@@ -46,18 +46,18 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="left" className="p-0 w-[20rem] sm:max-w-xs">
               {/* Branded header */}
-              <div className="px-5 pt-5 pb-4 border-b bg-gradient-to-br from-primary/10 via-transparent to-indigo-400/10">
-                <div className="flex items-center gap-3">
+              <div className="px-4 pt-3 pb-2 border-b bg-gradient-to-br from-primary/10 via-transparent to-indigo-400/10">
+                <div className="flex items-center gap-2.5">
                   <img src="/logo.png" alt="SpaceYouth" className="h-13 w-auto" />
                 </div>
-                <div className="mt-2 text-sm text-muted-foreground">
+                <div className="hidden text-sm text-muted-foreground">
                   Learn, assess, and level up your skills.
                 </div>
               </div>
 
               {/* Navigation */}
-              <nav className="p-2.5">
-                <div className="px-2 py-0 text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
+              <nav className="p-1.5">
+                <div className="hidden px-2 py-0 text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
                   Navigation
                 </div>
                 <ul className="space-y-0 mt-0">
@@ -79,29 +79,29 @@ export function Header() {
                         <NavLink
                           to={to}
                           className={({ isActive }) =>
-                            `flex items-center justify-between rounded-xl px-2.5 py-1 text-base ${
+                            `flex items-center justify-between rounded-lg px-2 py-0.5 text-lg font-medium ${
                               isActive
                                 ? "bg-secondary font-semibold text-foreground"
                                 : "hover:bg-secondary text-foreground"
                             }`
                           }
                         >
-                          <span className="flex items-center gap-1">
-                            <Icon className="h-[18px] w-[18px]" />
-                            <span className="leading-none">{label}</span>
+                          <span className="flex items-center gap-0.5">
+                            <Icon className="h-5 w-5" />
+                            <span className="leading-none tracking-tight">{label}</span>
                           </span>
-                          <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                          <ChevronRight className="hidden h-2 w-2 text-muted-foreground" />
                         </NavLink>
                       </SheetClose>
                     </li>
                   ))}
                 </ul>
 
-                {/* Quick actions */}
-                <div className="mt-2.5 px-2 py-0 text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
+                {/* Quick actions (hidden to maximize space) */}
+                <div className="hidden mt-2.5 px-2 py-0 text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
                   Quick Actions
                 </div>
-                <div className="mt-1 grid grid-cols-2 gap-1 px-1">
+                <div className="hidden mt-1 grid grid-cols-2 gap-1 px-1">
                   <a href="#" className="rounded-xl border px-3 py-1 text-sm hover:bg-secondary">Share</a>
                   <a href="#" className="rounded-xl border px-3 py-1 text-sm hover:bg-secondary">Settings</a>
                 </div>
