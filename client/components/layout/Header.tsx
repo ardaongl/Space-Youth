@@ -44,7 +44,7 @@ export function Header() {
                 <Menu className="h-5 w-5" />
               </button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-[20rem] sm:max-w-xs">
+            <SheetContent side="left" className="p-0 w-[20rem] sm:max-w-xs overflow-y-auto">
               {/* Branded header */}
               <div className="px-4 pt-3 pb-2 border-b bg-gradient-to-br from-primary/10 via-transparent to-indigo-400/10">
                 <div className="flex items-center gap-2.5">
@@ -55,57 +55,60 @@ export function Header() {
                 </div>
               </div>
 
-              {/* Navigation */}
-              <nav className="p-1.5">
-                <div className="hidden px-2 py-0 text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
-                  Navigation
-                </div>
-                <ul className="space-y-0 mt-0">
-                  {[
-                    { to: "/", label: "Home", icon: Home },
-                    { to: "/bookmarks", label: "Bookmarks", icon: Bookmark },
-                    { to: "/leagues", label: "Leagues", icon: Medal },
-                    { to: "/courses", label: "Courses", icon: BookOpen },
-                    { to: "/briefs", label: "Briefs", icon: ClipboardList },
-                    { to: "/tutorials", label: "Tutorials", icon: PencilRuler },
-                    { to: "/assessments", label: "Assessments", icon: GraduationCap },
-                    { to: "/arcade", label: "Arcade", icon: Gamepad2 },
-                    { to: "/showcase", label: "Showcase", icon: Images },
-                    { to: "/certifications", label: "Certifications", icon: BadgeCheck },
-                    { to: "/job-board", label: "Job Board", icon: BriefcaseBusiness },
-                  ].map(({ to, label, icon: Icon }) => (
-                    <li key={to}>
-                      <SheetClose asChild>
-                        <NavLink
-                          to={to}
-                          className={({ isActive }) =>
-                            `flex items-center justify-between rounded-lg px-2 py-0.5 text-lg font-medium ${
-                              isActive
-                                ? "bg-secondary font-semibold text-foreground"
-                                : "hover:bg-secondary text-foreground"
-                            }`
-                          }
-                        >
-                          <span className="flex items-center gap-0.5">
-                            <Icon className="h-5 w-5" />
-                            <span className="leading-none tracking-tight">{label}</span>
-                          </span>
-                          <ChevronRight className="hidden h-2 w-2 text-muted-foreground" />
-                        </NavLink>
-                      </SheetClose>
-                    </li>
-                  ))}
-                </ul>
+              {/* Scrollable content */}
+              <div className="flex-1 overflow-y-auto overscroll-contain">
+                {/* Navigation */}
+                <nav className="p-1.5">
+                  <div className="hidden px-2 py-0 text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
+                    Navigation
+                  </div>
+                  <ul className="space-y-0 mt-0">
+                    {[
+                      { to: "/", label: "Home", icon: Home },
+                      { to: "/bookmarks", label: "Bookmarks", icon: Bookmark },
+                      { to: "/leagues", label: "Leagues", icon: Medal },
+                      { to: "/courses", label: "Courses", icon: BookOpen },
+                      { to: "/briefs", label: "Briefs", icon: ClipboardList },
+                      { to: "/tutorials", label: "Tutorials", icon: PencilRuler },
+                      { to: "/assessments", label: "Assessments", icon: GraduationCap },
+                      { to: "/arcade", label: "Arcade", icon: Gamepad2 },
+                      { to: "/showcase", label: "Showcase", icon: Images },
+                      { to: "/certifications", label: "Certifications", icon: BadgeCheck },
+                      { to: "/job-board", label: "Job Board", icon: BriefcaseBusiness },
+                    ].map(({ to, label, icon: Icon }) => (
+                      <li key={to}>
+                        <SheetClose asChild>
+                          <NavLink
+                            to={to}
+                            className={({ isActive }) =>
+                              `flex items-center justify-between rounded-lg px-2 py-0.5 text-lg font-medium ${
+                                isActive
+                                  ? "bg-secondary font-semibold text-foreground"
+                                  : "hover:bg-secondary text-foreground"
+                              }`
+                            }
+                          >
+                            <span className="flex items-center gap-0.5">
+                              <Icon className="h-5 w-5" />
+                              <span className="leading-none tracking-tight">{label}</span>
+                            </span>
+                            <ChevronRight className="hidden h-2 w-2 text-muted-foreground" />
+                           </NavLink>
+                        </SheetClose>
+                      </li>
+                    ))}
+                  </ul>
 
-                {/* Quick actions (hidden to maximize space) */}
-                <div className="hidden mt-2.5 px-2 py-0 text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
-                  Quick Actions
-                </div>
-                <div className="hidden mt-1 grid grid-cols-2 gap-1 px-1">
-                  <a href="#" className="rounded-xl border px-3 py-1 text-sm hover:bg-secondary">Share</a>
-                  <a href="#" className="rounded-xl border px-3 py-1 text-sm hover:bg-secondary">Settings</a>
-                </div>
-              </nav>
+                  {/* Quick actions (hidden to maximize space) */}
+                  <div className="hidden mt-2.5 px-2 py-0 text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
+                    Quick Actions
+                  </div>
+                  <div className="hidden mt-1 grid grid-cols-2 gap-1 px-1">
+                    <a href="#" className="rounded-xl border px-3 py-1 text-sm hover:bg-secondary">Share</a>
+                    <a href="#" className="rounded-xl border px-3 py-1 text-sm hover:bg-secondary">Settings</a>
+                  </div>
+                </nav>
+              </div>
             </SheetContent>
           </Sheet>
         </div>
