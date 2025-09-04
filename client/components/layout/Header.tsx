@@ -1,4 +1,23 @@
-import { Search, Bell, HelpCircle, Sparkles, Coins, Menu } from "lucide-react";
+import {
+  Search,
+  Bell,
+  HelpCircle,
+  Sparkles,
+  Coins,
+  Menu,
+  Home,
+  Bookmark,
+  Medal,
+  BookOpen,
+  ClipboardList,
+  PencilRuler,
+  GraduationCap,
+  Gamepad2,
+  Images,
+  BadgeCheck,
+  BriefcaseBusiness,
+  ChevronRight,
+} from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { NavLink } from "react-router-dom";
 import { useTokens } from "@/context/TokensContext";
@@ -25,43 +44,67 @@ export function Header() {
                 <Menu className="h-5 w-5" />
               </button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-80 sm:max-w-xs">
-              <div className="px-4 py-3 border-b">
+            <SheetContent side="left" className="p-0 w-[20rem] sm:max-w-xs">
+              {/* Branded header */}
+              <div className="px-5 pt-5 pb-4 border-b bg-gradient-to-br from-primary/10 via-transparent to-indigo-400/10">
                 <div className="flex items-center gap-3">
-                  <img src="/spaceyouth-logo.svg" alt="SpaceYouth" className="h-8 w-auto" />
+                  <img src="/logo.png" alt="SpaceYouth" className="h-13 w-auto" />
+                </div>
+                <div className="mt-2 text-sm text-muted-foreground">
+                  Learn, assess, and level up your skills.
                 </div>
               </div>
-              <nav className="p-3">
-                <ul className="space-y-1">
+
+              {/* Navigation */}
+              <nav className="p-2.5">
+                <div className="px-2 py-0 text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
+                  Navigation
+                </div>
+                <ul className="space-y-0 mt-0">
                   {[
-                    { to: "/", label: "Home" },
-                    { to: "/bookmarks", label: "Bookmarks" },
-                    { to: "/leagues", label: "Leagues" },
-                    { to: "/courses", label: "Courses" },
-                    { to: "/briefs", label: "Briefs" },
-                    { to: "/tutorials", label: "Tutorials" },
-                    { to: "/assessments", label: "Assessments" },
-                    { to: "/arcade", label: "Arcade" },
-                    { to: "/showcase", label: "Showcase" },
-                    { to: "/certifications", label: "Certifications" },
-                    { to: "/job-board", label: "Job Board" },
-                  ].map((it) => (
-                    <li key={it.to}>
+                    { to: "/", label: "Home", icon: Home },
+                    { to: "/bookmarks", label: "Bookmarks", icon: Bookmark },
+                    { to: "/leagues", label: "Leagues", icon: Medal },
+                    { to: "/courses", label: "Courses", icon: BookOpen },
+                    { to: "/briefs", label: "Briefs", icon: ClipboardList },
+                    { to: "/tutorials", label: "Tutorials", icon: PencilRuler },
+                    { to: "/assessments", label: "Assessments", icon: GraduationCap },
+                    { to: "/arcade", label: "Arcade", icon: Gamepad2 },
+                    { to: "/showcase", label: "Showcase", icon: Images },
+                    { to: "/certifications", label: "Certifications", icon: BadgeCheck },
+                    { to: "/job-board", label: "Job Board", icon: BriefcaseBusiness },
+                  ].map(({ to, label, icon: Icon }) => (
+                    <li key={to}>
                       <SheetClose asChild>
                         <NavLink
-                          to={it.to}
+                          to={to}
                           className={({ isActive }) =>
-                            `block rounded-lg px-3 py-2 text-sm ${
-                              isActive ? "bg-secondary font-medium" : "hover:bg-secondary"
+                            `flex items-center justify-between rounded-xl px-2.5 py-1 text-base ${
+                              isActive
+                                ? "bg-secondary font-semibold text-foreground"
+                                : "hover:bg-secondary text-foreground"
                             }`
                           }
                         >
-                          {it.label}
+                          <span className="flex items-center gap-1">
+                            <Icon className="h-[18px] w-[18px]" />
+                            <span className="leading-none">{label}</span>
+                          </span>
+                          <ChevronRight className="h-3 w-3 text-muted-foreground" />
                         </NavLink>
                       </SheetClose>
                     </li>
                   ))}
                 </ul>
+
+                {/* Quick actions */}
+                <div className="mt-2.5 px-2 py-0 text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
+                  Quick Actions
+                </div>
+                <div className="mt-1 grid grid-cols-2 gap-1 px-1">
+                  <a href="#" className="rounded-xl border px-3 py-1 text-sm hover:bg-secondary">Share</a>
+                  <a href="#" className="rounded-xl border px-3 py-1 text-sm hover:bg-secondary">Settings</a>
+                </div>
               </nav>
             </SheetContent>
           </Sheet>
