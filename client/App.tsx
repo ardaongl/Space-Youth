@@ -20,6 +20,7 @@ import Showcase from "./pages/Showcase";
 import Tutorials from "./pages/Tutorials";
 import Certifications from "./pages/Certifications";
 import JobBoard from "./pages/JobBoard";
+import { Profile } from "./pages/Profile";
 import { TokensProvider } from "./context/TokensContext";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/showcase" element={<Showcase />} />
             <Route path="/certifications" element={<Certifications />} />
             <Route path="/job-board" element={<JobBoard />} />
+            <Route path="/profile" element={<Profile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

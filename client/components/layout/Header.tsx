@@ -17,10 +17,19 @@ import {
   BadgeCheck,
   BriefcaseBusiness,
   ChevronRight,
+  User,
+  Settings,
+  Gift,
+  Building2,
+  Sun,
+  Moon,
+  Monitor,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
-import { NavLink } from "react-router-dom";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useTokens } from "@/context/TokensContext";
+import { Separator } from "@/components/ui/separator";
 
 function TokenWallet() {
   const { tokens } = useTokens();
@@ -33,6 +42,8 @@ function TokenWallet() {
 }
 
 export function Header() {
+  const navigate = useNavigate();
+  
   return (
     <header className="sticky top-0 z-30 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
       <div className="h-14 flex items-center gap-3 px-4">
@@ -122,24 +133,77 @@ export function Header() {
             />
           </label>
         </div>
-        <a href="#" className="text-sm text-muted-foreground hover:text-foreground whitespace-nowrap">
-          For Teams
-        </a>
-        <a
-          href="#"
-          className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground shadow transition hover:brightness-110"
-        >
-          <Sparkles className="h-4 w-4" /> Upgrade
-        </a>
-        <TokenWallet />
-        <button className="p-2 rounded-full hover:bg-secondary">
-          <HelpCircle className="h-5 w-5" />
-        </button>
-        <button className="p-2 rounded-full hover:bg-secondary">
-          <Bell className="h-5 w-5" />
-        </button>
-        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-indigo-500 text-white grid place-items-center text-sm font-bold">
-          S
+        {/* Right side buttons - sağ tarafa dayalı */}
+        <div className="flex items-center gap-2 ml-auto">
+          <a href="#" className="text-sm text-muted-foreground hover:text-foreground whitespace-nowrap">
+            For Teams
+          </a>
+          <a
+            href="#"
+            className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground shadow transition hover:brightness-110"
+          >
+            <Sparkles className="h-4 w-4" /> Upgrade
+          </a>
+          <TokenWallet />
+          <button className="p-2 rounded-full hover:bg-secondary">
+            <HelpCircle className="h-5 w-5" />
+          </button>
+          <button className="p-2 rounded-full hover:bg-secondary">
+            <Bell className="h-5 w-5" />
+          </button>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-indigo-500 text-white grid place-items-center text-sm font-bold cursor-pointer hover:opacity-80 transition-opacity">
+                S
+              </div>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80 p-0" align="end">
+              <div className="p-4">
+                {/* Üst Bölüm - Kullanıcı Bilgileri */}
+                <div className="flex flex-col items-center text-center mb-4">
+                  <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-indigo-500 text-white grid place-items-center text-xl font-bold mb-2">
+                    S
+                  </div>
+                  <div className="font-semibold text-foreground">Cenker Gültekin</div>
+                  <div className="text-sm text-muted-foreground">Starter Plan</div>
+                </div>
+                
+                <Separator className="mb-4" />
+                
+                {/* Orta Bölüm - Ana Menü Öğeleri */}
+                <div className="space-y-1 mb-4">
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer" onClick={() => navigate('/profile')}>
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">Profile</span>
+                  </div>
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
+                    <Settings className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">Settings</span>
+                  </div>
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
+                    <Gift className="h-4 w-4 text-red-500" />
+                    <span className="text-sm">Refer friends, get rewards</span>
+                  </div>
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">Uxcel for Teams</span>
+                  </div>
+                </div>
+                
+                <Separator className="mb-4" />
+                
+                {/* Alt Bölüm - Ek Seçenekler ve Çıkış */}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
+                    <span className="text-sm">Help Center</span>
+                  </div>
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
+                    <span className="text-sm">Sign Out</span>
+                  </div>
+                </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
         </div>
       </div>
     </header>
