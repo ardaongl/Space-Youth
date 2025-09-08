@@ -1,5 +1,6 @@
 import "./global.css";
 
+import React, { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { createRoot } from "react-dom/client";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -22,38 +23,86 @@ import Certifications from "./pages/Certifications";
 import JobBoard from "./pages/JobBoard";
 import { Profile } from "./pages/Profile";
 import { TokensProvider } from "./context/TokensContext";
+import TestWizard, { OnboardingData } from "@/components/onboarding/TestWizard";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TokensProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/bookmarks" element={<Bookmarks />} />
-            <Route path="/leagues" element={<Leagues />} />
-            <Route path="/courses" element={<Index />} />
-            <Route path="/courses/:slug" element={<CourseDetail />} />
-            <Route path="/briefs" element={<Briefs />} />
-            <Route path="/practice" element={<Tutorials />} />
-            <Route path="/assessments" element={<Assessments />} />
-            <Route path="/tutorials" element={<Tutorials />} />
-            <Route path="/arcade" element={<Arcade />} />
-            <Route path="/showcase" element={<Showcase />} />
-            <Route path="/certifications" element={<Certifications />} />
-            <Route path="/job-board" element={<JobBoard />} />
-            <Route path="/profile" element={<Profile />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </TokensProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+
+  useEffect(() => {
+    const done = typeof window !== "undefined" && localStorage.getItem("onboarding.completed") === "true";
+    setOnboardingOpen(!done);
+  }, []);
+
+  const handleComplete = (data: OnboardingData) => {
+    try {
+      localStorage.setItem("onboarding.data", JSON.stringify(data));
+    } catch {}
+    localStorage.setItem("onboarding.completed", "true");
+    setOnboardingOpen(false);
+    // Redirect to profile after completion
+    try {
+      window.location.assign("/profile");
+    } catch {}
+  };
+  
+  const resetOnboarding = () => {
+    try {
+      localStorage.removeItem("onboarding.completed");
+      // Optionally keep data; comment next line if you want to preserve
+      localStorage.removeItem("onboarding.data");
+    } catch {}
+    setOnboardingOpen(true);
+  };
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TokensProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          {/* Router renders the app UI; TestWizard overlays above to gate access */}
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/bookmarks" element={<Bookmarks />} />
+              <Route path="/leagues" element={<Leagues />} />
+              <Route path="/courses" element={<Index />} />
+              <Route path="/courses/:slug" element={<CourseDetail />} />
+              <Route path="/briefs" element={<Briefs />} />
+              <Route path="/practice" element={<Tutorials />} />
+              <Route path="/assessments" element={<Assessments />} />
+              <Route path="/tutorials" element={<Tutorials />} />
+              <Route path="/arcade" element={<Arcade />} />
+              <Route path="/showcase" element={<Showcase />} />
+              <Route path="/certifications" element={<Certifications />} />
+              <Route path="/job-board" element={<JobBoard />} />
+              <Route path="/profile" element={<Profile />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+
+          <TestWizard
+            open={onboardingOpen}
+            onClose={() => { /* Gate: do nothing to enforce completion */ }}
+            onComplete={handleComplete}
+          />
+
+          {import.meta.env.DEV && !onboardingOpen && (
+            <button
+              onClick={resetOnboarding}
+              className="fixed bottom-4 right-4 z-50 rounded-full bg-foreground text-background px-4 py-2 text-sm shadow hover:brightness-110"
+              title="Geliştirme: Sorulara dön"
+            >
+              Sorulara dön
+            </button>
+          )}
+        </TooltipProvider>
+      </TokensProvider>
+    </QueryClientProvider>
+  );
+};
 
 createRoot(document.getElementById("root")!).render(<App />);
