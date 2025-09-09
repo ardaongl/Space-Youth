@@ -22,6 +22,7 @@ import Tutorials from "./pages/Tutorials";
 import Certifications from "./pages/Certifications";
 import JobBoard from "./pages/JobBoard";
 import { Profile } from "./pages/Profile";
+import About from "./pages/About";
 import { TokensProvider } from "./context/TokensContext";
 import TestWizard, { OnboardingData } from "@/components/onboarding/TestWizard";
 
@@ -79,6 +80,7 @@ const App = () => {
               <Route path="/certifications" element={<Certifications />} />
               <Route path="/job-board" element={<JobBoard />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/about" element={<About />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
