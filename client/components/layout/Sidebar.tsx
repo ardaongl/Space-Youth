@@ -18,13 +18,9 @@ import { cn } from "@/lib/utils";
 const items = [
   { to: "/", label: "Home", icon: Home },
   { to: "/bookmarks", label: "Bookmarks", icon: Bookmark },
-  { to: "/leagues", label: "Leagues", icon: Medal },
   { to: "/courses", label: "Courses", icon: BookOpen },
-  { to: "/briefs", label: "Briefs", icon: ClipboardList },
   { to: "/tutorials", label: "Tutorials", icon: PencilRuler },
-  { to: "/assessments", label: "Assessments", icon: GraduationCap },
-  { to: "/arcade", label: "Arcade", icon: Gamepad2 },
-  { to: "/showcase", label: "Showcase", icon: Images },
+  { to: "/assessments", label: "Assessments", icon: GraduationCap }, 
   { to: "/certifications", label: "Certifications", icon: BadgeCheck },
   { to: "/job-board", label: "Job Board", icon: BriefcaseBusiness },
 ];
