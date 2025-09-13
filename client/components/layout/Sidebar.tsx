@@ -20,7 +20,6 @@ const items = [
   { to: "/bookmarks", label: "Bookmarks", icon: Bookmark },
   { to: "/courses", label: "Courses", icon: BookOpen },
   { to: "/tutorials", label: "Tutorials", icon: PencilRuler },
-  { to: "/assessments", label: "Assessments", icon: GraduationCap }, 
   { to: "/certifications", label: "Certifications", icon: BadgeCheck },
   { to: "/job-board", label: "Job Board", icon: BriefcaseBusiness },
 ];

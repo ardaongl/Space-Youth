@@ -12,12 +12,7 @@ import NotFound from "./pages/NotFound";
 import Placeholder from "./pages/Placeholder";
 import CourseDetail from "./pages/CourseDetail";
 import Home from "./pages/Home";
-import Leagues from "./pages/Leagues";
 import Bookmarks from "./pages/Bookmarks";
-import Briefs from "./pages/Briefs";
-import Assessments from "./pages/Assessments";
-import Arcade from "./pages/Arcade";
-import Showcase from "./pages/Showcase";
 import Tutorials from "./pages/Tutorials";
 import Certifications from "./pages/Certifications";
 import JobBoard from "./pages/JobBoard";
@@ -71,7 +66,6 @@ const App = () => {
               <Route path="/courses" element={<Index />} />
               <Route path="/courses/:slug" element={<CourseDetail />} />
               <Route path="/practice" element={<Tutorials />} />
-              <Route path="/assessments" element={<Assessments />} />
               <Route path="/tutorials" element={<Tutorials />} />
               <Route path="/certifications" element={<Certifications />} />
               <Route path="/job-board" element={<JobBoard />} />
