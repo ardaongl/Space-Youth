@@ -1,23 +1,21 @@
 import { NavLink } from "react-router-dom";
 import {
   Home,
-  Bookmark,
-  Medal,
   BookOpen,
   ClipboardList,
   PencilRuler,
-  GraduationCap,
-  Gamepad2,
-  Images,
   BadgeCheck,
-  DollarSign,
   BriefcaseBusiness,
+  Trophy,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
   { to: "/", label: "Home", icon: Home },
-  { to: "/bookmarks", label: "Bookmarks", icon: Bookmark },
+  { to: "/tasks", label: "Tasks", icon: ClipboardList },
+  { to: "/leaderboard", label: "Leaderboard", icon: Trophy },
+  { to: "/workshops", label: "Workshops", icon: Users },
   { to: "/courses", label: "Courses", icon: BookOpen },
   { to: "/tutorials", label: "Tutorials", icon: PencilRuler },
   { to: "/certifications", label: "Certifications", icon: BadgeCheck },
