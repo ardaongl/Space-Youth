@@ -12,6 +12,9 @@ import NotFound from "./pages/NotFound";
 import Placeholder from "./pages/Placeholder";
 import CourseDetail from "./pages/CourseDetail";
 import Home from "./pages/Home";
+import Tasks from "./pages/Tasks";
+import TaskDetail from "./pages/TaskDetail";
+import PostProject from "./pages/PostProject";
 import Bookmarks from "./pages/Bookmarks";
 import Tutorials from "./pages/Tutorials";
 import Certifications from "./pages/Certifications";
@@ -19,6 +22,11 @@ import JobBoard from "./pages/JobBoard";
 import { Profile } from "./pages/Profile";
 import About from "./pages/About";
 import { TokensProvider } from "./context/TokensContext";
+import { DraftsProvider } from "./context/DraftsContext";
+import { TaskSubmissionsProvider } from "./context/TaskSubmissionsContext";
+import MyTasks from "./pages/MyTasks";
+import Leaderboard from "./pages/Leaderboard";
+import Workshops from "./pages/Workshops";
 import TestWizard, { OnboardingData } from "@/components/onboarding/TestWizard";
 
 const queryClient = new QueryClient();
@@ -55,14 +63,21 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TokensProvider>
-        <TooltipProvider>
+        <DraftsProvider>
+          <TaskSubmissionsProvider>
+          <TooltipProvider>
           <Toaster />
           <Sonner />
           {/* Router renders the app UI; TestWizard overlays above to gate access */}
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/bookmarks" element={<Bookmarks />} />
+              <Route path="/tasks" element={<Tasks />} />
+              <Route path="/tasks/:taskId" element={<TaskDetail />} />
+              <Route path="/tasks/:taskId/post" element={<PostProject />} />
+              <Route path="/my-tasks" element={<MyTasks />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/workshops" element={<Workshops />} />
               <Route path="/courses" element={<Index />} />
               <Route path="/courses/:slug" element={<CourseDetail />} />
               <Route path="/practice" element={<Tutorials />} />
@@ -92,6 +107,8 @@ const App = () => {
             </button>
           )}
         </TooltipProvider>
+        </TaskSubmissionsProvider>
+        </DraftsProvider>
       </TokensProvider>
     </QueryClientProvider>
   );
