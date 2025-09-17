@@ -28,9 +28,9 @@ import MyTasks from "./pages/MyTasks";
 import Leaderboard from "./pages/Leaderboard";
 import Workshops from "./pages/Workshops";
 import TestWizard, { OnboardingData } from "@/components/onboarding/TestWizard";
-
+import { Provider } from "react-redux";
 const queryClient = new QueryClient();
-
+import { store } from "./store";
 const App = () => {
   const [onboardingOpen, setOnboardingOpen] = useState(false);
 
@@ -61,6 +61,7 @@ const App = () => {
   };
 
   return (
+    <Provider store={store}>
     <QueryClientProvider client={queryClient}>
       <TokensProvider>
         <DraftsProvider>
@@ -111,6 +112,7 @@ const App = () => {
         </DraftsProvider>
       </TokensProvider>
     </QueryClientProvider>
+    </Provider>
   );
 };
 

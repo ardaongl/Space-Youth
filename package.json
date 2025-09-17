@@ -21,8 +21,11 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.9.0",
+    "axios": "^1.12.2",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "react-redux": "^9.2.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {

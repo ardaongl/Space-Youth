@@ -1,15 +1,31 @@
 import React, { useEffect, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
+import { login } from "@/services/login";
+import { setUserToken } from "@/store/slices/userSlice";
+import { useDispatch } from "react-redux";
 const baseUrl = import.meta.env.VITE_BASE_URL;
 interface AboutResponse {
   message: string;
 }
 
+
 export default function About() {
   const [response, setResponse] = useState<AboutResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const dispatch = useDispatch();
+
+  const handleLogin = async () => {
+    try {
+      const response = await login("dev.berat55@gmail.com", "123456");
+      console.log(response);
+      
+      dispatch(setUserToken(response.data.auth_token));
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const fetchAboutData = async () => {
     setLoading(true);
@@ -55,7 +71,13 @@ export default function About() {
       <div className="min-h-screen bg-background p-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold mb-6">About Page</h1>
-          
+          <div>
+            <button
+              onClick={handleLogin}
+            >
+              login 
+            </button>
+          </div>
           <div className="bg-card border rounded-lg p-6 mb-6">
             <h2 className="text-xl font-semibold mb-4">Space Youth API Test</h2>            
             <Button 
