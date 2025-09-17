@@ -1,6 +1,9 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { Link } from "react-router-dom";
 import { Star, Clock, Award, Trophy, Bookmark } from "lucide-react";
+import { useEffect } from "react";
+import { api } from "@/services/api";
+import { useState } from "react";
 
 function Chip({ children }: { children: React.ReactNode }) {
   return (
@@ -65,7 +68,29 @@ function CourseCard({
 }
 
 export default function Courses() {
+
+  const [courses, setCourses] = useState([])
+
+  const handleGetCourses = async () => {
+    try {
+      const response = await api.get("/api/courses", {
+        requiresAuth: true,
+        validateStatus: s => s < 500},
+      )
+
+      console.log(response);
+      setCourses(response.data)
+    } catch (error) {
+      
+    }
+  }
+
+  useEffect(()=> {
+    handleGetCourses();
+  }, [])
+
   return (
+    // courses.map ile yapılmalı
     <AppLayout>
       <div className="py-6">
         <h1 className="text-2xl font-bold">Courses</h1>

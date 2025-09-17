@@ -1,3 +1,4 @@
+import { store } from '@/store';
 import axios, {AxiosHeaders, InternalAxiosRequestConfig} from 'axios';
 
 const baseUrl = import.meta.env.VITE_BASE_URL;
@@ -18,7 +19,9 @@ api.interceptors.request.use(
     const headers = (config.headers ?? new AxiosHeaders()) as AxiosHeaders;
 
     if (config.requiresAuth) {
-      const token = "";
+      const token = store.getState().user.token;
+      //console.log(token);
+      
       if (!token) {
         return Promise.reject(new Error('Geçersiz token'));
       }
