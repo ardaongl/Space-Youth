@@ -1,5 +1,6 @@
 import "./global.css";
 
+import AdminPage from "./pages/AdminPage"; 
 import React, { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { createRoot } from "react-dom/client";
@@ -31,6 +32,8 @@ import TestWizard, { OnboardingData } from "@/components/onboarding/TestWizard";
 import { Provider } from "react-redux";
 const queryClient = new QueryClient();
 import { store } from "./store";
+
+
 const App = () => {
   const [onboardingOpen, setOnboardingOpen] = useState(false);
 
@@ -87,6 +90,7 @@ const App = () => {
               <Route path="/job-board" element={<JobBoard />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/about" element={<About />} /> 
+              <Route path="/admin" element={<AdminPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
