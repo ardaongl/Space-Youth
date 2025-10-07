@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
-import { login } from "@/services/login";
 import { setUserToken } from "@/store/slices/userSlice";
 import { useDispatch } from "react-redux";
+import { apis } from "@/services";
 const baseUrl = import.meta.env.VITE_BASE_URL;
 interface AboutResponse {
   message: string;
@@ -18,7 +18,8 @@ export default function About() {
 
   const handleLogin = async () => {
     try {
-      const response = await login("dev.berat55@gmail.com", "123456");
+      //const response = await login("dev.berat55@gmail.com", "123456");
+      const response = await apis.user.login("dev.berat55@gmail.com", "123456");
       console.log(response);
       
       dispatch(setUserToken(response.data.auth_token));
@@ -33,23 +34,14 @@ export default function About() {
     
     try {
 
-      const res = await fetch(`${baseUrl}/api/about`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const res = await apis.common.about();
+      console.log(res);
+    
       
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status} - ${res.statusText}`);
-      }
-      
-      const data: AboutResponse = await res.json();
-      
-      console.log("🎉 Response received from Space Youth API:", data);
+      console.log("🎉 Response received from Space Youth API:", res);
       console.log("📅 Response timestamp:", new Date().toISOString());
-      console.log("💬 API Message:", data.message);
-      setResponse(data);
+      console.log("💬 API Message:", res.message);
+      setResponse(res);
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
@@ -60,6 +52,12 @@ export default function About() {
       setLoading(false);
     }
   };
+
+  const fetchCourses = async () => {
+    const response = await apis.course.getAllCourses();
+    console.log(response);
+    
+  }
 
   useEffect(() => {
     // Automatically fetch data when component mounts
@@ -75,7 +73,7 @@ export default function About() {
             <button
               onClick={handleLogin}
             >
-              login 
+              login!
             </button>
           </div>
           <div className="bg-card border rounded-lg p-6 mb-6">
@@ -110,6 +108,22 @@ export default function About() {
               </div>
             )}
           </div>
+        </div>
+        <div>
+        <Button 
+              onClick={handleLogin} 
+              disabled={loading}
+              className="mb-4"
+            >
+              login ol
+        </Button>
+        <Button 
+              onClick={fetchCourses} 
+              disabled={loading}
+              className="mb-4"
+            >
+              kursları getir
+        </Button>
         </div>
       </div>
     </AppLayout>
