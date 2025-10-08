@@ -32,6 +32,8 @@ import TestWizard, { OnboardingData } from "@/components/onboarding/TestWizard";
 import { Provider } from "react-redux";
 const queryClient = new QueryClient();
 import { store } from "./store";
+import Callback from "./pages/Callback";
+import Dashboard from "./pages/Dashboard";
 
 
 const App = () => {
@@ -76,6 +78,8 @@ const App = () => {
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/callback" element={<Callback />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/tasks" element={<Tasks />} />
               <Route path="/tasks/:taskId" element={<TaskDetail />} />
               <Route path="/tasks/:taskId/post" element={<PostProject />} />
