@@ -1,118 +1,218 @@
 import AppLayout from "@/components/layout/AppLayout";
-import { CheckCircle2, Clock, Star, ShieldCheck, Award, Users, Trophy, BookOpen, Globe, Phone, Gamepad2, ListChecks, CalendarClock } from "lucide-react";
-import { useParams } from "react-router-dom";
-
-function Stat({ icon: Icon, children }: { icon: any; children: React.ReactNode }) {
-  return (
-    <div className="inline-flex items-center gap-2 text-sm text-muted-foreground mr-4">
-      <Icon className="h-4 w-4 text-primary" />
-      <span>{children}</span>
-    </div>
-  );
-}
+import { Button } from "@/components/ui/button";
+import { CheckCircle2, Clock, ShieldCheck, BookOpen, ListChecks, ArrowLeft, Bookmark, Share2, Coins, Play } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { isAdmin } from "@/utils/roles";
 
 export default function CourseDetail() {
   const { slug } = useParams();
+  const navigate = useNavigate();
+  const { auth } = useAuth();
+  const adminUser = isAdmin(auth.user?.role);
+
+  // Mock course data - in real app, fetch from API
+  const courseData = {
+    title: slug ? slug.replace(/-/g, " ") : "Workshop Facilitation",
+    description: "Workshops are powerful tools for tackling complex problems and driving innovative solutions. This course equips you with the skills to effectively facilitate workshops that inspire collaboration, enhance teamwork, and generate breakthrough ideas. Throughout the course, you'll explore common challenges teams face and learn how to overcome them.",
+    price: 250, // coin value
+    teacherName: "Colin Michael Pace",
+    duration: "4 hours",
+    certification: true,
+    lessonsCount: 15,
+    examsCount: 3,
+    teacherPhotos: [
+      "/image.png",
+      "/image.png",
+      "/image.png"
+    ],
+    teacherVideos: [
+      { thumbnail: "/image.png", title: "Introduction to Workshop Facilitation" },
+      { thumbnail: "/image.png", title: "Advanced Techniques" }
+    ]
+  };
+
+  const handleSave = () => {
+    console.log("Course saved");
+    // TODO: Implement save functionality
+  };
+
+  const handleShare = () => {
+    console.log("Course shared");
+    // TODO: Implement share functionality
+  };
+
   return (
-    <AppLayout
-      right={
-        <aside className="hidden lg:block sticky top-[4.5rem] h-max">
-          <div className="rounded-2xl border bg-card p-5 shadow-sm">
-            <div className="aspect-[4/3] w-full rounded-xl bg-accent grid place-items-center mb-4">
-              <img src="/placeholder.svg" alt="certificate" className="h-24 opacity-90" />
+    <AppLayout>
+      <div className="container mx-auto py-6">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          className="mb-6 gap-2"
+          onClick={() => navigate('/courses')}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Geri Dön
+        </Button>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-8">
+          {/* Left Content */}
+          <div>
+            {/* Course Header */}
+            <div className="space-y-4">
+              <h1 className="text-4xl font-bold tracking-tight capitalize">{courseData.title}</h1>
+              
+              {/* Price and Actions */}
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-2">
+                  <Coins className="h-6 w-6 text-yellow-600" />
+                  <span className="text-2xl font-bold text-yellow-600">{courseData.price}</span>
+                  <span className="text-muted-foreground">coins</span>
+                </div>
+                
+                <div className="flex gap-3">
+                  {adminUser && (
+                    <Button
+                      size="default"
+                      className="gap-2"
+                      onClick={() => navigate(`/courses/${slug}/edit`)}
+                    >
+                      Düzenle
+                    </Button>
+                  )}
+                  <Button variant="outline" size="default" className="gap-2" onClick={handleSave}>
+                    <Bookmark className="h-4 w-4" />
+                    Kaydet
+                  </Button>
+                  <Button variant="outline" size="default" className="gap-2" onClick={handleShare}>
+                    <Share2 className="h-4 w-4" />
+                    Paylaş
+                  </Button>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="mt-8">
+                <h2 className="text-2xl font-semibold mb-4">Açıklama</h2>
+                <p className="text-muted-foreground leading-7">
+                  {courseData.description}
+                </p>
+              </div>
+
+              {/* Details Section */}
+              <div className="mt-8">
+                <h2 className="text-2xl font-semibold mb-4">Detaylar</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <BookOpen className="h-5 w-5 text-primary flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">Öğretmen</p>
+                      <p className="text-sm text-muted-foreground">{courseData.teacherName}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <Clock className="h-5 w-5 text-primary flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">Süre</p>
+                      <p className="text-sm text-muted-foreground">{courseData.duration}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">Sertifika</p>
+                      <p className="text-sm text-muted-foreground">
+                        {courseData.certification ? "Sertifikalı" : "Sertifikasız"}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <ListChecks className="h-5 w-5 text-primary flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">İçerik</p>
+                      <p className="text-sm text-muted-foreground">
+                        {courseData.lessonsCount} ders, {courseData.examsCount} sınav
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Skills Section */}
+              <div className="mt-8">
+                <h2 className="text-2xl font-semibold mb-4">Bu kursta kazanacağınız beceriler:</h2>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
+                    <p className="leading-7"><span className="font-semibold">Başarılı tasarım atölyeleri planlama ve yürütme</span> — Tasarım atölyesi çağrısının ne zaman yapılacağını, hedeflerin nasıl belirleneceğini ve doğru çıktıları üretmek için doğru süreçleri ve aktiviteleri nasıl planlayacağınızı öğrenin.</p>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
+                    <p className="leading-7"><span className="font-semibold">Beyin fırtınası ve karar verme aktiviteleri keşfetme</span> — Yaratıcı fikir üretimini teşvik eden ve tasarım kararlarında fikir birliği oluşturmanın yollarını öğrenin.</p>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
+                    <p className="leading-7"><span className="font-semibold">Uzaktan atölyeler yürütme ve harika sunumlar oluşturma</span> — Başarılı bir uzaktan atölye yürütmek için ihtiyacınız olan tüm sanal araçları ve teknikleri öğrenin.</p>
+                  </li>
+                </ul>
+              </div>
             </div>
-            <h3 className="text-lg font-semibold">Earn your course certificate</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              Complete the course to earn your certificate of completion and showcase your expertise.
-            </p>
-            <button className="mt-4 w-full rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow transition hover:brightness-110">
-              Start course for free
-            </button>
           </div>
-          <div className="mt-4 rounded-2xl border bg-card p-5 shadow-sm">
-            <div className="flex gap-1 mb-3">
-              <button className="px-3 py-1 rounded-full text-sm font-medium bg-primary text-primary-foreground">Individual</button>
-              <button className="px-3 py-1 rounded-full text-sm font-medium bg-secondary text-foreground">Team</button>
+
+          {/* Right Sidebar - Teacher Photos & Videos */}
+          <div className="space-y-6">
+            {/* Teacher Photos */}
+            <div className="rounded-lg border bg-card p-6">
+              <h3 className="text-lg font-semibold mb-4">Kurs Görselleri</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {courseData.teacherPhotos.map((photo, index) => (
+                  <div key={index} className="aspect-video rounded-lg overflow-hidden bg-muted">
+                    <img 
+                      src={photo} 
+                      alt={`Course photo ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary"/> 100+ courses, projects & assessments</li>
-              <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary"/> Professional certificates</li>
-              <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary"/> Mentor-led project reviews</li>
-              <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary"/> Full access on mobile</li>
-            </ul>
-            <button className="mt-4 w-full rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background shadow transition hover:brightness-110">
-              Get full access with Pro
-            </button>
+
+            {/* Teacher Videos */}
+            <div className="rounded-lg border bg-card p-6">
+              <h3 className="text-lg font-semibold mb-4">Kurs Videoları</h3>
+              <div className="space-y-3">
+                {courseData.teacherVideos.map((video, index) => (
+                  <div key={index} className="group cursor-pointer">
+                    <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+                      <img 
+                        src={video.thumbnail} 
+                        alt={video.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/50 transition">
+                        <Play className="h-12 w-12 text-white" />
+                      </div>
+                    </div>
+                    <p className="text-sm font-medium mt-2">{video.title}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Enroll Button */}
+            <div className="rounded-lg border bg-card p-6">
+              <Button className="w-full" size="lg">
+                Kursa Kayıt Ol
+              </Button>
+              <p className="text-xs text-muted-foreground text-center mt-3">
+                Bu kursa kaydolarak tüm içeriklere erişim sağlayacaksınız.
+              </p>
+            </div>
           </div>
-        </aside>
-      }
-    >
-      <div className="py-6">
-        <div className="text-sm text-muted-foreground">Courses ▸</div>
-        <h1 className="mt-1 text-3xl font-extrabold tracking-tight">{slug ? slug.replace(/-/g, " ") : "Workshop Facilitation"}</h1>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Stat icon={Clock}>4 hours</Stat>
-          <Stat icon={Trophy}>Advanced</Stat>
-          <Stat icon={Star}>4.6 (4,061)</Stat>
-          <Stat icon={Users}>50,913 learners</Stat>
-          <Stat icon={Award}>5250 XP</Stat>
         </div>
-        <div className="mt-4 flex gap-3">
-          <button className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow hover:brightness-110">
-            Start course for free
-          </button>
-          <button className="rounded-full border px-5 py-2 text-sm font-semibold">Save</button>
-          <button className="rounded-full border px-5 py-2 text-sm font-semibold">Share</button>
-        </div>
-
-        <section className="mt-8 grid gap-8 lg:max-w-3xl">
-          <div>
-            <h2 className="text-xl font-semibold">About this course</h2>
-            <p className="mt-2 text-muted-foreground leading-7">
-              Workshops are powerful tools for tackling complex problems and driving innovative solutions. This course equips you with the skills to effectively facilitate workshops that inspire collaboration, enhance teamwork, and generate breakthrough ideas.
-            </p>
-            <p className="mt-2 text-muted-foreground leading-7">
-              Throughout the course, you'll explore common challenges teams face and learn how to overcome them.
-            </p>
-          </div>
-
-          <div>
-            <h3 className="font-semibold text-sm mb-2">Details</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
-              <div className="flex items-center gap-2 text-muted-foreground"><BookOpen className="h-4 w-4 text-primary"/> By Colin Michael Pace</div>
-              <div className="flex items-center gap-2 text-muted-foreground"><ShieldCheck className="h-4 w-4 text-primary"/> Certificate of completion</div>
-              <div className="flex items-center gap-2 text-muted-foreground"><Trophy className="h-4 w-4 text-primary"/> Advanced level</div>
-              <div className="flex items-center gap-2 text-muted-foreground"><Globe className="h-4 w-4 text-primary"/> English language</div>
-              <div className="flex items-center gap-2 text-muted-foreground"><Clock className="h-4 w-4 text-primary"/> About 4 hours to complete</div>
-              <div className="flex items-center gap-2 text-muted-foreground"><Phone className="h-4 w-4 text-primary"/> Learn on iOS or Android</div>
-              <div className="flex items-center gap-2 text-muted-foreground"><Gamepad2 className="h-4 w-4 text-primary"/> Gamified and interactive</div>
-              <div className="flex items-center gap-2 text-muted-foreground"><ListChecks className="h-4 w-4 text-primary"/> 15 lessons, 3 quizzes</div>
-              <div className="flex items-center gap-2 text-muted-foreground"><CalendarClock className="h-4 w-4 text-primary"/> Last updated Sep 4, 2025</div>
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-xl font-semibold mb-2">Skills you'll gain with course:</h2>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary" />
-                <p className="leading-7"><span className="font-semibold">Plan and execute successful design workshops</span> — Understand when to call for a design workshop, how to set goals, and plan the correct processes and activities to produce the right deliverables.</p>
-              </li>
-              <li className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary" />
-                <p className="leading-7"><span className="font-semibold">Discover helpful brainstorming and decision-making workshop activities</span> — Familiarize yourself with tried-and-tested individual and group activities to stimulate creative idea generation and ways to build consensus on design decisions.</p>
-              </li>
-              <li className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary" />
-                <p className="leading-7"><span className="font-semibold">Understand how to run remote design workshops and build great presentations</span> — Learn about all the virtual tools and techniques you'll need to run a successful remote workshop and how to keep your audience engaged with your presentations.</p>
-              </li>
-              <li className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary" />
-                <p className="leading-7"><span className="font-semibold">Master people management during workshops</span> — Learn management techniques that will help you encourage workshop participants and handle conflicts with ease.</p>
-              </li>
-            </ul>
-          </div>
-        </section>
       </div>
     </AppLayout>
   );

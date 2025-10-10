@@ -1,8 +1,6 @@
 import {
   Search,
   Bell,
-  HelpCircle,
-  Sparkles,
   Coins,
   Menu,
   Home,
@@ -24,6 +22,7 @@ import {
   Sun,
   Moon,
   Monitor,
+  Users,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
@@ -34,8 +33,8 @@ import { Separator } from "@/components/ui/separator";
 function TokenWallet() {
   const { tokens } = useTokens();
   return (
-    <div className="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm">
-      <Coins className="h-4 w-4 text-amber-500" />
+    <div className="inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm">
+      <Coins className="h-5 w-5 text-amber-500" />
       <span className="tabular-nums">{tokens}</span>
     </div>
   );
@@ -75,11 +74,12 @@ export function Header() {
                   </div>
                   <ul className="space-y-0 mt-0">
                     {[
-                      { to: "/", label: "Home", icon: Home },
-                      { to: "/bookmarks", label: "Bookmarks", icon: Bookmark },
-                      { to: "/courses", label: "Courses", icon: BookOpen },
-                      { to: "/tutorials", label: "Tutorials", icon: PencilRuler },
-                      { to: "/certifications", label: "Certifications", icon: BadgeCheck },
+                      { to: "/", label: "Ana Ekran", icon: Home },
+                      { to: "/tasks", label: "Görevler", icon: ClipboardList },
+                      { to: "/courses", label: "Kurslar", icon: BookOpen },
+                      { to: "/workshops", label: "Workshops & Hackathons", icon: Users },
+                      { to: "/tutorials", label: "Ders Videoları", icon: PencilRuler },
+                      { to: "/my-tasks", label: "Ödevler", icon: ClipboardList },
                       { to: "/job-board", label: "Job Board", icon: BriefcaseBusiness },
                     ].map(({ to, label, icon: Icon }) => (
                       <li key={to}>
@@ -130,25 +130,13 @@ export function Header() {
         </div>
         {/* Right side buttons - sağ tarafa dayalı */}
         <div className="flex items-center gap-2 ml-auto">
-          <a href="#" className="text-sm text-muted-foreground hover:text-foreground whitespace-nowrap">
-            For Teams
-          </a>
-          <a
-            href="#"
-            className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground shadow transition hover:brightness-110"
-          >
-            <Sparkles className="h-4 w-4" /> Upgrade
-          </a>
           <TokenWallet />
-          <button className="p-2 rounded-full hover:bg-secondary">
-            <HelpCircle className="h-5 w-5" />
-          </button>
-          <button className="p-2 rounded-full hover:bg-secondary">
-            <Bell className="h-5 w-5" />
+          <button className="px-3 py-2 rounded-full hover:bg-secondary">
+            <Bell className="h-6 w-6" />
           </button>
           <HoverCard>
             <HoverCardTrigger asChild>
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-indigo-500 text-white grid place-items-center text-sm font-bold cursor-pointer hover:opacity-80 transition-opacity">
+              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-indigo-500 text-white grid place-items-center text-sm font-bold cursor-pointer hover:opacity-80 transition-opacity">
                 S
               </div>
             </HoverCardTrigger>

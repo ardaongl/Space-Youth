@@ -12,13 +12,12 @@ import {
 import { cn } from "@/lib/utils";
 
 const items = [
-  { to: "/", label: "Home", icon: Home },
-  { to: "/tasks", label: "Tasks", icon: ClipboardList },
-  { to: "/leaderboard", label: "Leaderboard", icon: Trophy },
-  { to: "/workshops", label: "Workshops", icon: Users },
-  { to: "/courses", label: "Courses", icon: BookOpen },
-  { to: "/tutorials", label: "Tutorials", icon: PencilRuler },
-  { to: "/certifications", label: "Certifications", icon: BadgeCheck },
+  { to: "/", label: "Ana Ekran", icon: Home },
+  { to: "/tasks", label: "Görevler", icon: ClipboardList },
+  { to: "/courses", label: "Kurslar", icon: BookOpen },
+  { to: "/workshops", label: "Workshops & Hackathons", icon: Users },
+  { to: "/tutorials", label: "Ders Videoları", icon: PencilRuler },
+  { to: "/my-tasks", label: "Ödevler", icon: ClipboardList },
   { to: "/job-board", label: "Job Board", icon: BriefcaseBusiness },
 ];
 
@@ -62,3 +61,4 @@ export function Sidebar() {
     </aside>
   );
 }
+

@@ -12,6 +12,10 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Placeholder from "./pages/Placeholder";
 import CourseDetail from "./pages/CourseDetail";
+import ZoomCallback from "./pages/ZoomCallback";
+import AddCourse from "./pages/AddCourse";
+import AddLessons from "./pages/AddLessons";
+import EditCourse from "./pages/EditCourse";
 import Home from "./pages/Home";
 import Tasks from "./pages/Tasks";
 import TaskDetail from "./pages/TaskDetail";
@@ -25,6 +29,7 @@ import About from "./pages/About";
 import { TokensProvider } from "./context/TokensContext";
 import { DraftsProvider } from "./context/DraftsContext";
 import { TaskSubmissionsProvider } from "./context/TaskSubmissionsContext";
+import { AuthProvider } from "./context/AuthContext";
 import MyTasks from "./pages/MyTasks";
 import Leaderboard from "./pages/Leaderboard";
 import Workshops from "./pages/Workshops";
@@ -34,6 +39,7 @@ const queryClient = new QueryClient();
 import { store } from "./store";
 import Callback from "./pages/Callback";
 import Dashboard from "./pages/Dashboard";
+import RoleSwitcher from "./components/dev/RoleSwitcher";
 
 
 const App = () => {
@@ -68,6 +74,7 @@ const App = () => {
   return (
     <Provider store={store}>
     <QueryClientProvider client={queryClient}>
+      <AuthProvider>
       <TokensProvider>
         <DraftsProvider>
           <TaskSubmissionsProvider>
@@ -79,6 +86,7 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/callback" element={<Callback />} />
+              <Route path="/zoom/callback" element={<ZoomCallback />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/tasks" element={<Tasks />} />
               <Route path="/tasks/:taskId" element={<TaskDetail />} />
@@ -87,6 +95,9 @@ const App = () => {
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/workshops" element={<Workshops />} />
               <Route path="/courses" element={<Index />} />
+              <Route path="/courses/add" element={<AddCourse />} />
+              <Route path="/courses/add/lessons" element={<AddLessons />} />
+              <Route path="/courses/:slug/edit" element={<EditCourse />} />
               <Route path="/courses/:slug" element={<CourseDetail />} />
               <Route path="/practice" element={<Tutorials />} />
               <Route path="/tutorials" element={<Tutorials />} />
@@ -107,18 +118,22 @@ const App = () => {
           />
 
           {import.meta.env.DEV && !onboardingOpen && (
-            <button
-              onClick={resetOnboarding}
-              className="fixed bottom-4 right-4 z-50 rounded-full bg-foreground text-background px-4 py-2 text-sm shadow hover:brightness-110"
-              title="Geliştirme: Sorulara dön"
-            >
-              Sorulara dön
-            </button>
+            <>
+              <RoleSwitcher />
+              <button
+                onClick={resetOnboarding}
+                className="fixed bottom-4 right-4 z-50 rounded-full bg-foreground text-background px-4 py-2 text-sm shadow hover:brightness-110"
+                title="Geliştirme: Sorulara dön"
+              >
+                Sorulara dön
+              </button>
+            </>
           )}
         </TooltipProvider>
         </TaskSubmissionsProvider>
         </DraftsProvider>
       </TokensProvider>
+      </AuthProvider>
     </QueryClientProvider>
     </Provider>
   );
