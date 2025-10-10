@@ -10,7 +10,25 @@ import {
   Lightbulb,
 } from "lucide-react";
 
-export const tasks = [
+export type TaskStatus = "To Do" | "In Progress" | "Done" | "Overdue";
+
+export interface Task {
+  id: number;
+  title: string;
+  description: string;
+  duration: string;
+  level: string;
+  type: string;
+  category: "UX" | "PM";
+  href: string;
+  icon: any;
+  coins: number;
+  status: TaskStatus;
+  deadline: string;
+  image?: string;
+}
+
+export const tasks: Task[] = [
   {
     id: 1,
     title: "Create a Customer Journey Map",
@@ -21,6 +39,10 @@ export const tasks = [
     category: "UX",
     href: "/tasks/customer-journey-map",
     icon: Users,
+    coins: 150,
+    status: "To Do",
+    deadline: "1 week",
+    image: "/image.png",
   },
   {
     id: 2,
@@ -32,6 +54,10 @@ export const tasks = [
     category: "PM",
     href: "/tasks/product-roadmap",
     icon: Target,
+    coins: 200,
+    status: "In Progress",
+    deadline: "2 weeks",
+    image: "/image.png",
   },
   {
     id: 3,
@@ -43,6 +69,10 @@ export const tasks = [
     category: "UX",
     href: "/tasks/ethical-design",
     icon: Shield,
+    coins: 180,
+    status: "Done",
+    deadline: "1 week",
+    image: "/image.png",
   },
   {
     id: 4,
@@ -54,6 +84,10 @@ export const tasks = [
     category: "UX",
     href: "/tasks/information-architecture",
     icon: Layout,
+    coins: 120,
+    status: "To Do",
+    deadline: "1 week",
+    image: "/image.png",
   },
   {
     id: 5,
@@ -65,6 +99,10 @@ export const tasks = [
     category: "PM",
     href: "/tasks/prd",
     icon: FileText,
+    coins: 150,
+    status: "In Progress",
+    deadline: "1 week",
+    image: "/image.png",
   },
   {
     id: 6,
@@ -76,6 +114,10 @@ export const tasks = [
     category: "UX",
     href: "/tasks/design-system",
     icon: Palette,
+    coins: 250,
+    status: "To Do",
+    deadline: "3 weeks",
+    image: "/image.png",
   },
   {
     id: 7,
@@ -87,6 +129,10 @@ export const tasks = [
     category: "PM",
     href: "/tasks/feature-prioritization",
     icon: ClipboardList,
+    coins: 100,
+    status: "Done",
+    deadline: "1 week",
+    image: "/image.png",
   },
   {
     id: 8,
@@ -98,6 +144,10 @@ export const tasks = [
     category: "PM",
     href: "/tasks/tech-requirements",
     icon: Settings,
+    coins: 180,
+    status: "Overdue",
+    deadline: "1 week",
+    image: "/image.png",
   },
   {
     id: 9,
@@ -109,5 +159,9 @@ export const tasks = [
     category: "PM",
     href: "/tasks/innovation-workshop",
     icon: Lightbulb,
+    coins: 130,
+    status: "To Do",
+    deadline: "2 weeks",
+    image: "/image.png",
   },
-] as const;
+];

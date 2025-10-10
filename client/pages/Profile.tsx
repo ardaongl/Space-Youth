@@ -1,4 +1,4 @@
-import { Edit, Share2, MoreHorizontal, Plus, BookOpen, ClipboardList, Clock, Trophy, Zap, Coins, GraduationCap, Globe, Target, Info } from "lucide-react";
+import { Edit, Share2, MoreHorizontal, Plus, BookOpen, ClipboardList, Clock, Trophy, Zap, Coins, GraduationCap, Globe, Target, Info, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import AppLayout from "@/components/layout/AppLayout";
@@ -60,6 +60,9 @@ function useOnboardingScores() {
 export function Profile() {
   const scores = useOnboardingScores();
   const [onboarding, setOnboarding] = React.useState<OnboardingData | null>(null);
+  const [zoomConnected, setZoomConnected] = React.useState<boolean>(() => {
+    try { return localStorage.getItem("zoom.connected") === "true"; } catch { return false; }
+  });
   React.useEffect(() => {
     try {
       const raw = localStorage.getItem("onboarding.data");
@@ -394,6 +397,55 @@ export function Profile() {
 
           {/* Right Column - Sidebar */}
           <div className="space-y-6 lg:sticky lg:top-24 h-[calc(100vh-6rem)] overflow-auto">
+            {/* Zoom Connection Section */}
+            <div className="bg-card border rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Video className="h-4 w-4 text-primary" /> Zoom Entegrasyonu
+                </h3>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${zoomConnected ? "bg-green-100 text-green-700" : "bg-muted text-foreground"}`}>
+                  {zoomConnected ? "Bağlı" : "Bağlı değil"}
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Zoom hesabınızı bağlayarak dersler için otomatik toplantı linkleri oluşturabilirsiniz.
+              </p>
+              <div className="mt-3 flex gap-2">
+                {!zoomConnected ? (
+                  <Button
+                    onClick={() => {
+                      // UI-only: simulate an OAuth start; backend redirect hedefi /zoom/callback olacaktır
+                      try { sessionStorage.setItem("zoom.oauth.state", crypto.randomUUID()); } catch {}
+                      window.location.assign("/zoom/callback?code=mock_code&state=" + (sessionStorage.getItem("zoom.oauth.state") || "state"));
+                    }}
+                    className="flex-1"
+                  >
+                    Zoom Hesabını Bağla
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        alert("Toplantı oluşturma yetkiniz aktif. Ders sayfalarından Zoom linkleri üretebilirsiniz.");
+                      }}
+                    >
+                      Durum: Aktif
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => { try { localStorage.removeItem("zoom.connected"); } catch {}; setZoomConnected(false); }}
+                    >
+                      Bağlantıyı Kes
+                    </Button>
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Not: Bu bir arayüz simülasyonudur. Backend ile OAuth tamamlandığında bu buton geri dönüş URL'siyle çalışacaktır.
+              </p>
+            </div>
             {/* Skill Graph Section */}
             <div className="bg-card border rounded-lg p-4">
                 <div className="h-64 lg:h-72">

@@ -1,6 +1,7 @@
 import AppLayout from "@/components/layout/AppLayout";
-import { ArrowRight, CheckCircle2, Clock, Bookmark, Star } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, Bookmark, Star, Bell, Briefcase, GraduationCap, Target, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import { EventCalendar } from "@/components/ui/event-calendar";
 
 function PrimaryButton({ children }: { children: React.ReactNode }) {
   return (
@@ -17,48 +18,26 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
 }
 
 export default function Home() {
+  // Sample events data - replace with actual data from your backend
+  const sampleEvents = [
+    { id: '1', date: new Date(2025, 9, 8), title: 'AI Workshop', color: 'bg-blue-500' },
+    { id: '2', date: new Date(2025, 9, 8), title: 'Team Meeting', color: 'bg-green-500' },
+    { id: '3', date: new Date(2025, 9, 10), title: 'Design Sprint', color: 'bg-purple-500' },
+    { id: '4', date: new Date(2025, 9, 15), title: 'Code Review', color: 'bg-amber-500' },
+    { id: '5', date: new Date(2025, 9, 20), title: 'Project Demo', color: 'bg-rose-500' },
+  ];
+
   const Right = (
     <aside className="hidden lg:block sticky top-[4.5rem] h-max space-y-4">
+      {/* Takvim */}
       <Card className="p-4">
-        <h3 className="font-semibold">Getting started</h3>
-        <ul className="mt-2 space-y-2 text-sm">
-          <li>
-            <button className="w-full justify-between rounded-xl border px-3 py-2 hover:bg-secondary inline-flex items-center">
-              <span>Start your first course</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </li>
-          <li>
-            <button className="w-full justify-between rounded-xl border px-3 py-2 hover:bg-secondary inline-flex items-center">
-              <span>Complete a lesson quiz</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </li>
-          <li>
-            <button className="w-full justify-between rounded-xl border px-3 py-2 hover:bg-secondary inline-flex items-center">
-              <span>Take Uxcel Pulse test</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </li>
-        </ul>
+        <EventCalendar 
+          events={sampleEvents}
+          onDateSelect={(date) => console.log('Selected date:', date)}
+        />
       </Card>
 
-      <Card className="p-5">
-        <div className="flex gap-1 mb-3">
-          <button className="px-3 py-1 rounded-full text-sm font-medium bg-primary text-primary-foreground">Individual</button>
-          <button className="px-3 py-1 rounded-full text-sm font-medium bg-secondary text-foreground">Team</button>
-        </div>
-        <ul className="space-y-2 text-sm">
-          <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary"/> 100+ courses, projects & assessments</li>
-          <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary"/> Professional certificates</li>
-          <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary"/> Mentor-led project reviews</li>
-          <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary"/> Full access on mobile</li>
-        </ul>
-        <button className="mt-4 w-full rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background shadow transition hover:brightness-110">
-          Get full access with Pro
-        </button>
-      </Card>
-
+      {/* Streak */}
       <Card className="p-5">
         <div className="flex items-center justify-between">
           <div className="font-semibold">0 day streak</div>
@@ -73,29 +52,6 @@ export default function Home() {
             </div>
           ))}
         </div>
-      </Card>
-
-      <Card className="p-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="font-semibold">Quartz league</div>
-            <div className="text-sm text-muted-foreground">4 days left to join</div>
-          </div>
-          <div className="h-8 w-8 rounded-md bg-rose-200" />
-        </div>
-        <div className="mt-4 rounded-xl border bg-secondary p-6 text-sm text-center">Earn pixels to join this week's league</div>
-      </Card>
-
-      <Card className="p-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="font-semibold">Skill graph</div>
-            <div className="text-sm text-muted-foreground">Recommended for you</div>
-          </div>
-          <span className="text-[10px] rounded-md border bg-secondary px-1.5 py-0.5">PM</span>
-        </div>
-        <div className="mt-4 aspect-[4/3] rounded-xl bg-secondary"></div>
-        <button className="mt-3 text-sm font-medium text-primary hover:underline">Get started</button>
       </Card>
     </aside>
   );
@@ -129,82 +85,197 @@ export default function Home() {
   return (
     <AppLayout right={Right}>
       <div className="py-6 space-y-8">
+        {/* Duyurular Section */}
         <section>
-          <h2 className="text-sm font-semibold tracking-tight text-muted-foreground">Continue learning</h2>
-          <Card className="mt-3 p-4">
-            <div className="grid grid-cols-[220px_1fr] gap-4 items-center">
-              <div className="aspect-[4/3] rounded-xl border grid place-items-center bg-accent">
-                <div className="h-16 w-16 rounded-full border-2 border-dashed grid place-items-center text-muted-foreground">●</div>
-              </div>
-              <div className="space-y-3">
-                <div className="text-[10px] font-semibold tracking-widest text-muted-foreground">COURSE</div>
-                <div className="font-semibold">You don't have any active courses</div>
-                <p className="text-sm text-muted-foreground">Select a course and start improving your skills.</p>
-                <PrimaryButton>Browse courses</PrimaryButton>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span className="inline-flex -space-x-2">
-                    <span className="h-5 w-5 rounded-full bg-secondary inline-block" />
-                    <span className="h-5 w-5 rounded-full bg-secondary inline-block" />
-                    <span className="h-5 w-5 rounded-full bg-secondary inline-block" />
-                  </span>
-                  6033 learning this week
+          <div className="flex items-center gap-2 mb-4">
+            <Bell className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold">Duyurular</h2>
+          </div>
+          <div className="space-y-3">
+            <Card className="p-4 border-l-4 border-l-blue-500">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <GraduationCap className="h-5 w-5 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold">Yeni Kurs: Web Geliştirme Temelleri</h3>
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Yeni</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    HTML, CSS ve JavaScript ile başlangıç seviyesinde web geliştirme kursumuz yayında!
+                  </p>
+                  <div className="flex items-center gap-3 mt-2">
+                    <Link to="/courses" className="text-xs text-primary font-medium hover:underline">
+                      Kursa Git →
+                    </Link>
+                    <span className="text-xs text-muted-foreground">2 saat önce</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+
+            <Card className="p-4 border-l-4 border-l-green-500">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                  <Target className="h-5 w-5 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold">Yeni Görev: UX Tasarım Projesi</h3>
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Yeni</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Kullanıcı deneyimi odaklı yeni bir tasarım görevi eklendi. 150 coin kazanma fırsatı!
+                  </p>
+                  <div className="flex items-center gap-3 mt-2">
+                    <Link to="/tasks" className="text-xs text-primary font-medium hover:underline">
+                      Göreve Git →
+                    </Link>
+                    <span className="text-xs text-muted-foreground">1 gün önce</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-4 border-l-4 border-l-purple-500">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+                  <Users className="h-5 w-5 text-purple-600" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold">Yaklaşan Workshop: Figma İleri Seviye</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    15 Ekim tarihinde gerçekleşecek Figma workshop'una kayıt olmayı unutmayın!
+                  </p>
+                  <div className="flex items-center gap-3 mt-2">
+                    <Link to="/workshops" className="text-xs text-primary font-medium hover:underline">
+                      Detayları Gör →
+                    </Link>
+                    <span className="text-xs text-muted-foreground">3 gün önce</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
         </section>
 
+        {/* Önerilen Görevler */}
         <section>
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold">Bulletin board</h2>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <button className="rounded-full border px-2 py-1 text-xs">⟳</button>
-              <button className="rounded-full border px-2 py-1 text-xs">↗</button>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold">Önerilen Görevler</h2>
             </div>
+            <Link to="/tasks" className="text-sm text-muted-foreground hover:underline">Tümünü Gör</Link>
           </div>
-          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {[1,2,3].map((i) => (
-              <Card key={i} className="p-4">
-                <div className="text-[10px] font-semibold tracking-widest text-muted-foreground">NEW COURSE</div>
-                <div className="mt-1 font-semibold">Human-Centered AI</div>
-                <p className="mt-2 text-sm text-muted-foreground line-clamp-2">Learn AI design principles to create user-centric, trustworthy, and effective AI experiences.</p>
-                <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-primary" /> 3h</span>
-                  <span className="inline-flex items-center gap-1">Advanced</span>
-                  <span className="inline-flex items-center gap-1"><Star className="h-3.5 w-3.5 text-yellow-500" /> 4.8</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { title: "Kullanıcı Araştırması Yapma", coins: 120, level: "Orta", time: "2h" },
+              { title: "Wireframe Oluşturma", coins: 100, level: "Başlangıç", time: "1.5h" },
+            ].map((task, i) => (
+              <Card key={i} className="p-4 hover:shadow-md transition">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className="font-semibold">{task.title}</h3>
+                    <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" /> {task.time}
+                      </span>
+                      <span>{task.level}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-semibold text-yellow-600">{task.coins} coins</div>
+                  </div>
                 </div>
-                <div className="mt-4 flex items-center gap-2">
-                  <Link to="/courses/human-centered-ai" className="rounded-full border px-3 py-1.5 text-sm">View course</Link>
-                  <button className="rounded-full border px-3 py-1.5 text-sm">Mark as read</button>
-                </div>
+                <Link to="/tasks" className="mt-3 inline-block text-sm text-primary hover:underline">
+                  Görevi Gör →
+                </Link>
               </Card>
             ))}
           </div>
         </section>
 
+        {/* Önerilen Kurslar */}
         <section>
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold">Recommended for you</h2>
-            <button className="text-sm text-muted-foreground hover:underline">View all</button>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold">Önerilen Kurslar</h2>
+            </div>
+            <Link to="/courses" className="text-sm text-muted-foreground hover:underline">Tümünü Gör</Link>
           </div>
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <CourseCard />
             <CourseCard popular />
           </div>
         </section>
 
+        {/* Önerilen Eğitimler (Tutorials) */}
         <section>
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold">Upcoming events</h2>
-            <button className="text-sm text-muted-foreground hover:underline">View all</button>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Bookmark className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold">Önerilen Eğitimler</h2>
+            </div>
+            <Link to="/tutorials" className="text-sm text-muted-foreground hover:underline">Tümünü Gör</Link>
           </div>
-          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {["Lazar Pavlovic","Mentors Meetup"].map((title, i) => (
-              <Card key={i} className="overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { title: "React Hooks Kullanımı", duration: "30 dk", difficulty: "Orta" },
+              { title: "CSS Grid Layout", duration: "45 dk", difficulty: "Başlangıç" },
+              { title: "TypeScript Temelleri", duration: "1 saat", difficulty: "Orta" },
+            ].map((tutorial, i) => (
+              <Card key={i} className="p-4 hover:shadow-md transition">
+                <div className="aspect-video bg-gradient-to-br from-primary/20 to-purple-200 rounded-lg mb-3 flex items-center justify-center">
+                  <div className="h-12 w-12 rounded-full bg-white/80 flex items-center justify-center">
+                    <Bookmark className="h-6 w-6 text-primary" />
+                  </div>
+                </div>
+                <h3 className="font-semibold text-sm">{tutorial.title}</h3>
+                <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" /> {tutorial.duration}
+                  </span>
+                  <span>{tutorial.difficulty}</span>
+                </div>
+                <Link to="/tutorials" className="mt-3 inline-block text-sm text-primary hover:underline">
+                  Başla →
+                </Link>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {/* Önerilen Workshop'lar */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold">Önerilen Workshop'lar</h2>
+            </div>
+            <Link to="/workshops" className="text-sm text-muted-foreground hover:underline">Tümünü Gör</Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { title: "Design Thinking Workshop", date: "15 Ekim 2025", time: "14:00" },
+              { title: "Agile Metodolojiler", date: "20 Ekim 2025", time: "16:00" },
+            ].map((workshop, i) => (
+              <Card key={i} className="overflow-hidden hover:shadow-md transition">
                 <div className="h-40 bg-gradient-to-br from-primary/30 to-indigo-300" />
                 <div className="p-4">
-                  <div className="text-[10px] font-semibold tracking-widest text-muted-foreground">Free event</div>
-                  <div className="mt-1 font-semibold">{title}</div>
+                  <h3 className="font-semibold">{workshop.title}</h3>
+                  <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
+                    <span>{workshop.date}</span>
+                    <span>•</span>
+                    <span>{workshop.time}</span>
+                  </div>
+                  <Link to="/workshops" className="mt-3 inline-block text-sm text-primary hover:underline">
+                    Detayları Gör →
+                  </Link>
                 </div>
               </Card>
             ))}
