@@ -8,17 +8,17 @@ const statusConfig: Record<SubmissionStatus, { icon: typeof Clock, color: string
   pending: { 
     icon: Clock4, 
     color: "text-yellow-500 bg-yellow-500/10", 
-    text: "Pending Review" 
+    text: "İnceleme Bekliyor" 
   },
   approved: { 
     icon: CheckCircle2, 
     color: "text-green-500 bg-green-500/10", 
-    text: "Approved" 
+    text: "Onaylandı" 
   },
   rejected: { 
     icon: XCircle, 
     color: "text-red-500 bg-red-500/10", 
-    text: "Needs Revision" 
+    text: "Revizyon Gerekli" 
   }
 };
 
@@ -31,16 +31,16 @@ export default function MyTasks() {
       <div className="container mx-auto py-8">
         <div className="max-w-4xl mx-auto space-y-8">
           <div>
-            <h1 className="text-3xl font-bold">My Tasks</h1>
+            <h1 className="text-3xl font-bold">Görevlerim</h1>
             <p className="mt-1 text-muted-foreground">
-              Track your submitted tasks and their status
+              Gönderdiğiniz görevleri ve durumlarını takip edin
             </p>
           </div>
 
           <div className="space-y-4">
             {submissions.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
-                No tasks submitted yet
+                Henüz görev gönderilmedi
               </div>
             ) : (
               submissions.map(submission => {
@@ -68,7 +68,7 @@ export default function MyTasks() {
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Clock className="h-4 w-4" />
                         <span>
-                          Submitted {new Intl.DateTimeFormat('en-US', {
+                          Gönderildi: {new Intl.DateTimeFormat('tr-TR', {
                             day: 'numeric',
                             month: 'short',
                             hour: '2-digit',
@@ -81,7 +81,7 @@ export default function MyTasks() {
                         size="sm"
                         onClick={() => navigate(`/tasks/${submission.taskId}`)}
                       >
-                        View Task
+                        Görevi Gör
                       </Button>
                     </div>
                   </div>

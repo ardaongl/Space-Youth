@@ -1,10 +1,12 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { CheckCircle2, Clock, ShieldCheck, BookOpen, ListChecks, ArrowLeft, Bookmark, Coins, Play, Calendar, Users2, MapPin } from "lucide-react";
+import { CheckCircle2, Clock, ShieldCheck, BookOpen, ListChecks, ArrowLeft, Bookmark, BookmarkCheck, Coins, Play, Calendar, Users2, MapPin } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { isAdmin } from "@/utils/roles";
+import { useBookmarks, BookmarkedContent, EnrolledContent } from "@/context/BookmarksContext";
+import { useToast } from "@/hooks/use-toast";
 
 type EventType = "workshop" | "hackathon";
 
@@ -13,12 +15,15 @@ export default function EventDetail() {
   const navigate = useNavigate();
   const { auth } = useAuth();
   const adminUser = isAdmin(auth.user?.role);
+  const { addBookmark, removeBookmark, isBookmarked, addEnrollment, isEnrolled } = useBookmarks();
+  const { toast } = useToast();
 
   // Slug'dan event type'ı çıkar
   const eventType: EventType = slug?.startsWith("workshop") ? "workshop" : "hackathon";
 
   // Mock event data - gerçek uygulamada API'den gelecek
   const eventData = {
+    id: `event-${slug}`,
     title: eventType === "workshop" 
       ? "UX Research Fundamentals Workshop" 
       : "AI Hackathon 2024",
@@ -28,6 +33,8 @@ export default function EventDetail() {
     price: eventType === "workshop" ? 150 : 0, // Hackathon'lar genelde ücretsiz
     organizerName: eventType === "workshop" ? "Emily Parker" : "Tech Community",
     duration: eventType === "workshop" ? "2 hours" : "48 hours",
+    level: eventType === "workshop" ? "Beginner" : "Advanced",
+    rating: eventType === "workshop" ? "4.8" : "4.9",
     certification: true,
     sessionsCount: eventType === "workshop" ? 4 : 10,
     date: "2024-03-25T10:00:00Z",
@@ -46,14 +53,71 @@ export default function EventDetail() {
     eventType: eventType
   };
 
+  const bookmarked = isBookmarked(eventData.id);
+  const enrolled = isEnrolled(eventData.id);
+
   const handleSave = () => {
-    console.log("Event saved");
-    // TODO: Implement save functionality
+    if (bookmarked) {
+      removeBookmark(eventData.id);
+      toast({
+        title: "Kayıt kaldırıldı",
+        description: `${eventData.title} kayıtlılardan çıkarıldı.`,
+      });
+    } else {
+      const bookmarkItem: BookmarkedContent = {
+        id: eventData.id,
+        title: eventData.title,
+        author: eventData.organizerName,
+        level: eventData.level,
+        rating: eventData.rating,
+        time: eventData.duration,
+        type: eventType,
+        slug: slug || "",
+        bookmarkedAt: Date.now(),
+        date: eventData.date,
+        participants: eventData.currentParticipants,
+        maxParticipants: eventData.maxParticipants,
+        description: eventData.description
+      };
+      addBookmark(bookmarkItem);
+      toast({
+        title: "Kaydedildi",
+        description: `${eventData.title} kayıtlılara eklendi.`,
+      });
+    }
   };
 
   const handleJoin = () => {
-    console.log("Joined event");
-    // TODO: Implement join functionality
+    if (enrolled) {
+      toast({
+        title: "Zaten kayıtlısınız",
+        description: "Bu etkinliğe zaten kayıt oldunuz.",
+      });
+      return;
+    }
+    
+    const enrollmentItem: EnrolledContent = {
+      id: eventData.id,
+      title: eventData.title,
+      author: eventData.organizerName,
+      level: eventData.level,
+      rating: eventData.rating,
+      time: eventData.duration,
+      type: eventType,
+      slug: slug || "",
+      bookmarkedAt: Date.now(),
+      enrolledAt: Date.now(),
+      progress: 0,
+      date: eventData.date,
+      participants: eventData.currentParticipants,
+      maxParticipants: eventData.maxParticipants,
+      description: eventData.description
+    };
+    addEnrollment(enrollmentItem);
+    toast({
+      title: "Etkinliğe kayıt oldunuz!",
+      description: `${eventData.title} etkinliğine başarıyla kayıt oldunuz.`,
+    });
   };
 
   return (
@@ -89,18 +153,6 @@ export default function EventDetail() {
               
               {/* Price and Actions */}
               <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-2">
-                  {eventData.price > 0 ? (
-                    <>
-                      <Coins className="h-6 w-6 text-yellow-600" />
-                      <span className="text-2xl font-bold text-yellow-600">{eventData.price}</span>
-                      <span className="text-muted-foreground">coins</span>
-                    </>
-                  ) : (
-                    <span className="text-2xl font-bold text-green-600">ÜCRETSİZ</span>
-                  )}
-                </div>
-                
                 <div className="flex gap-4 items-center flex-wrap">
                   {adminUser && (
                     <Button
@@ -111,17 +163,38 @@ export default function EventDetail() {
                       Düzenle
                     </Button>
                   )}
-                  <Button variant="outline" size="lg" className="gap-2" onClick={handleSave}>
-                    <Bookmark className="h-5 w-5" />
+                  <Button 
+                    variant={bookmarked ? "default" : "outline"} 
+                    size="lg" 
+                    className="gap-2" 
+                    onClick={handleSave}
+                  >
+                    {bookmarked ? (
+                      <BookmarkCheck className="h-5 w-5 fill-current" />
+                    ) : (
+                      <Bookmark className="h-5 w-5" />
+                    )}
                   </Button>
                   
                   {/* Featured Join Button */}
                   <Button 
                     size="lg" 
-                    className="gap-2 px-8 py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105" 
+                    className="gap-2 px-8 py-3 text-lg font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105" 
                     onClick={handleJoin}
+                    disabled={enrolled}
                   >
-                    {eventType === "workshop" ? "Workshop'a Katıl" : "Hackathon'a Kayıt Ol"}
+                    {enrolled ? (
+                      "Kayıtlı"
+                    ) : eventData.price > 0 ? (
+                      <>
+                        <Coins className="h-5 w-5" />
+                        {eventData.price} coin ile {eventType === "workshop" ? "katıl" : "kayıt ol"}
+                      </>
+                    ) : (
+                      <>
+                        Ücretsiz {eventType === "workshop" ? "katıl" : "kayıt ol"}
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>

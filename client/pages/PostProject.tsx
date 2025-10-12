@@ -60,9 +60,9 @@ export default function PostProject() {
             variant="ghost" 
             onClick={() => navigate(-1)}
           >
-            Cancel
+            İptal
           </Button>
-          <h1 className="text-xl font-semibold">Post Project</h1>
+          <h1 className="text-xl font-semibold">Proje Paylaş</h1>
           <div className="flex gap-2">
             <Button 
               variant="outline" 
@@ -78,7 +78,7 @@ export default function PostProject() {
                 }
               }}
             >
-              Save as draft
+              Taslak olarak kaydet
             </Button>
             <Button
               onClick={() => {
@@ -93,7 +93,7 @@ export default function PostProject() {
                 }
               }}
             >
-              Continue
+              Devam Et
             </Button>
           </div>
         </div>
@@ -103,9 +103,9 @@ export default function PostProject() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto space-y-8">
           <div className="space-y-2">
-            <h2 className="text-2xl font-semibold text-center">Name your project</h2>
+            <h2 className="text-2xl font-semibold text-center">Projenize isim verin</h2>
             <Input
-              placeholder="Enter project name"
+              placeholder="Proje adını girin"
               className="text-lg py-6"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -127,26 +127,26 @@ export default function PostProject() {
               </div>
               <div className="text-center">
                 <p className="font-medium">
-                  Drag and drop a cover image, or{" "}
-                  <Button variant="link" className="px-1">Browse</Button>
+                  Kapak görseli sürükleyip bırakın veya{" "}
+                  <Button variant="link" className="px-1">Gözat</Button>
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Minimum 1600px width recommended. Max file size of 10MB (20MB for videos).
+                  Minimum 1600px genişlik önerilir. Maksimum dosya boyutu 10MB (videolar için 20MB).
                 </p>
               </div>
               <div className="text-sm text-muted-foreground space-y-1">
-                <div>• High resolution images (png, jpg, gif)</div>
-                <div>• Animated gifs</div>
-                <div>• Videos (mp4)</div>
-                <div>• Only upload media you own the rights to</div>
+                <div>• Yüksek çözünürlüklü görseller (png, jpg, gif)</div>
+                <div>• Hareketli gifler</div>
+                <div>• Videolar (mp4)</div>
+                <div>• Yalnızca hakkına sahip olduğunuz medyaları yükleyin</div>
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-lg font-medium">Project Description</h3>
+            <h3 className="text-lg font-medium">Proje Açıklaması</h3>
             <Textarea
-              placeholder="Provide a detailed explanation of the decision-making process and rationale behind your project. The more descriptive you are, the better!"
+              placeholder="Projenizin arkasındaki karar verme sürecini ve mantığını detaylı bir şekilde açıklayın. Ne kadar detaylı olursanız o kadar iyi!"
               className="min-h-[200px]"
               value={description}
               onChange={(e) => setDescription(e.target.value)}

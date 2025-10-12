@@ -101,10 +101,6 @@ export default function TaskDetail() {
                     <span>coins</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    <span>Deadline: {task.deadline}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
                     <Clock className="h-5 w-5" />
                     <span>Duration: {task.duration}</span>
                   </div>

@@ -508,7 +508,7 @@ export default function TestWizard({
               onClick={onClose}
               className="rounded-full border px-4 py-2 text-sm hidden sm:inline-flex"
             >
-              Cancel
+              İptal
             </button>
             <div className="flex items-center gap-2 ml-auto">
               {step > 1 && (
@@ -516,7 +516,7 @@ export default function TestWizard({
                   onClick={() => setStep((s) => Math.max(1, s - 1))}
                   className="rounded-full border px-4 py-2 text-sm"
                 >
-                  Back
+                  Geri
                 </button>
               )}
               {step < 4 && (

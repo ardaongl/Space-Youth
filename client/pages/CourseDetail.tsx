@@ -1,24 +1,32 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { CheckCircle2, Clock, ShieldCheck, BookOpen, ListChecks, ArrowLeft, Bookmark, Coins, Play } from "lucide-react";
+import { CheckCircle2, Clock, ShieldCheck, BookOpen, ListChecks, ArrowLeft, Bookmark, BookmarkCheck, Coins, Play } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { isAdmin } from "@/utils/roles";
+import { useBookmarks, BookmarkedContent, EnrolledContent } from "@/context/BookmarksContext";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CourseDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { auth } = useAuth();
   const adminUser = isAdmin(auth.user?.role);
+  const { addBookmark, removeBookmark, isBookmarked, addEnrollment, isEnrolled } = useBookmarks();
+  const { toast } = useToast();
 
   // Mock course data - in real app, fetch from API
   const courseData = {
+    id: `course-${slug}`,
     title: slug ? slug.replace(/-/g, " ") : "Workshop Facilitation",
     description: "Workshops are powerful tools for tackling complex problems and driving innovative solutions. This course equips you with the skills to effectively facilitate workshops that inspire collaboration, enhance teamwork, and generate breakthrough ideas. Throughout the course, you'll explore common challenges teams face and learn how to overcome them.",
     price: 250, // coin value
+    teacherId: "1", // instructor id for navigation
     teacherName: "Colin Michael Pace",
     duration: "4 hours",
+    level: "Advanced",
+    rating: "4.6",
     certification: true,
     lessonsCount: 15,
     examsCount: 3,
@@ -33,14 +41,65 @@ export default function CourseDetail() {
     ]
   };
 
+  const bookmarked = isBookmarked(courseData.id);
+  const enrolled = isEnrolled(courseData.id);
+
   const handleSave = () => {
-    console.log("Course saved");
-    // TODO: Implement save functionality
+    if (bookmarked) {
+      removeBookmark(courseData.id);
+      toast({
+        title: "Kayıt kaldırıldı",
+        description: `${courseData.title} kayıtlılardan çıkarıldı.`,
+      });
+    } else {
+      const bookmarkItem: BookmarkedContent = {
+        id: courseData.id,
+        title: courseData.title,
+        author: courseData.teacherName,
+        level: courseData.level,
+        rating: courseData.rating,
+        time: courseData.duration,
+        type: "course",
+        slug: slug || "",
+        bookmarkedAt: Date.now(),
+        description: courseData.description
+      };
+      addBookmark(bookmarkItem);
+      toast({
+        title: "Kaydedildi",
+        description: `${courseData.title} kayıtlılara eklendi.`,
+      });
+    }
   };
 
   const handleEnroll = () => {
-    console.log("Course enrolled");
-    // TODO: Implement enroll functionality
+    if (enrolled) {
+      toast({
+        title: "Zaten kayıtlısınız",
+        description: "Bu kursa zaten kayıt oldunuz.",
+      });
+      return;
+    }
+    
+    const enrollmentItem: EnrolledContent = {
+      id: courseData.id,
+      title: courseData.title,
+      author: courseData.teacherName,
+      level: courseData.level,
+      rating: courseData.rating,
+      time: courseData.duration,
+      type: "course",
+      slug: slug || "",
+      bookmarkedAt: Date.now(),
+      enrolledAt: Date.now(),
+      progress: 0,
+      description: courseData.description
+    };
+    addEnrollment(enrollmentItem);
+    toast({
+      title: "Kursa kayıt oldunuz!",
+      description: `${courseData.title} kursuna başarıyla kayıt oldunuz.`,
+    });
   };
 
   return (
@@ -65,12 +124,6 @@ export default function CourseDetail() {
               
               {/* Price and Actions */}
               <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-2">
-                  <Coins className="h-6 w-6 text-yellow-600" />
-                  <span className="text-2xl font-bold text-yellow-600">{courseData.price}</span>
-                  <span className="text-muted-foreground">coins</span>
-                </div>
-                
                 <div className="flex gap-4 items-center flex-wrap">
                   {adminUser && (
                     <Button
@@ -81,17 +134,34 @@ export default function CourseDetail() {
                       Düzenle
                     </Button>
                   )}
-                  <Button variant="outline" size="lg" className="gap-2" onClick={handleSave}>
-                    <Bookmark className="h-5 w-5" />
+                  <Button 
+                    variant={bookmarked ? "default" : "outline"} 
+                    size="lg" 
+                    className="gap-2" 
+                    onClick={handleSave}
+                  >
+                    {bookmarked ? (
+                      <BookmarkCheck className="h-5 w-5 fill-current" />
+                    ) : (
+                      <Bookmark className="h-5 w-5" />
+                    )}
                   </Button>
                   
-                  {/* Featured Enroll Button */}
+                  {/* Featured Enroll Button with Coin Display */}
                   <Button 
                     size="lg" 
-                    className="gap-2 px-8 py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105" 
+                    className="gap-2 px-8 py-3 text-lg font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105" 
                     onClick={handleEnroll}
+                    disabled={enrolled}
                   >
-                    Kursa Kayıt Ol
+                    {enrolled ? (
+                      "Kayıtlı"
+                    ) : (
+                      <>
+                        <Coins className="h-5 w-5" />
+                        {courseData.price} coin ile kayıt ol
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
@@ -108,11 +178,14 @@ export default function CourseDetail() {
               <div className="mt-8">
                 <h2 className="text-2xl font-semibold mb-4">Detaylar</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  <div 
+                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted transition-colors group"
+                    onClick={() => navigate(`/instructor/${courseData.teacherId}`)}
+                  >
                     <BookOpen className="h-5 w-5 text-primary flex-shrink-0" />
                     <div>
                       <p className="text-sm font-medium">Öğretmen</p>
-                      <p className="text-sm text-muted-foreground">{courseData.teacherName}</p>
+                      <p className="text-sm text-muted-foreground group-hover:text-primary transition-colors">{courseData.teacherName}</p>
                     </div>
                   </div>
                   

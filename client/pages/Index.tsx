@@ -1,11 +1,14 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { Link } from "react-router-dom";
-import { Star, Clock, Trophy, Bookmark, SlidersHorizontal } from "lucide-react";
+import { Clock, Trophy, Bookmark, BookmarkCheck, SlidersHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "@/services/api";
 import AddCourseButton from "@/components/Courses/AddCourseButton";
+import { useBookmarks, BookmarkedContent } from "@/context/BookmarksContext";
+import { useToast } from "@/hooks/use-toast";
 
 function CourseCard({
+  id,
   to,
   title,
   author,
@@ -13,7 +16,9 @@ function CourseCard({
   rating,
   time,
   popular,
+  slug,
 }: {
+  id: string;
   to: string;
   title: string;
   author: string;
@@ -21,7 +26,43 @@ function CourseCard({
   rating: string;
   time: string;
   popular?: boolean;
+  slug: string;
 }) {
+  const { addBookmark, removeBookmark, isBookmarked } = useBookmarks();
+  const { toast } = useToast();
+  const bookmarked = isBookmarked(id);
+
+  const handleBookmark = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (bookmarked) {
+      removeBookmark(id);
+      toast({
+        title: "Kayıt kaldırıldı",
+        description: `${title} kayıtlılardan çıkarıldı.`,
+      });
+    } else {
+      const bookmarkItem: BookmarkedContent = {
+        id,
+        title,
+        author,
+        level,
+        rating,
+        time,
+        type: "course",
+        slug,
+        bookmarkedAt: Date.now(),
+        description: "Learn the essentials of planning and leading effective workshops. Build skills in facilitation, collaboration, and driving desired outcomes."
+      };
+      addBookmark(bookmarkItem);
+      toast({
+        title: "Kaydedildi",
+        description: `${title} kayıtlılara eklendi.`,
+      });
+    }
+  };
+
   return (
     <Link
       to={to}
@@ -30,29 +71,33 @@ function CourseCard({
       <div className="relative p-5 pb-0">
         {popular && (
           <span className="absolute left-5 top-5 z-10 rounded-full bg-amber-100 text-amber-800 text-[11px] font-semibold px-2 py-0.5 border border-amber-200">
-            Popular
+            Popüler
           </span>
         )}
-        <button className="absolute right-5 top-5 z-10 p-1.5 rounded-full bg-background/80 border opacity-0 group-hover:opacity-100 transition">
-          <Bookmark className="h-4 w-4" />
+        <button 
+          onClick={handleBookmark}
+          className="absolute right-5 top-5 z-10 p-1.5 rounded-full bg-background/80 border opacity-0 group-hover:opacity-100 hover:bg-primary hover:text-primary-foreground transition"
+        >
+          {bookmarked ? (
+            <BookmarkCheck className="h-4 w-4 fill-current" />
+          ) : (
+            <Bookmark className="h-4 w-4" />
+          )}
         </button>
         <div className="aspect-[5/4] w-full rounded-xl bg-accent grid place-items-center">
           <img src="/placeholder.svg" alt="course" className="h-24 opacity-70"/>
         </div>
       </div>
       <div className="p-5">
-        <div className="text-[11px] font-semibold tracking-widest text-muted-foreground">COURSE</div>
+        <div className="text-[11px] font-semibold tracking-widest text-muted-foreground">KURS</div>
         <div className="mt-1 text-lg font-semibold leading-snug group-hover:underline">{title}</div>
         <div className="mt-1 text-sm text-muted-foreground">{author}</div>
         <p className="mt-3 text-sm text-muted-foreground line-clamp-2">
-          Learn the essentials of planning and leading effective workshops. Build skills in facilitation, collaboration, and driving desired outcomes.
+          Etkili atölye çalışmaları planlama ve yönetme temellerini öğrenin. Kolaylaştırma, işbirliği ve istenen sonuçları elde etme becerilerinizi geliştirin.
         </p>
-        <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-4">
-            <span className="inline-flex items-center gap-1"><Clock className="h-4 w-4 text-primary" /> {time}</span>
-            <span className="inline-flex items-center gap-1"><Trophy className="h-4 w-4 text-primary" /> {level}</span>
-          </div>
-          <div className="inline-flex items-center gap-1"><Star className="h-4 w-4 text-yellow-500" /> {rating}</div>
+        <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
+          <span className="inline-flex items-center gap-1"><Clock className="h-4 w-4 text-primary" /> {time}</span>
+          <span className="inline-flex items-center gap-1"><Trophy className="h-4 w-4 text-primary" /> {level}</span>
         </div>
       </div>
     </Link>
@@ -152,7 +197,9 @@ export default function Courses() {
 
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
           <CourseCard
+            id="course-1"
             to="/courses/workshop-facilitation"
+            slug="workshop-facilitation"
             title="Workshop Facilitation"
             author="Colin Michael Pace"
             level="Advanced"
@@ -161,7 +208,9 @@ export default function Courses() {
             popular
           />
           <CourseCard
+            id="course-2"
             to="/courses/ux-design-foundations"
+            slug="ux-design-foundations"
             title="UX Design Foundations"
             author="Gene Kamenez"
             level="Beginner"
@@ -169,7 +218,9 @@ export default function Courses() {
             time="6h"
           />
           <CourseCard
+            id="course-3"
             to="/courses/introduction-to-customer-journey-mapping"
+            slug="introduction-to-customer-journey-mapping"
             title="Introduction to Customer Journey Mapping"
             author="Oliver West"
             level="Intermediate"

@@ -1,5 +1,5 @@
 import AppLayout from "@/components/layout/AppLayout";
-import { ArrowRight, CheckCircle2, Clock, Bookmark, Star, Bell, Briefcase, GraduationCap, Target, Users, Flame, Check } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, Bookmark, Bell, Briefcase, GraduationCap, Target, Users, Flame, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { EventCalendar } from "@/components/ui/event-calendar";
 import FeatureSlider from "@/components/ui/FeatureSlider";
@@ -96,11 +96,10 @@ export default function Home() {
       <div className="mt-4 flex items-center gap-6 text-sm text-muted-foreground">
         <span className="inline-flex items-center gap-1"><Clock className="h-4 w-4 text-primary" /> 4h</span>
         <span className="inline-flex items-center gap-1">Advanced</span>
-        <span className="inline-flex items-center gap-1"><Star className="h-4 w-4 text-yellow-500" /> 4.6</span>
       </div>
       <div className="mt-4 flex items-center gap-2">
-        <Link to="/courses/workshop-facilitation" className="rounded-full border px-3 py-1.5 text-sm">View course</Link>
-        <button className="rounded-full border px-3 py-1.5 text-sm">Mark as read</button>
+        <Link to="/courses/workshop-facilitation" className="rounded-full border px-3 py-1.5 text-sm">Kursu Gör</Link>
+        <button className="rounded-full border px-3 py-1.5 text-sm">Okundu işaretle</button>
       </div>
     </Card>
   );
