@@ -57,8 +57,8 @@ export function Header() {
             <SheetContent side="left" className="p-0 w-[20rem] sm:max-w-xs overflow-y-auto">
               {/* Branded header */}
               <div className="px-4 pt-3 pb-2 border-b bg-gradient-to-br from-primary/10 via-transparent to-indigo-400/10">
-                <div className="flex items-center gap-2.5">
-                  <img src="/logo.png" alt="SpaceYouth" className="h-13 w-auto" />
+                <div className="flex items-center gap-3">
+                  <img src="/SpaceYouth-logo.png" alt="SpaceYouth" className="h-12 w-auto" />
                 </div>
                 <div className="hidden text-sm text-muted-foreground">
                   Learn, assess, and level up your skills.
@@ -79,7 +79,6 @@ export function Header() {
                       { to: "/courses", label: "Kurslar", icon: BookOpen },
                       { to: "/workshops", label: "Workshops & Hackathons", icon: Users },
                       { to: "/tutorials", label: "Ders Videoları", icon: PencilRuler },
-                      { to: "/my-tasks", label: "Ödevler", icon: ClipboardList },
                       { to: "/job-board", label: "Job Board", icon: BriefcaseBusiness },
                     ].map(({ to, label, icon: Icon }) => (
                       <li key={to}>
@@ -130,6 +129,13 @@ export function Header() {
         </div>
         {/* Right side buttons - sağ tarafa dayalı */}
         <div className="flex items-center gap-2 ml-auto">
+          <button 
+            className="px-3 py-2 rounded-full hover:bg-secondary"
+            onClick={() => navigate('/bookmarks')}
+            aria-label="Bookmarks"
+          >
+            <Bookmark className="h-6 w-6" />
+          </button>
           <TokenWallet />
           <button className="px-3 py-2 rounded-full hover:bg-secondary">
             <Bell className="h-6 w-6" />

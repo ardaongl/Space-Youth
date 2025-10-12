@@ -105,13 +105,13 @@ export function EventCalendar({ events = [], onDateSelect, selectedDate }: Event
   return (
     <div className="w-full">
       {/* Calendar */}
-      <div className="rounded-2xl bg-gradient-to-br from-gray-400 to-gray-500 p-6 text-white shadow-lg">
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 text-white p-5">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <button 
             onClick={handlePrevMonth}
             className="p-1 hover:bg-white/20 rounded transition-colors"
-          >
+          > 
             <ChevronLeft className="h-5 w-5" />
           </button>
           <h2 className="text-xl font-light">

@@ -33,6 +33,10 @@ import { AuthProvider } from "./context/AuthContext";
 import MyTasks from "./pages/MyTasks";
 import Leaderboard from "./pages/Leaderboard";
 import Workshops from "./pages/Workshops";
+import EventDetail from "./pages/EventDetail";
+import AddEvent from "./pages/AddEvent";
+import AddEventSessions from "./pages/AddEventSessions";
+import EditEvent from "./pages/EditEvent";
 import TestWizard, { OnboardingData } from "@/components/onboarding/TestWizard";
 import { Provider } from "react-redux";
 const queryClient = new QueryClient();
@@ -94,6 +98,10 @@ const App = () => {
               <Route path="/my-tasks" element={<MyTasks />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/workshops" element={<Workshops />} />
+              <Route path="/events/add" element={<AddEvent />} />
+              <Route path="/events/add/sessions" element={<AddEventSessions />} />
+              <Route path="/events/:slug/edit" element={<EditEvent />} />
+              <Route path="/events/:slug" element={<EventDetail />} />
               <Route path="/courses" element={<Index />} />
               <Route path="/courses/add" element={<AddCourse />} />
               <Route path="/courses/add/lessons" element={<AddLessons />} />

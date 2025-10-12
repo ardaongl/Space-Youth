@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Plus, Upload, X, FileText, Calendar, Clock } from "lucide-react";
 
-interface Lesson {
+interface Session {
   id: string;
   title: string;
   description: string;
@@ -14,10 +14,10 @@ interface Lesson {
   files: File[];
 }
 
-export default function AddLessons() {
+export default function AddEventSessions() {
   const navigate = useNavigate();
-  const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [currentLesson, setCurrentLesson] = useState<Lesson>({
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [currentSession, setCurrentSession] = useState<Session>({
     id: crypto.randomUUID(),
     title: "",
     description: "",
@@ -27,51 +27,54 @@ export default function AddLessons() {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [eventData, setEventData] = useState<any>(null);
 
   useEffect(() => {
-    // Check if course data exists
-    const courseData = sessionStorage.getItem("courseData");
-    if (!courseData) {
-      navigate("/courses/add");
+    // Check if event data exists
+    const eventDataStr = sessionStorage.getItem("eventData");
+    if (!eventDataStr) {
+      navigate("/events/add");
+    } else {
+      setEventData(JSON.parse(eventDataStr));
     }
   }, [navigate]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setCurrentLesson({
-        ...currentLesson,
-        files: [...currentLesson.files, ...Array.from(e.target.files)],
+      setCurrentSession({
+        ...currentSession,
+        files: [...currentSession.files, ...Array.from(e.target.files)],
       });
     }
   };
 
   const handleRemoveFile = (index: number) => {
-    setCurrentLesson({
-      ...currentLesson,
-      files: currentLesson.files.filter((_, i) => i !== index),
+    setCurrentSession({
+      ...currentSession,
+      files: currentSession.files.filter((_, i) => i !== index),
     });
   };
 
-  const handleAddLesson = () => {
-    if (currentLesson.title.trim() === "" || currentLesson.description.trim() === "") {
-      alert("Lütfen ders başlığı ve açıklamasını doldurun");
+  const handleAddSession = () => {
+    if (currentSession.title.trim() === "" || currentSession.description.trim() === "") {
+      alert("Lütfen oturum başlığı ve açıklamasını doldurun");
       return;
     }
 
     if (isEditing && editingIndex !== null) {
-      // Update existing lesson
-      const updatedLessons = [...lessons];
-      updatedLessons[editingIndex] = currentLesson;
-      setLessons(updatedLessons);
+      // Update existing session
+      const updatedSessions = [...sessions];
+      updatedSessions[editingIndex] = currentSession;
+      setSessions(updatedSessions);
       setIsEditing(false);
       setEditingIndex(null);
     } else {
-      // Add new lesson
-      setLessons([...lessons, currentLesson]);
+      // Add new session
+      setSessions([...sessions, currentSession]);
     }
 
     // Reset form
-    setCurrentLesson({
+    setCurrentSession({
       id: crypto.randomUUID(),
       title: "",
       description: "",
@@ -81,56 +84,59 @@ export default function AddLessons() {
     });
   };
 
-  const handleEditLesson = (index: number) => {
-    setCurrentLesson(lessons[index]);
+  const handleEditSession = (index: number) => {
+    setCurrentSession(sessions[index]);
     setIsEditing(true);
     setEditingIndex(index);
   };
 
-  const handleDeleteLesson = (index: number) => {
-    setLessons(lessons.filter((_, i) => i !== index));
+  const handleDeleteSession = (index: number) => {
+    setSessions(sessions.filter((_, i) => i !== index));
   };
 
-  const handleSaveAllLessons = () => {
-    if (lessons.length === 0) {
-      alert("En az bir ders eklemelisiniz");
+  const handleSaveAllSessions = () => {
+    if (sessions.length === 0) {
+      alert("En az bir oturum eklemelisiniz");
       return;
     }
 
-    // Get course data from session
-    const courseDataStr = sessionStorage.getItem("courseData");
-    if (!courseDataStr) {
-      navigate("/courses/add");
+    // Get event data from session
+    const eventDataStr = sessionStorage.getItem("eventData");
+    if (!eventDataStr) {
+      navigate("/events/add");
       return;
     }
 
-    const courseData = JSON.parse(courseDataStr);
+    const eventData = JSON.parse(eventDataStr);
     
-    // Combine course data with lessons
-    const fullCourseData = {
-      ...courseData,
-      lessons: lessons.map(lesson => ({
-        ...lesson,
-        fileNames: lesson.files.map(f => f.name),
+    // Combine event data with sessions
+    const fullEventData = {
+      ...eventData,
+      sessions: sessions.map(session => ({
+        ...session,
+        fileNames: session.files.map(f => f.name),
       })),
     };
 
-    console.log("Complete course data:", fullCourseData);
+    console.log("Complete event data:", fullEventData);
     // TODO: Send to API
 
     // Clear session storage
-    sessionStorage.removeItem("courseData");
+    sessionStorage.removeItem("eventData");
     
-    // Navigate back to courses
-    navigate("/courses");
+    // Navigate back to workshops
+    navigate("/workshops");
   };
 
-  const isCurrentLessonValid = currentLesson.title.trim() !== "" && currentLesson.description.trim() !== "";
+  const isCurrentSessionValid = currentSession.title.trim() !== "" && currentSession.description.trim() !== "";
 
   const zoomConnected = (() => {
     try { return localStorage.getItem("zoom.connected") === "true"; } catch { return false; }
   })();
 
+  const eventType = eventData?.type || "workshop";
+  const eventTypeLabel = eventType === "workshop" ? "Workshop" : "Hackathon";
+  const sessionLabel = eventType === "workshop" ? "Oturum" : "Etkinlik Günü";
 
   return (
     <AppLayout>
@@ -139,66 +145,66 @@ export default function AddLessons() {
         <Button
           variant="ghost"
           className="mb-6 gap-2"
-          onClick={() => navigate('/courses/add')}
+          onClick={() => navigate('/events/add')}
         >
           <ArrowLeft className="h-4 w-4" />
           Geri Dön
         </Button>
 
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Yeni Kurs Ekle</h1>
-          <p className="text-muted-foreground mt-2">Adım 2/2: Ders Oluşturma</p>
+          <h1 className="text-3xl font-bold">Yeni {eventTypeLabel} Ekle</h1>
+          <p className="text-muted-foreground mt-2">Adım 2/2: {sessionLabel} Oluşturma</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-6">
-          {/* Left Side - Lesson Form */}
+          {/* Left Side - Session Form */}
           <div className="bg-card rounded-lg border shadow-sm p-6">
             <h2 className="text-xl font-semibold mb-6">
-              {isEditing ? "Dersi Düzenle" : "Yeni Ders Ekle"}
+              {isEditing ? `${sessionLabel} Düzenle` : `Yeni ${sessionLabel} Ekle`}
             </h2>
 
             <div className="space-y-6">
-              {/* Lesson Title */}
+              {/* Session Title */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Ders Başlığı <span className="text-red-500">*</span>
+                  {sessionLabel} Başlığı <span className="text-red-500">*</span>
                 </label>
                 <Input
                   type="text"
-                  value={currentLesson.title}
-                  onChange={(e) => setCurrentLesson({ ...currentLesson, title: e.target.value })}
-                  placeholder="Örn: HTML Temelleri"
+                  value={currentSession.title}
+                  onChange={(e) => setCurrentSession({ ...currentSession, title: e.target.value })}
+                  placeholder={eventType === "workshop" ? "Örn: Kullanıcı Araştırması Temelleri" : "Örn: Gün 1 - Takım Oluşturma ve Planlama"}
                   className="w-full"
                 />
               </div>
 
-              {/* Lesson Description */}
+              {/* Session Description */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Dersin Konusu/Açıklaması <span className="text-red-500">*</span>
+                  {sessionLabel} Konusu/Açıklaması <span className="text-red-500">*</span>
                 </label>
                 <textarea
-                  value={currentLesson.description}
-                  onChange={(e) => setCurrentLesson({ ...currentLesson, description: e.target.value })}
-                  placeholder="Ders içeriği hakkında detaylı bilgi verin..."
+                  value={currentSession.description}
+                  onChange={(e) => setCurrentSession({ ...currentSession, description: e.target.value })}
+                  placeholder={`${sessionLabel} içeriği hakkında detaylı bilgi verin...`}
                   rows={4}
                   className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 />
               </div>
 
-              {/* Lesson Duration and Date */}
+              {/* Session Duration and Date */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold mb-2">
-                    Dersin Süresi
+                    {sessionLabel} Süresi
                   </label>
                   <div className="relative">
                     <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       type="text"
-                      value={currentLesson.duration}
-                      onChange={(e) => setCurrentLesson({ ...currentLesson, duration: e.target.value })}
-                      placeholder="Örn: 45 dakika"
+                      value={currentSession.duration}
+                      onChange={(e) => setCurrentSession({ ...currentSession, duration: e.target.value })}
+                      placeholder={eventType === "workshop" ? "Örn: 45 dakika" : "Örn: 8 saat"}
                       className="pl-10"
                     />
                   </div>
@@ -206,14 +212,14 @@ export default function AddLessons() {
 
                 <div>
                   <label className="block text-sm font-semibold mb-2">
-                    Dersin Tarihi
+                    {sessionLabel} Tarihi
                   </label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      type="date"
-                      value={currentLesson.date}
-                      onChange={(e) => setCurrentLesson({ ...currentLesson, date: e.target.value })}
+                      type="datetime-local"
+                      value={currentSession.date}
+                      onChange={(e) => setCurrentSession({ ...currentSession, date: e.target.value })}
                       className="pl-10"
                     />
                   </div>
@@ -223,7 +229,7 @@ export default function AddLessons() {
               {/* File Upload */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Derse Eklenecek Dosyalar
+                  {sessionLabel}'a Eklenecek Dosyalar
                 </label>
                 <div className="border-2 border-dashed rounded-lg p-6 text-center">
                   <input
@@ -231,10 +237,10 @@ export default function AddLessons() {
                     multiple
                     onChange={handleFileUpload}
                     className="hidden"
-                    id="lesson-file-upload"
+                    id="session-file-upload"
                   />
                   <label
-                    htmlFor="lesson-file-upload"
+                    htmlFor="session-file-upload"
                     className="cursor-pointer flex flex-col items-center gap-2"
                   >
                     <Upload className="h-10 w-10 text-muted-foreground" />
@@ -245,9 +251,9 @@ export default function AddLessons() {
                   </label>
                 </div>
 
-                {currentLesson.files.length > 0 && (
+                {currentSession.files.length > 0 && (
                   <div className="mt-4 space-y-2">
-                    {currentLesson.files.map((file, index) => (
+                    {currentSession.files.map((file, index) => (
                       <div
                         key={index}
                         className="flex items-center justify-between p-3 bg-muted rounded-lg"
@@ -274,65 +280,65 @@ export default function AddLessons() {
                 )}
               </div>
 
-              {/* Add/Update Lesson Button */}
+              {/* Add/Update Session Button */}
               <Button
-                onClick={handleAddLesson}
-                disabled={!isCurrentLessonValid}
+                onClick={handleAddSession}
+                disabled={!isCurrentSessionValid}
                 className="w-full"
                 size="lg"
               >
-                {isEditing ? "Dersi Güncelle" : "Ders Ekle"}
+                {isEditing ? `${sessionLabel} Güncelle` : `${sessionLabel} Ekle`}
               </Button>
             </div>
           </div>
 
-          {/* Right Side - Created Lessons */}
+          {/* Right Side - Created Sessions */}
           <div className="space-y-4">
             <div className="bg-card rounded-lg border shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Oluşturulan Dersler</h3>
+                <h3 className="text-lg font-semibold">Oluşturulan {sessionLabel}lar</h3>
                 <span className="text-sm text-muted-foreground">
-                  {lessons.length} ders
+                  {sessions.length} {sessionLabel.toLowerCase()}
                 </span>
               </div>
 
-              {lessons.length === 0 ? (
+              {sessions.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <p className="text-sm">Henüz ders eklenmedi</p>
-                  <p className="text-xs mt-1">Soldaki formu kullanarak ders ekleyin</p>
+                  <p className="text-sm">Henüz {sessionLabel.toLowerCase()} eklenmedi</p>
+                  <p className="text-xs mt-1">Soldaki formu kullanarak {sessionLabel.toLowerCase()} ekleyin</p>
                 </div>
               ) : (
                 <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                  {lessons.map((lesson, index) => (
+                  {sessions.map((session, index) => (
                     <div
-                      key={lesson.id}
+                      key={session.id}
                       className="border rounded-lg p-4 hover:bg-muted/50 transition"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <h4 className="font-semibold text-sm mb-1">
-                            {index + 1}. {lesson.title}
+                            {index + 1}. {session.title}
                           </h4>
                           <p className="text-xs text-muted-foreground line-clamp-2">
-                            {lesson.description}
+                            {session.description}
                           </p>
                           <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                            {lesson.duration && (
+                            {session.duration && (
                               <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
-                                {lesson.duration}
+                                {session.duration}
                               </span>
                             )}
-                            {lesson.date && (
+                            {session.date && (
                               <span className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
-                                {new Date(lesson.date).toLocaleDateString('tr-TR')}
+                                {new Date(session.date).toLocaleDateString('tr-TR')}
                               </span>
                             )}
-                            {lesson.files.length > 0 && (
+                            {session.files.length > 0 && (
                               <span className="flex items-center gap-1">
                                 <FileText className="h-3 w-3" />
-                                {lesson.files.length} dosya
+                                {session.files.length} dosya
                               </span>
                             )}
                           </div>
@@ -342,7 +348,7 @@ export default function AddLessons() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleEditLesson(index)}
+                          onClick={() => handleEditSession(index)}
                           className="flex-1"
                         >
                           Düzenle
@@ -350,7 +356,7 @@ export default function AddLessons() {
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => handleDeleteLesson(index)}
+                          onClick={() => handleDeleteSession(index)}
                           className="flex-1"
                         >
                           Sil
@@ -365,23 +371,25 @@ export default function AddLessons() {
             {/* Zoom Info and Save Button */}
             <div className="space-y-3">
               {/* Zoom notification */}
-              <div className={`p-3 rounded-lg text-sm ${
-                zoomConnected 
-                  ? "bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800" 
-                  : "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
-              }`}>
-                {zoomConnected 
-                  ? "📹 Dersler için otomatik Zoom linkleri oluşturulacaktır" 
-                  : "⚠️ Zoom bağlanmadan link oluşturulamaz. Lütfen önce profilinizden Zoom hesabınızı bağlayın."}
-              </div>
+              {eventType === "workshop" && (
+                <div className={`p-3 rounded-lg text-sm ${
+                  zoomConnected 
+                    ? "bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800" 
+                    : "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                }`}>
+                  {zoomConnected 
+                    ? "📹 Oturumlar için otomatik Zoom linkleri oluşturulacaktır" 
+                    : "⚠️ Zoom bağlanmadan link oluşturulamaz. Lütfen önce profilinizden Zoom hesabınızı bağlayın."}
+                </div>
+              )}
               
               <Button
-                onClick={handleSaveAllLessons}
-                disabled={lessons.length === 0}
+                onClick={handleSaveAllSessions}
+                disabled={sessions.length === 0}
                 className="w-full"
                 size="lg"
               >
-                Tüm Dersleri Kaydet
+                Tüm {sessionLabel}ları Kaydet
               </Button>
             </div>
           </div>
@@ -390,3 +398,4 @@ export default function AddLessons() {
     </AppLayout>
   );
 }
+

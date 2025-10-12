@@ -1,99 +1,359 @@
 import AppLayout from "@/components/layout/AppLayout";
-import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Users2, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Star, Clock, Trophy, Bookmark, SlidersHorizontal, Calendar, Users2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { canSeeAddCourse } from "@/utils/roles";
 
-const workshops = [
-  {
-    id: 1,
-    title: "UX Research Fundamentals",
-    description: "Learn essential UX research methods and techniques to better understand your users.",
-    date: "2024-03-20T15:00:00Z",
-    duration: "2 hours",
-    instructor: "Emily Parker",
-    participants: 45,
-    maxParticipants: 50,
-    category: "UX",
-  },
-  {
-    id: 2,
-    title: "Product Strategy Workshop",
-    description: "Develop effective product strategies and roadmaps for your digital products.",
-    date: "2024-03-22T14:00:00Z",
-    duration: "3 hours",
-    instructor: "Michael Ross",
-    participants: 28,
-    maxParticipants: 30,
-    category: "PM",
-  },
-  // Add more workshops
-];
+type EventType = "workshop" | "hackathon";
+
+function EventCard({
+  to,
+  title,
+  author,
+  level,
+  rating,
+  time,
+  popular,
+  eventType,
+  date,
+  participants,
+  maxParticipants,
+}: {
+  to: string;
+  title: string;
+  author: string;
+  level: string;
+  rating: string;
+  time: string;
+  popular?: boolean;
+  eventType: EventType;
+  date?: string;
+  participants?: number;
+  maxParticipants?: number;
+}) {
+  return (
+    <Link
+      to={to}
+      className="group rounded-2xl border bg-card shadow-sm hover:shadow-md transition overflow-hidden"
+    >
+      <div className="relative p-5 pb-0">
+        {/* Event Type Tag */}
+        <span className={`absolute left-5 top-5 z-10 rounded-full text-[11px] font-semibold px-3 py-1 border ${
+          eventType === "workshop" 
+            ? "bg-blue-100 text-blue-800 border-blue-200" 
+            : "bg-purple-100 text-purple-800 border-purple-200"
+        }`}>
+          {eventType === "workshop" ? "Workshop" : "Hackathon"}
+        </span>
+        
+        {popular && (
+          <span className="absolute left-5 top-12 z-10 rounded-full bg-amber-100 text-amber-800 text-[11px] font-semibold px-2 py-0.5 border border-amber-200">
+            Popüler
+          </span>
+        )}
+        
+        <button className="absolute right-5 top-5 z-10 p-1.5 rounded-full bg-background/80 border opacity-0 group-hover:opacity-100 transition">
+          <Bookmark className="h-4 w-4" />
+        </button>
+        
+        <div className="aspect-[5/4] w-full rounded-xl bg-accent grid place-items-center">
+          <img src="/placeholder.svg" alt="event" className="h-24 opacity-70"/>
+        </div>
+      </div>
+      
+      <div className="p-5">
+        <div className="text-[11px] font-semibold tracking-widest text-muted-foreground">
+          {eventType.toUpperCase()}
+        </div>
+        <div className="mt-1 text-lg font-semibold leading-snug group-hover:underline">{title}</div>
+        <div className="mt-1 text-sm text-muted-foreground">{author}</div>
+        
+        <p className="mt-3 text-sm text-muted-foreground line-clamp-2">
+          {eventType === "workshop" 
+            ? "Uygulamalı çalışmalar ve interaktif oturumlarla becerilerinizi geliştirin." 
+            : "Ekip çalışması ve problem çözme odaklı yoğun bir deneyim."}
+        </p>
+        
+        <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+          <div className="flex items-center gap-4">
+            <span className="inline-flex items-center gap-1">
+              <Clock className="h-4 w-4 text-primary" /> {time}
+            </span>
+            {date && (
+              <span className="inline-flex items-center gap-1">
+                <Calendar className="h-4 w-4 text-primary" /> 
+                {new Date(date).toLocaleDateString("tr-TR", { month: "short", day: "numeric" })}
+              </span>
+            )}
+          </div>
+          <div className="inline-flex items-center gap-1">
+            <Star className="h-4 w-4 text-yellow-500" /> {rating}
+          </div>
+        </div>
+        
+        {participants !== undefined && maxParticipants !== undefined && (
+          <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <Users2 className="h-3.5 w-3.5" />
+            <span>{participants}/{maxParticipants} katılımcı</span>
+          </div>
+        )}
+      </div>
+    </Link>
+  );
+}
 
 export default function Workshops() {
+  const { auth } = useAuth();
+  const role = auth.user?.role ?? null;
+  const [events, setEvents] = useState<any[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterType, setFilterType] = useState<"all" | EventType>("all");
+  const [sortBy, setSortBy] = useState("newest");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Mock data - gerçek uygulamada API'den gelecek
+  useEffect(() => {
+    const mockEvents = [
+      {
+        id: 1,
+        type: "workshop",
+        title: "UX Research Fundamentals",
+        author: "Emily Parker",
+        level: "Beginner",
+        rating: "4.8 (245)",
+        time: "2h",
+        date: "2024-03-20",
+        participants: 45,
+        maxParticipants: 50,
+        popular: true,
+      },
+      {
+        id: 2,
+        type: "hackathon",
+        title: "AI Hackathon 2024",
+        author: "Tech Community",
+        level: "Advanced",
+        rating: "4.9 (180)",
+        time: "48h",
+        date: "2024-03-25",
+        participants: 120,
+        maxParticipants: 150,
+        popular: true,
+      },
+      {
+        id: 3,
+        type: "workshop",
+        title: "Product Strategy Workshop",
+        author: "Michael Ross",
+        level: "Intermediate",
+        rating: "4.7 (312)",
+        time: "3h",
+        date: "2024-03-22",
+        participants: 28,
+        maxParticipants: 30,
+      },
+      {
+        id: 4,
+        type: "hackathon",
+        title: "Web3 Development Sprint",
+        author: "Blockchain Labs",
+        level: "Advanced",
+        rating: "4.6 (95)",
+        time: "24h",
+        date: "2024-04-01",
+        participants: 60,
+        maxParticipants: 80,
+      },
+      {
+        id: 5,
+        type: "workshop",
+        title: "Design Thinking Masterclass",
+        author: "Sarah Johnson",
+        level: "Intermediate",
+        rating: "4.8 (421)",
+        time: "4h",
+        date: "2024-03-28",
+        participants: 35,
+        maxParticipants: 40,
+      },
+      {
+        id: 6,
+        type: "hackathon",
+        title: "Mobile App Challenge",
+        author: "Dev Community",
+        level: "Intermediate",
+        rating: "4.7 (156)",
+        time: "36h",
+        date: "2024-04-05",
+        participants: 85,
+        maxParticipants: 100,
+      },
+    ];
+    setEvents(mockEvents);
+  }, []);
+
+  // Filtreleme ve sıralama
+  const filteredEvents = events
+    .filter(event => {
+      // Tip filtresi
+      if (filterType !== "all" && event.type !== filterType) return false;
+      
+      // Arama filtresi
+      if (searchQuery && !event.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+      
+      return true;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "newest":
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        case "oldest":
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
+        case "a-z":
+          return a.title.localeCompare(b.title);
+        case "z-a":
+          return b.title.localeCompare(a.title);
+        default:
+          return 0;
+      }
+    });
+
   return (
     <AppLayout>
-      <div className="container mx-auto py-8">
-        <div className="max-w-4xl mx-auto space-y-8">
+      <div className="py-6">
+        {/* Header Section */}
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold">Workshops</h1>
-            <p className="mt-1 text-muted-foreground">
-              Join live workshops and enhance your skills
+            <h1 className="text-3xl font-bold text-gray-800">Workshop & Hackathon</h1>
+            <p className="text-muted-foreground mt-1">
+              Uygulamalı etkinliklerle becerilerinizi geliştirin ve networking yapın
             </p>
           </div>
+          
+          {canSeeAddCourse(role) && (
+            <Link
+              to="/events/add"
+              className="inline-flex items-center gap-2 rounded-lg bg-purple-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-purple-700 transition-colors shadow-sm"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Etkinlik Ekle
+            </Link>
+          )}
+        </div>
 
-          <div className="grid gap-6">
-            {workshops.map((workshop) => (
-              <div
-                key={workshop.id}
-                className="rounded-xl border bg-card overflow-hidden"
+        {/* Search and Filters Section */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="flex items-center gap-4">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                placeholder="Etkinliklerde arayın..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+              <svg
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <div className="p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium px-2 py-1 rounded-full bg-primary/10 text-primary">
-                          {workshop.category}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          with {workshop.instructor}
-                        </span>
-                      </div>
-                      <h3 className="text-xl font-semibold">{workshop.title}</h3>
-                      <p className="text-muted-foreground">
-                        {workshop.description}
-                      </p>
-                    </div>
-                    <Button>
-                      Join Workshop
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
 
-                  <div className="mt-6 flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      <span>
-                        {new Date(workshop.date).toLocaleDateString("en-US", {
-                          weekday: "long",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      <span>{workshop.duration}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users2 className="h-4 w-4" />
-                      <span>
-                        {workshop.participants}/{workshop.maxParticipants} participants
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${
+                showFilters 
+                  ? 'bg-purple-600 text-white border-purple-600' 
+                  : 'bg-white border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <SlidersHorizontal className="h-5 w-5" />
+              <span className="font-medium">Filtrele</span>
+            </button>
           </div>
+
+          {/* Filters Dropdown */}
+          {showFilters && (
+            <div className="mt-4 flex items-center gap-4 pt-4 border-t border-gray-200">
+              <select 
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="newest">En Yeniye Göre Sırala</option>
+                <option value="oldest">En Eskiye Göre Sırala</option>
+                <option value="a-z">A-Z Sırala</option>
+                <option value="z-a">Z-A Sırala</option>
+              </select>
+
+              <select 
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value as "all" | EventType)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="all">Tümü</option>
+                <option value="workshop">Workshop</option>
+                <option value="hackathon">Hackathon</option>
+              </select>
+            </div>
+          )}
+        </div>
+
+        {/* Filter Summary */}
+        {filterType !== "all" && (
+          <div className="mt-4 flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Filtreleme:</span>
+            <button
+              onClick={() => setFilterType("all")}
+              className="inline-flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium hover:bg-purple-200 transition"
+            >
+              {filterType === "workshop" ? "Workshop" : "Hackathon"}
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* Events Grid */}
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredEvents.length > 0 ? (
+            filteredEvents.map((event) => (
+              <EventCard
+                key={event.id}
+                to={`/events/${event.type}-${event.id}`}
+                title={event.title}
+                author={event.author}
+                level={event.level}
+                rating={event.rating}
+                time={event.time}
+                popular={event.popular}
+                eventType={event.type}
+                date={event.date}
+                participants={event.participants}
+                maxParticipants={event.maxParticipants}
+              />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-muted-foreground">
+                {searchQuery ? "Arama kriterlerine uygun etkinlik bulunamadı." : "Henüz etkinlik bulunmuyor."}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </AppLayout>

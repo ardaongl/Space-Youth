@@ -210,7 +210,7 @@ export default function TestWizard({
       {/* Header with logo and profile */}
       <div className="h-14 border-b flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="SpaceYouth" className="h-8 w-auto" />
+          <img src="/2.png" alt="SpaceYouth" className="h-8 w-auto" />
           <div className="text-sm text-muted-foreground hidden sm:block">Student Onboarding Test</div>
         </div>
         <div className="flex items-center gap-3">
