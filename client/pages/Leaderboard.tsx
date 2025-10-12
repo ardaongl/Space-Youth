@@ -42,9 +42,9 @@ export default function Leaderboard() {
       <div className="container mx-auto py-8">
         <div className="max-w-4xl mx-auto space-y-8">
           <div>
-            <h1 className="text-3xl font-bold">Leaderboard</h1>
+            <h1 className="text-3xl font-bold">Liderlik Tablosu</h1>
             <p className="mt-1 text-muted-foreground">
-              Top performers in the community
+              Topluluktaki en iyi performans gösterenler
             </p>
           </div>
 
@@ -70,7 +70,7 @@ export default function Leaderboard() {
                 </div>
                 <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                   <Trophy className="h-4 w-4" />
-                  <span>{user.completedTasks} tasks completed</span>
+                  <span>{user.completedTasks} görev tamamlandı</span>
                 </div>
               </div>
             ))}
@@ -95,7 +95,7 @@ export default function Leaderboard() {
                     <div>
                       <h4 className="font-medium">{user.name}</h4>
                       <p className="text-sm text-muted-foreground">
-                        {user.completedTasks} tasks completed
+                        {user.completedTasks} görev tamamlandı
                       </p>
                     </div>
                   </div>

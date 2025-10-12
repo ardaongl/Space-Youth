@@ -88,9 +88,9 @@ export default function Tasks() {
           {/* Header Section */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold">All Tasks</h1>
+              <h1 className="text-3xl font-bold">Tüm Görevler</h1>
               <p className="text-muted-foreground mt-1">
-                {filteredTasks.length} {filteredTasks.length === 1 ? "task" : "tasks"}
+                {filteredTasks.length} {filteredTasks.length === 1 ? "görev" : "görev"}
               </p>
             </div>
 
@@ -99,7 +99,7 @@ export default function Tasks() {
               <div className="relative w-80">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Search Tasks"
+                  placeholder="Görevlerde Ara"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -111,11 +111,11 @@ export default function Tasks() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="default" className="gap-2">
                     <Filter className="h-4 w-4" />
-                    Filter
+                    Filtrele
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                  <DropdownMenuLabel>Duruma Göre Filtrele</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {(["To Do", "In Progress", "Done", "Overdue"] as TaskStatus[]).map((status) => (
                     <DropdownMenuCheckboxItem
@@ -133,7 +133,7 @@ export default function Tasks() {
               {adminUser && (
                 <Button className="gap-2">
                   <Plus className="h-4 w-4" />
-                  Add new task
+                  Yeni görev ekle
                 </Button>
               )}
             </div>
@@ -144,10 +144,10 @@ export default function Tasks() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Task Name</TableHead>
-                  <TableHead>Coin Value</TableHead>
-                  <TableHead>Status</TableHead>
-                  {adminUser && <TableHead className="text-right">Actions</TableHead>}
+                  <TableHead>Görev Adı</TableHead>
+                  <TableHead>Coin Değeri</TableHead>
+                  <TableHead>Durum</TableHead>
+                  {adminUser && <TableHead className="text-right">İşlemler</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -157,7 +157,7 @@ export default function Tasks() {
                       colSpan={adminUser ? 4 : 3}
                       className="h-24 text-center text-muted-foreground"
                     >
-                      No tasks found
+                      Görev bulunamadı
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -171,7 +171,7 @@ export default function Tasks() {
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <span className="text-yellow-600 font-semibold">{task.coins}</span>
-                          <span className="text-muted-foreground">coins</span>
+                          <span className="text-muted-foreground">coin</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -199,7 +199,7 @@ export default function Tasks() {
                                 className="gap-2"
                               >
                                 <Pencil className="h-4 w-4" />
-                                Edit
+                                Düzenle
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
@@ -207,7 +207,7 @@ export default function Tasks() {
                                 className="gap-2 text-red-600 dark:text-red-400"
                               >
                                 <Trash2 className="h-4 w-4" />
-                                Delete
+                                Sil
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>

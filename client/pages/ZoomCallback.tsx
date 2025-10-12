@@ -2,10 +2,14 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 
 export default function ZoomCallback() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const { auth } = useAuth();
+  
+  const isTeacherOrAdmin = auth.user?.role === "teacher" || auth.user?.role === "admin";
 
   useEffect(() => {
     // UI-only: Simulate exchanging code for tokens and mark as connected
@@ -24,11 +28,13 @@ export default function ZoomCallback() {
         <div className="max-w-xl mx-auto border rounded-lg bg-card p-8 text-center">
           <h1 className="text-2xl font-bold mb-2">Zoom hesabı bağlandı</h1>
           <p className="text-muted-foreground mb-6">
-            Hesabınız başarıyla bağlandı. Artık dersler için Zoom toplantı linkleri oluşturabilirsiniz.
+            {isTeacherOrAdmin 
+              ? "Hesabınız başarıyla bağlandı. Artık dersler için Zoom toplantı linkleri oluşturabilirsiniz."
+              : "Hesabınız başarıyla bağlandı. Artık Zoom ile yapılacak derslere katılabilirsiniz."
+            }
           </p>
           <div className="flex gap-3 justify-center">
             <Button onClick={() => navigate("/profile")}>Profile dön</Button>
-            <Button variant="outline" onClick={() => navigate("/courses/add/lessons")}>Ders oluştur</Button>
           </div>
         </div>
       </div>

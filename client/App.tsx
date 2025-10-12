@@ -25,11 +25,14 @@ import Tutorials from "./pages/Tutorials";
 import Certifications from "./pages/Certifications";
 import JobBoard from "./pages/JobBoard";
 import { Profile } from "./pages/Profile";
+import { InstructorProfile } from "./pages/InstructorProfile";
 import About from "./pages/About";
+import Settings from "./pages/Settings";
 import { TokensProvider } from "./context/TokensContext";
 import { DraftsProvider } from "./context/DraftsContext";
 import { TaskSubmissionsProvider } from "./context/TaskSubmissionsContext";
 import { AuthProvider } from "./context/AuthContext";
+import { BookmarksProvider } from "./context/BookmarksContext";
 import MyTasks from "./pages/MyTasks";
 import Leaderboard from "./pages/Leaderboard";
 import Workshops from "./pages/Workshops";
@@ -44,6 +47,7 @@ import { store } from "./store";
 import Callback from "./pages/Callback";
 import Dashboard from "./pages/Dashboard";
 import RoleSwitcher from "./components/dev/RoleSwitcher";
+import BuyCoins from "./pages/BuyCoins";
 
 
 const App = () => {
@@ -80,6 +84,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
       <TokensProvider>
+        <BookmarksProvider>
         <DraftsProvider>
           <TaskSubmissionsProvider>
           <TooltipProvider>
@@ -111,9 +116,13 @@ const App = () => {
               <Route path="/tutorials" element={<Tutorials />} />
               <Route path="/certifications" element={<Certifications />} />
               <Route path="/job-board" element={<JobBoard />} />
+              <Route path="/bookmarks" element={<Bookmarks />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/instructor/:id" element={<InstructorProfile />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="/about" element={<About />} /> 
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/buy-coins" element={<BuyCoins />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
@@ -140,6 +149,7 @@ const App = () => {
         </TooltipProvider>
         </TaskSubmissionsProvider>
         </DraftsProvider>
+        </BookmarksProvider>
       </TokensProvider>
       </AuthProvider>
     </QueryClientProvider>

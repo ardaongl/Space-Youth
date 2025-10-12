@@ -29,19 +29,29 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { NavLink, useNavigate } from "react-router-dom";
 import { useTokens } from "@/context/TokensContext";
 import { Separator } from "@/components/ui/separator";
+import { NotificationsPopover } from "./NotificationsPopover";
+import { useAuth } from "@/context/AuthContext";
+import { AvatarDisplay } from "@/components/ui/avatar-display";
 
 function TokenWallet() {
   const { tokens } = useTokens();
+  const navigate = useNavigate();
+  
   return (
-    <div className="inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm">
+    <button 
+      onClick={() => navigate('/buy-coins')}
+      className="inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm hover:bg-secondary hover:border-amber-500/50 transition-all cursor-pointer"
+    >
       <Coins className="h-5 w-5 text-amber-500" />
       <span className="tabular-nums">{tokens}</span>
-    </div>
+    </button>
   );
 }
 
 export function Header() {
   const navigate = useNavigate();
+  const { auth } = useAuth();
+  const userName = auth.user?.name || "User";
   
   return (
     <header className="sticky top-0 z-30 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
@@ -77,9 +87,11 @@ export function Header() {
                       { to: "/", label: "Ana Ekran", icon: Home },
                       { to: "/tasks", label: "Görevler", icon: ClipboardList },
                       { to: "/courses", label: "Kurslar", icon: BookOpen },
-                      { to: "/workshops", label: "Workshops & Hackathons", icon: Users },
+                      { to: "/workshops", label: "Atölyeler & Hackathonlar", icon: Users },
                       { to: "/tutorials", label: "Ders Videoları", icon: PencilRuler },
-                      { to: "/job-board", label: "Job Board", icon: BriefcaseBusiness },
+                      { to: "/job-board", label: "İş İlanları", icon: BriefcaseBusiness },
+                      { to: "/profile", label: "Profil", icon: User },
+                      { to: "/settings", label: "Ayarlar", icon: Settings },
                     ].map(({ to, label, icon: Icon }) => (
                       <li key={to}>
                         <SheetClose asChild>
@@ -123,7 +135,7 @@ export function Header() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               className="w-full h-9 rounded-2xl border bg-secondary/50 px-9 text-sm outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Search"
+              placeholder="Ara"
             />
           </label>
         </div>
@@ -137,24 +149,22 @@ export function Header() {
             <Bookmark className="h-6 w-6" />
           </button>
           <TokenWallet />
-          <button className="px-3 py-2 rounded-full hover:bg-secondary">
-            <Bell className="h-6 w-6" />
-          </button>
-          <HoverCard>
+          <NotificationsPopover />
+          <HoverCard openDelay={0}>
             <HoverCardTrigger asChild>
-              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-indigo-500 text-white grid place-items-center text-sm font-bold cursor-pointer hover:opacity-80 transition-opacity">
-                S
+              <div className="cursor-pointer hover:opacity-80 transition-opacity">
+                <AvatarDisplay name={userName} size="sm" />
               </div>
             </HoverCardTrigger>
             <HoverCardContent className="w-80 p-0" align="end">
               <div className="p-4">
                 {/* Üst Bölüm - Kullanıcı Bilgileri */}
                 <div className="flex flex-col items-center text-center mb-4">
-                  <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-indigo-500 text-white grid place-items-center text-xl font-bold mb-2">
-                    S
+                  <div className="mb-2">
+                    <AvatarDisplay name={userName} size="md" />
                   </div>
-                  <div className="font-semibold text-foreground">Cenker Gültekin</div>
-                  <div className="text-sm text-muted-foreground">Starter Plan</div>
+                  <div className="font-semibold text-foreground">{userName}</div>
+                  <div className="text-sm text-muted-foreground">Başlangıç Planı</div>
                 </div>
                 
                 <Separator className="mb-4" />
@@ -163,19 +173,19 @@ export function Header() {
                 <div className="space-y-1 mb-4">
                   <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer" onClick={() => navigate('/profile')}>
                     <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Profile</span>
+                    <span className="text-sm">Profil</span>
                   </div>
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer" onClick={() => navigate('/settings')}>
                     <Settings className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Settings</span>
+                    <span className="text-sm">Ayarlar</span>
                   </div>
                   <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
                     <Gift className="h-4 w-4 text-red-500" />
-                    <span className="text-sm">Refer friends, get rewards</span>
+                    <span className="text-sm">Arkadaşlarını davet et, ödül kazan</span>
                   </div>
                   <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
                     <Building2 className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Uxcel for Teams</span>
+                    <span className="text-sm">Ekipler için SpaceYouth</span>
                   </div>
                 </div>
                 
@@ -184,10 +194,10 @@ export function Header() {
                 {/* Alt Bölüm - Ek Seçenekler ve Çıkış */}
                 <div className="space-y-1">
                   <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
-                    <span className="text-sm">Help Center</span>
+                    <span className="text-sm">Yardım Merkezi</span>
                   </div>
                   <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
-                    <span className="text-sm">Sign Out</span>
+                    <span className="text-sm">Çıkış Yap</span>
                   </div>
                 </div>
               </div>

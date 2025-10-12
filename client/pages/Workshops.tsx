@@ -1,13 +1,16 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { Link } from "react-router-dom";
-import { Star, Clock, Trophy, Bookmark, SlidersHorizontal, Calendar, Users2 } from "lucide-react";
+import { Clock, Trophy, Bookmark, BookmarkCheck, SlidersHorizontal, Calendar, Users2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { canSeeAddCourse } from "@/utils/roles";
+import { useBookmarks, BookmarkedContent } from "@/context/BookmarksContext";
+import { useToast } from "@/hooks/use-toast";
 
 type EventType = "workshop" | "hackathon";
 
 function EventCard({
+  id,
   to,
   title,
   author,
@@ -19,7 +22,9 @@ function EventCard({
   date,
   participants,
   maxParticipants,
+  slug,
 }: {
+  id: string;
   to: string;
   title: string;
   author: string;
@@ -31,7 +36,48 @@ function EventCard({
   date?: string;
   participants?: number;
   maxParticipants?: number;
+  slug: string;
 }) {
+  const { addBookmark, removeBookmark, isBookmarked } = useBookmarks();
+  const { toast } = useToast();
+  const bookmarked = isBookmarked(id);
+
+  const handleBookmark = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (bookmarked) {
+      removeBookmark(id);
+      toast({
+        title: "Kayıt kaldırıldı",
+        description: `${title} kayıtlılardan çıkarıldı.`,
+      });
+    } else {
+      const bookmarkItem: BookmarkedContent = {
+        id,
+        title,
+        author,
+        level,
+        rating,
+        time,
+        type: eventType,
+        slug,
+        bookmarkedAt: Date.now(),
+        date,
+        participants,
+        maxParticipants,
+        description: eventType === "workshop" 
+          ? "Uygulamalı çalışmalar ve interaktif oturumlarla becerilerinizi geliştirin." 
+          : "Ekip çalışması ve problem çözme odaklı yoğun bir deneyim."
+      };
+      addBookmark(bookmarkItem);
+      toast({
+        title: "Kaydedildi",
+        description: `${title} kayıtlılara eklendi.`,
+      });
+    }
+  };
+
   return (
     <Link
       to={to}
@@ -53,8 +99,15 @@ function EventCard({
           </span>
         )}
         
-        <button className="absolute right-5 top-5 z-10 p-1.5 rounded-full bg-background/80 border opacity-0 group-hover:opacity-100 transition">
-          <Bookmark className="h-4 w-4" />
+        <button 
+          onClick={handleBookmark}
+          className="absolute right-5 top-5 z-10 p-1.5 rounded-full bg-background/80 border opacity-0 group-hover:opacity-100 hover:bg-primary hover:text-primary-foreground transition"
+        >
+          {bookmarked ? (
+            <BookmarkCheck className="h-4 w-4 fill-current" />
+          ) : (
+            <Bookmark className="h-4 w-4" />
+          )}
         </button>
         
         <div className="aspect-[5/4] w-full rounded-xl bg-accent grid place-items-center">
@@ -75,21 +128,16 @@ function EventCard({
             : "Ekip çalışması ve problem çözme odaklı yoğun bir deneyim."}
         </p>
         
-        <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-4">
+        <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <Clock className="h-4 w-4 text-primary" /> {time}
+          </span>
+          {date && (
             <span className="inline-flex items-center gap-1">
-              <Clock className="h-4 w-4 text-primary" /> {time}
+              <Calendar className="h-4 w-4 text-primary" /> 
+              {new Date(date).toLocaleDateString("tr-TR", { month: "short", day: "numeric" })}
             </span>
-            {date && (
-              <span className="inline-flex items-center gap-1">
-                <Calendar className="h-4 w-4 text-primary" /> 
-                {new Date(date).toLocaleDateString("tr-TR", { month: "short", day: "numeric" })}
-              </span>
-            )}
-          </div>
-          <div className="inline-flex items-center gap-1">
-            <Star className="h-4 w-4 text-yellow-500" /> {rating}
-          </div>
+          )}
         </div>
         
         {participants !== undefined && maxParticipants !== undefined && (
@@ -334,7 +382,9 @@ export default function Workshops() {
             filteredEvents.map((event) => (
               <EventCard
                 key={event.id}
+                id={`event-${event.id}`}
                 to={`/events/${event.type}-${event.id}`}
+                slug={`${event.type}-${event.id}`}
                 title={event.title}
                 author={event.author}
                 level={event.level}
