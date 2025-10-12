@@ -1,7 +1,8 @@
 import AppLayout from "@/components/layout/AppLayout";
-import { ArrowRight, CheckCircle2, Clock, Bookmark, Star, Bell, Briefcase, GraduationCap, Target, Users } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, Bookmark, Star, Bell, Briefcase, GraduationCap, Target, Users, Flame, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { EventCalendar } from "@/components/ui/event-calendar";
+import FeatureSlider from "@/components/ui/FeatureSlider";
 
 function PrimaryButton({ children }: { children: React.ReactNode }) {
   return (
@@ -30,7 +31,7 @@ export default function Home() {
   const Right = (
     <aside className="hidden lg:block sticky top-[4.5rem] h-max space-y-4">
       {/* Takvim */}
-      <Card className="p-4">
+      <Card className="p-0 overflow-hidden">
         <EventCalendar 
           events={sampleEvents}
           onDateSelect={(date) => console.log('Selected date:', date)}
@@ -38,19 +39,41 @@ export default function Home() {
       </Card>
 
       {/* Streak */}
-      <Card className="p-5">
-        <div className="flex items-center justify-between">
-          <div className="font-semibold">0 day streak</div>
-          <div className="h-6 w-6 rounded-md bg-secondary grid place-items-center">⚡</div>
-        </div>
-        <p className="text-sm text-muted-foreground mt-1">Earn 100 PX to start a new streak</p>
-        <div className="mt-3 flex items-center justify-between">
-          {"TFSsMTW".split("").map((d, i) => (
-            <div key={i} className="flex flex-col items-center gap-1 text-[10px] text-muted-foreground">
-              <div className={`h-6 w-6 rounded-full ${i===0 ? 'bg-foreground/10 border border-border' : 'bg-secondary'} grid place-items-center`}></div>
-              <span className={`${i===0 ? 'font-semibold text-foreground' : ''}`}>{d}</span>
-            </div>
-          ))}
+      <Card className="p-0 overflow-hidden">
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="font-semibold text-white text-lg">Streak</div>
+            <Flame className="h-6 w-6 text-purple-200" />
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            {[
+              { day: 1, coins: 10, completed: true },
+              { day: 2, coins: 20, completed: true },
+              { day: 3, coins: 30, completed: false },
+              { day: 4, coins: 40, completed: false },
+              { day: 5, coins: 50, completed: false },
+              { day: 6, coins: 60, completed: false },
+              { day: 7, coins: 70, completed: false }
+            ].map((item, i) => (
+              <div key={i} className="flex flex-col items-center gap-2 flex-1">
+                <div className="text-[10px] text-gray-400 font-medium">Gün {item.day}</div>
+                <div className="relative">
+                  <Flame 
+                    className={`h-10 w-10 ${
+                      item.completed 
+                        ? 'text-purple-200 fill-purple-200' 
+                        : 'text-gray-500 fill-gray-700'
+                    }`} 
+                  />
+                </div>
+                <div className={`text-[11px] font-semibold ${
+                  item.completed ? 'text-white' : 'text-gray-400'
+                }`}>
+                  {item.coins}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </Card>
     </aside>
@@ -84,114 +107,42 @@ export default function Home() {
 
   return (
     <AppLayout right={Right}>
-      <div className="py-6 space-y-8">
-        {/* Duyurular Section */}
+      <div className="py-6 space-y-12">
+        {/* Feature Slider Section */}
         <section>
-          <div className="flex items-center gap-2 mb-4">
-            <Bell className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-semibold">Duyurular</h2>
-          </div>
-          <div className="space-y-3">
-            <Card className="p-4 border-l-4 border-l-blue-500">
-              <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <GraduationCap className="h-5 w-5 text-blue-600" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold">Yeni Kurs: Web Geliştirme Temelleri</h3>
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Yeni</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    HTML, CSS ve JavaScript ile başlangıç seviyesinde web geliştirme kursumuz yayında!
-                  </p>
-                  <div className="flex items-center gap-3 mt-2">
-                    <Link to="/courses" className="text-xs text-primary font-medium hover:underline">
-                      Kursa Git →
-                    </Link>
-                    <span className="text-xs text-muted-foreground">2 saat önce</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-4 border-l-4 border-l-green-500">
-              <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
-                  <Target className="h-5 w-5 text-green-600" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold">Yeni Görev: UX Tasarım Projesi</h3>
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Yeni</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Kullanıcı deneyimi odaklı yeni bir tasarım görevi eklendi. 150 coin kazanma fırsatı!
-                  </p>
-                  <div className="flex items-center gap-3 mt-2">
-                    <Link to="/tasks" className="text-xs text-primary font-medium hover:underline">
-                      Göreve Git →
-                    </Link>
-                    <span className="text-xs text-muted-foreground">1 gün önce</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-4 border-l-4 border-l-purple-500">
-              <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
-                  <Users className="h-5 w-5 text-purple-600" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold">Yaklaşan Workshop: Figma İleri Seviye</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    15 Ekim tarihinde gerçekleşecek Figma workshop'una kayıt olmayı unutmayın!
-                  </p>
-                  <div className="flex items-center gap-3 mt-2">
-                    <Link to="/workshops" className="text-xs text-primary font-medium hover:underline">
-                      Detayları Gör →
-                    </Link>
-                    <span className="text-xs text-muted-foreground">3 gün önce</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
+          <FeatureSlider />
         </section>
 
         {/* Önerilen Görevler */}
         <section>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
               <Target className="h-5 w-5 text-primary" />
               <h2 className="text-xl font-semibold">Önerilen Görevler</h2>
             </div>
-            <Link to="/tasks" className="text-sm text-muted-foreground hover:underline">Tümünü Gör</Link>
+            <Link to="/tasks" className="text-base text-muted-foreground hover:underline">Tümünü Gör</Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {[
               { title: "Kullanıcı Araştırması Yapma", coins: 120, level: "Orta", time: "2h" },
               { title: "Wireframe Oluşturma", coins: 100, level: "Başlangıç", time: "1.5h" },
             ].map((task, i) => (
-              <Card key={i} className="p-4 hover:shadow-md transition">
+              <Card key={i} className="p-12 hover:shadow-lg transition">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="font-semibold">{task.title}</h3>
-                    <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5" /> {task.time}
+                    <h3 className="font-semibold text-base">{task.title}</h3>
+                    <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="h-4 w-4" /> {task.time}
                       </span>
                       <span>{task.level}</span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-semibold text-yellow-600">{task.coins} coins</div>
+                    <div className="text-base font-semibold text-yellow-600">{task.coins} coins</div>
                   </div>
                 </div>
-                <Link to="/tasks" className="mt-3 inline-block text-sm text-primary hover:underline">
+                <Link to="/tasks" className="mt-4 inline-block text-base text-primary hover:underline font-medium">
                   Görevi Gör →
                 </Link>
               </Card>
@@ -216,33 +167,33 @@ export default function Home() {
 
         {/* Önerilen Eğitimler (Tutorials) */}
         <section>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
               <Bookmark className="h-5 w-5 text-primary" />
               <h2 className="text-xl font-semibold">Önerilen Eğitimler</h2>
             </div>
-            <Link to="/tutorials" className="text-sm text-muted-foreground hover:underline">Tümünü Gör</Link>
+            <Link to="/tutorials" className="text-base text-muted-foreground hover:underline">Tümünü Gör</Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { title: "React Hooks Kullanımı", duration: "30 dk", difficulty: "Orta" },
               { title: "CSS Grid Layout", duration: "45 dk", difficulty: "Başlangıç" },
               { title: "TypeScript Temelleri", duration: "1 saat", difficulty: "Orta" },
             ].map((tutorial, i) => (
-              <Card key={i} className="p-4 hover:shadow-md transition">
-                <div className="aspect-video bg-gradient-to-br from-primary/20 to-purple-200 rounded-lg mb-3 flex items-center justify-center">
-                  <div className="h-12 w-12 rounded-full bg-white/80 flex items-center justify-center">
-                    <Bookmark className="h-6 w-6 text-primary" />
+              <Card key={i} className="p-6 hover:shadow-lg transition">
+                <div className="aspect-video bg-gradient-to-br from-primary/20 to-purple-200 rounded-lg mb-4 flex items-center justify-center">
+                  <div className="h-16 w-16 rounded-full bg-white/80 flex items-center justify-center">
+                    <Bookmark className="h-8 w-8 text-primary" />
                   </div>
                 </div>
-                <h3 className="font-semibold text-sm">{tutorial.title}</h3>
-                <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" /> {tutorial.duration}
+                <h3 className="font-semibold text-base">{tutorial.title}</h3>
+                <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="h-4 w-4" /> {tutorial.duration}
                   </span>
                   <span>{tutorial.difficulty}</span>
                 </div>
-                <Link to="/tutorials" className="mt-3 inline-block text-sm text-primary hover:underline">
+                <Link to="/tutorials" className="mt-4 inline-block text-base text-primary hover:underline font-medium">
                   Başla →
                 </Link>
               </Card>
@@ -252,28 +203,28 @@ export default function Home() {
 
         {/* Önerilen Workshop'lar */}
         <section>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />
               <h2 className="text-xl font-semibold">Önerilen Workshop'lar</h2>
             </div>
-            <Link to="/workshops" className="text-sm text-muted-foreground hover:underline">Tümünü Gör</Link>
+            <Link to="/workshops" className="text-base text-muted-foreground hover:underline">Tümünü Gör</Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
               { title: "Design Thinking Workshop", date: "15 Ekim 2025", time: "14:00" },
               { title: "Agile Metodolojiler", date: "20 Ekim 2025", time: "16:00" },
             ].map((workshop, i) => (
-              <Card key={i} className="overflow-hidden hover:shadow-md transition">
-                <div className="h-40 bg-gradient-to-br from-primary/30 to-indigo-300" />
-                <div className="p-4">
-                  <h3 className="font-semibold">{workshop.title}</h3>
-                  <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
+              <Card key={i} className="overflow-hidden hover:shadow-lg transition">
+                <div className="h-48 bg-gradient-to-br from-primary/30 to-indigo-300" />
+                <div className="p-6">
+                  <h3 className="font-semibold text-base">{workshop.title}</h3>
+                  <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
                     <span>{workshop.date}</span>
                     <span>•</span>
                     <span>{workshop.time}</span>
                   </div>
-                  <Link to="/workshops" className="mt-3 inline-block text-sm text-primary hover:underline">
+                  <Link to="/workshops" className="mt-4 inline-block text-base text-primary hover:underline font-medium">
                     Detayları Gör →
                   </Link>
                 </div>

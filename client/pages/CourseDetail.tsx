@@ -1,6 +1,7 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Clock, ShieldCheck, BookOpen, ListChecks, ArrowLeft, Bookmark, Share2, Coins, Play } from "lucide-react";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { CheckCircle2, Clock, ShieldCheck, BookOpen, ListChecks, ArrowLeft, Bookmark, Coins, Play } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { isAdmin } from "@/utils/roles";
@@ -37,9 +38,9 @@ export default function CourseDetail() {
     // TODO: Implement save functionality
   };
 
-  const handleShare = () => {
-    console.log("Course shared");
-    // TODO: Implement share functionality
+  const handleEnroll = () => {
+    console.log("Course enrolled");
+    // TODO: Implement enroll functionality
   };
 
   return (
@@ -70,7 +71,7 @@ export default function CourseDetail() {
                   <span className="text-muted-foreground">coins</span>
                 </div>
                 
-                <div className="flex gap-3">
+                <div className="flex gap-4 items-center flex-wrap">
                   {adminUser && (
                     <Button
                       size="default"
@@ -80,13 +81,17 @@ export default function CourseDetail() {
                       Düzenle
                     </Button>
                   )}
-                  <Button variant="outline" size="default" className="gap-2" onClick={handleSave}>
-                    <Bookmark className="h-4 w-4" />
-                    Kaydet
+                  <Button variant="outline" size="lg" className="gap-2" onClick={handleSave}>
+                    <Bookmark className="h-5 w-5" />
                   </Button>
-                  <Button variant="outline" size="default" className="gap-2" onClick={handleShare}>
-                    <Share2 className="h-4 w-4" />
-                    Paylaş
+                  
+                  {/* Featured Enroll Button */}
+                  <Button 
+                    size="lg" 
+                    className="gap-2 px-8 py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105" 
+                    onClick={handleEnroll}
+                  >
+                    Kursa Kayıt Ol
                   </Button>
                 </div>
               </div>
@@ -164,53 +169,63 @@ export default function CourseDetail() {
 
           {/* Right Sidebar - Teacher Photos & Videos */}
           <div className="space-y-6">
-            {/* Teacher Photos */}
-            <div className="rounded-lg border bg-card p-6">
-              <h3 className="text-lg font-semibold mb-4">Kurs Görselleri</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {courseData.teacherPhotos.map((photo, index) => (
-                  <div key={index} className="aspect-video rounded-lg overflow-hidden bg-muted">
+            {/* Course Photo */}
+            <div className="rounded-lg border overflow-hidden bg-muted">
+              <img 
+                src={courseData.teacherPhotos[0]} 
+                alt="Course photo"
+                className="w-full aspect-video object-cover"
+              />
+            </div>
+
+            {/* Course Videos */}
+            {courseData.teacherVideos.length === 1 ? (
+              // Single video - display directly
+              <div className="rounded-lg border bg-card p-6">
+                <div className="group cursor-pointer">
+                  <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
                     <img 
-                      src={photo} 
-                      alt={`Course photo ${index + 1}`}
+                      src={courseData.teacherVideos[0].thumbnail} 
+                      alt={courseData.teacherVideos[0].title}
                       className="w-full h-full object-cover"
                     />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Teacher Videos */}
-            <div className="rounded-lg border bg-card p-6">
-              <h3 className="text-lg font-semibold mb-4">Kurs Videoları</h3>
-              <div className="space-y-3">
-                {courseData.teacherVideos.map((video, index) => (
-                  <div key={index} className="group cursor-pointer">
-                    <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
-                      <img 
-                        src={video.thumbnail} 
-                        alt={video.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/50 transition">
-                        <Play className="h-12 w-12 text-white" />
-                      </div>
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/50 transition">
+                      <Play className="h-12 w-12 text-white" />
                     </div>
-                    <p className="text-sm font-medium mt-2">{video.title}</p>
                   </div>
-                ))}
+                  <p className="text-sm font-medium mt-2">{courseData.teacherVideos[0].title}</p>
+                </div>
               </div>
-            </div>
+            ) : (
+              // Multiple videos - display as carousel
+              <div className="rounded-lg border bg-card p-6">
+                <Carousel className="w-full">
+                  <CarouselContent>
+                    {courseData.teacherVideos.map((video, index) => (
+                      <CarouselItem key={index}>
+                        <div className="group cursor-pointer">
+                          <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+                            <img 
+                              src={video.thumbnail} 
+                              alt={video.title}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/50 transition">
+                              <Play className="h-12 w-12 text-white" />
+                            </div>
+                          </div>
+                          <p className="text-sm font-medium mt-2">{video.title}</p>
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-2" />
+                  <CarouselNext className="right-2" />
+                </Carousel>
+              </div>
+            )}
 
-            {/* Enroll Button */}
-            <div className="rounded-lg border bg-card p-6">
-              <Button className="w-full" size="lg">
-                Kursa Kayıt Ol
-              </Button>
-              <p className="text-xs text-muted-foreground text-center mt-3">
-                Bu kursa kaydolarak tüm içeriklere erişim sağlayacaksınız.
-              </p>
-            </div>
+            
           </div>
         </div>
       </div>

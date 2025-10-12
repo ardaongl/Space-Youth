@@ -1,86 +1,145 @@
+import { useState, useEffect } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import { Link } from "react-router-dom";
-import { MessageSquareText, Star, Eye, Heart } from "lucide-react";
-
-function Chip({ children }: { children: React.ReactNode }) {
-  return (
-    <button className="rounded-full border px-3 py-1 text-xs font-medium text-foreground/80 hover:bg-secondary">
-      {children}
-    </button>
-  );
-}
-
-function TutorialCard({
-  title,
-  author,
-  image,
-}: {
-  title: string;
-  author: string;
-  image?: string;
-}) {
-  return (
-    <Link to="#" className="group rounded-2xl border bg-card shadow-sm hover:shadow-md transition overflow-hidden">
-      <div className="p-3 pb-0">
-        <div className="aspect-[4/3] w-full rounded-xl bg-accent grid place-items-center overflow-hidden">
-          <img src={image || "/placeholder.svg"} alt="tutorial" className="h-20 opacity-80" />
-        </div>
-      </div>
-      <div className="p-4">
-        <div className="text-[10px] font-semibold tracking-widest text-muted-foreground">TUTORIAL</div>
-        <div className="mt-1 font-semibold leading-snug group-hover:underline line-clamp-2">{title}</div>
-        <div className="mt-1 text-xs text-muted-foreground">{author}</div>
-        <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1"><Eye className="h-3.5 w-3.5"/> 2k</span>
-          <span className="inline-flex items-center gap-1"><Heart className="h-3.5 w-3.5"/> 85</span>
-          <span className="inline-flex items-center gap-1"><Star className="h-3.5 w-3.5 text-yellow-500"/> 4.8</span>
-        </div>
-      </div>
-    </Link>
-  );
-}
+import { useAuth } from "@/context/AuthContext";
+import { canSeeAddCourse } from "@/utils/roles";
+import { Video, VideoListResponse } from "@shared/api";
+import { VideoCard } from "@/components/Videos/VideoCard";
+import { AddVideoModal } from "@/components/Videos/AddVideoModal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Plus, Loader2, Search } from "lucide-react";
 
 export default function Tutorials() {
-  const tutorials = [
-    {
-      title: "ChatGPT for Product Managers: 10 Prompts That Will Save You…",
-      author: "Alessya Dzanga",
-    },
-    { title: "How To Write User Stories That Actually Get Built", author: "Raghuvir Sethi" },
-    { title: "Best Practices for Addressing Psychological Needs of Users", author: "Alessya Dzanga" },
-  ];
+  const { auth } = useAuth();
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  const canAddVideo = canSeeAddCourse(auth.user?.role);
+
+  const fetchVideos = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/videos");
+      if (!response.ok) {
+        throw new Error("Videolar yüklenemedi");
+      }
+      const data: VideoListResponse = await response.json();
+      setVideos(data.videos);
+    } catch (error) {
+      console.error("Video yükleme hatası:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchVideos();
+  }, []);
+
+  const handleDeleteVideo = async (videoId: string) => {
+    try {
+      const response = await fetch(`/api/videos/${videoId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Video silinemedi");
+      }
+
+      setVideos((prev) => prev.filter((v) => v.id !== videoId));
+    } catch (error) {
+      console.error("Video silme hatası:", error);
+      alert("Video silinirken bir hata oluştu.");
+    }
+  };
+
+  // Filter videos by search query
+  const filteredVideos = videos.filter((video) => {
+    if (!searchQuery.trim()) return true;
+    
+    const query = searchQuery.toLowerCase();
+    return (
+      video.title.toLowerCase().includes(query) ||
+      video.description.toLowerCase().includes(query) ||
+      video.teacherName.toLowerCase().includes(query) ||
+      video.category?.toLowerCase().includes(query)
+    );
+  });
+
   return (
     <AppLayout>
       <div className="py-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Tutorials</h1>
-            <p className="text-muted-foreground mt-1">Learn from industry experts with step-by-step, practical guides.</p>
+            <h1 className="text-2xl font-bold">Ders Videoları</h1>
+            <p className="text-muted-foreground mt-1">
+              Öğretmenlerimizden adım adım pratik rehberlerle öğrenin.
+            </p>
           </div>
-          <div className="hidden md:flex items-center gap-2">
-            <button className="rounded-full border px-3 py-1.5 text-sm">Newest ▾</button>
-            <button className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground shadow">Post tutorial</button>
+          {canAddVideo && (
+            <Button
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Video Ekle
+            </Button>
+          )}
+        </div>
+
+        <div className="mt-6 relative max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Video ara..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 h-11"
+          />
+        </div>
+
+        {isLoading ? (
+          <div className="mt-8 flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
-        </div>
-
-        <div className="mt-4 flex items-center gap-2">
-          <Chip>All</Chip>
-          <Chip>UX</Chip>
-          <Chip>PM</Chip>
-        </div>
-
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-          {tutorials.map((t, i) => (
-            <TutorialCard key={i} title={t.title} author={t.author} />
-          ))}
-        </div>
-
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <TutorialCard key={`more-${i}`} title={`Tutorial ${i + 4}`} author="Author" />
-          ))}
-        </div>
+        ) : filteredVideos.length === 0 ? (
+          <div className="mt-8 text-center py-12">
+            <p className="text-muted-foreground">
+              {searchQuery.trim() 
+                ? `"${searchQuery}" için sonuç bulunamadı.` 
+                : "Henüz video eklenmemiş."}
+            </p>
+            {canAddVideo && !searchQuery.trim() && (
+              <Button
+                onClick={() => setShowAddModal(true)}
+                variant="outline"
+                className="mt-4"
+              >
+                İlk Videoyu Ekle
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+            {filteredVideos.map((video) => (
+              <VideoCard
+                key={video.id}
+                video={video}
+                canDelete={canAddVideo && video.teacherId === auth.user?.id}
+                onDelete={handleDeleteVideo}
+              />
+            ))}
+          </div>
+        )}
       </div>
+
+      <AddVideoModal
+        open={showAddModal}
+        onOpenChange={setShowAddModal}
+        onVideoAdded={fetchVideos}
+      />
     </AppLayout>
   );
 }

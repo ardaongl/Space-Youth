@@ -3,12 +3,20 @@ import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Upload, X, Image as ImageIcon, Video } from "lucide-react";
+import { ArrowLeft, Upload, X, Image as ImageIcon, Video, Calendar, MapPin, Users2 } from "lucide-react";
 
-export default function AddCourse() {
+type EventType = "workshop" | "hackathon";
+
+export default function AddEvent() {
   const navigate = useNavigate();
-  const [courseName, setCourseName] = useState("");
-  const [courseDescription, setCourseDescription] = useState("");
+  const [eventType, setEventType] = useState<EventType>("workshop");
+  const [eventName, setEventName] = useState("");
+  const [eventDescription, setEventDescription] = useState("");
+  const [organizerName, setOrganizerName] = useState("");
+  const [eventDate, setEventDate] = useState("");
+  const [eventLocation, setEventLocation] = useState("");
+  const [maxParticipants, setMaxParticipants] = useState("");
+  const [price, setPrice] = useState("");
   const [achievements, setAchievements] = useState<string[]>([""]);
   const [photos, setPhotos] = useState<File[]>([]);
   const [videos, setVideos] = useState<File[]>([]);
@@ -49,26 +57,38 @@ export default function AddCourse() {
   };
 
   const handleContinue = () => {
-    // Store course data in session/state and navigate to lessons page
-    const courseData = {
-      name: courseName,
-      description: courseDescription,
+    // Store event data in session/state and navigate to sessions page
+    const eventData = {
+      type: eventType,
+      name: eventName,
+      description: eventDescription,
+      organizer: organizerName,
+      date: eventDate,
+      location: eventLocation,
+      maxParticipants: parseInt(maxParticipants) || 0,
+      price: parseInt(price) || 0,
       achievements: achievements.filter(a => a.trim() !== ""),
       photos,
       videos,
     };
     
     // Store in sessionStorage for now
-    sessionStorage.setItem("courseData", JSON.stringify({
-      ...courseData,
+    sessionStorage.setItem("eventData", JSON.stringify({
+      ...eventData,
       photoNames: photos.map(p => p.name),
       videoNames: videos.map(v => v.name),
     }));
 
-    navigate("/courses/add/lessons");
+    navigate("/events/add/sessions");
   };
 
-  const isValid = courseName.trim() !== "" && courseDescription.trim() !== "";
+  const isValid = 
+    eventName.trim() !== "" && 
+    eventDescription.trim() !== "" &&
+    organizerName.trim() !== "" &&
+    eventDate !== "" &&
+    eventLocation.trim() !== "" &&
+    maxParticipants !== "";
 
   return (
     <AppLayout>
@@ -77,7 +97,7 @@ export default function AddCourse() {
         <Button
           variant="ghost"
           className="mb-6 gap-2"
-          onClick={() => navigate('/courses')}
+          onClick={() => navigate('/workshops')}
         >
           <ArrowLeft className="h-4 w-4" />
           Geri Dön
@@ -86,43 +106,162 @@ export default function AddCourse() {
         <div className="max-w-4xl mx-auto">
           <div className="bg-card rounded-lg border shadow-sm p-8">
             <div className="mb-6">
-              <h1 className="text-3xl font-bold">Yeni Kurs Ekle</h1>
-              <p className="text-muted-foreground mt-2">Adım 1/2: Kurs Bilgileri</p>
+              <h1 className="text-3xl font-bold">Yeni Etkinlik Ekle</h1>
+              <p className="text-muted-foreground mt-2">Adım 1/2: Etkinlik Bilgileri</p>
             </div>
 
             <div className="space-y-6">
-              {/* Course Name */}
+              {/* Event Type Selection */}
+              <div>
+                <label className="block text-sm font-semibold mb-3">
+                  Etkinlik Tipi <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setEventType("workshop")}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      eventType === "workshop"
+                        ? "border-blue-500 bg-blue-50 text-blue-900"
+                        : "border-gray-300 hover:border-gray-400"
+                    }`}
+                  >
+                    <div className="text-2xl mb-2">🎯</div>
+                    <div className="font-semibold">Workshop</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Uygulamalı öğrenme ve beceri geliştirme
+                    </div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setEventType("hackathon")}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      eventType === "hackathon"
+                        ? "border-purple-500 bg-purple-50 text-purple-900"
+                        : "border-gray-300 hover:border-gray-400"
+                    }`}
+                  >
+                    <div className="text-2xl mb-2">💻</div>
+                    <div className="font-semibold">Hackathon</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Yoğun kodlama maratonu ve yarışma
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Event Name */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Kursun Adı <span className="text-red-500">*</span>
+                  {eventType === "workshop" ? "Workshop" : "Hackathon"} Adı <span className="text-red-500">*</span>
                 </label>
                 <Input
                   type="text"
-                  value={courseName}
-                  onChange={(e) => setCourseName(e.target.value)}
-                  placeholder="Örn: Web Geliştirme Temelleri"
+                  value={eventName}
+                  onChange={(e) => setEventName(e.target.value)}
+                  placeholder={eventType === "workshop" ? "Örn: UX Research Fundamentals" : "Örn: AI Hackathon 2024"}
                   className="w-full"
                 />
               </div>
 
-              {/* Course Description */}
+              {/* Event Description */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Kursun Açıklaması <span className="text-red-500">*</span>
+                  Etkinlik Açıklaması <span className="text-red-500">*</span>
                 </label>
                 <textarea
-                  value={courseDescription}
-                  onChange={(e) => setCourseDescription(e.target.value)}
-                  placeholder="Kursunuz hakkında detaylı bilgi verin..."
+                  value={eventDescription}
+                  onChange={(e) => setEventDescription(e.target.value)}
+                  placeholder="Etkinliğiniz hakkında detaylı bilgi verin..."
                   rows={6}
                   className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 />
               </div>
 
+              {/* Organizer Name */}
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  Organizatör Adı <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="text"
+                  value={organizerName}
+                  onChange={(e) => setOrganizerName(e.target.value)}
+                  placeholder="Örn: Tech Community"
+                  className="w-full"
+                />
+              </div>
+
+              {/* Event Date, Location, and Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2">
+                    Etkinlik Tarihi <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="datetime-local"
+                      value={eventDate}
+                      onChange={(e) => setEventDate(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-2">
+                    Konum <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      value={eventLocation}
+                      onChange={(e) => setEventLocation(e.target.value)}
+                      placeholder="Örn: TechHub Istanbul veya Online - Zoom"
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-2">
+                    Maksimum Katılımcı <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Users2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="number"
+                      value={maxParticipants}
+                      onChange={(e) => setMaxParticipants(e.target.value)}
+                      placeholder="Örn: 50"
+                      min="1"
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-2">
+                    Katılım Ücreti (Coins)
+                  </label>
+                  <Input
+                    type="number"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder="Örn: 150 (ücretsiz için 0)"
+                    min="0"
+                    className="w-full"
+                  />
+                </div>
+              </div>
+
               {/* Achievements */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Kurs Sonunda Kazanılacaklar
+                  Etkinlik Sonunda Kazanılacaklar
                 </label>
                 <div className="space-y-3">
                   {achievements.map((achievement, index) => (
@@ -159,7 +298,7 @@ export default function AddCourse() {
               {/* File Upload - Photo and Video side by side */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Dosya Ekle
+                  Medya Ekle
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Photo Upload */}
@@ -261,7 +400,7 @@ export default function AddCourse() {
               <div className="flex items-center justify-between pt-6 border-t">
                 <Button
                   variant="outline"
-                  onClick={() => navigate('/courses')}
+                  onClick={() => navigate('/workshops')}
                 >
                   İptal
                 </Button>
@@ -280,3 +419,4 @@ export default function AddCourse() {
     </AppLayout>
   );
 }
+

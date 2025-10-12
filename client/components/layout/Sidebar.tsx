@@ -17,7 +17,6 @@ const items = [
   { to: "/courses", label: "Kurslar", icon: BookOpen },
   { to: "/workshops", label: "Workshops & Hackathons", icon: Users },
   { to: "/tutorials", label: "Ders Videoları", icon: PencilRuler },
-  { to: "/my-tasks", label: "Ödevler", icon: ClipboardList },
   { to: "/job-board", label: "Job Board", icon: BriefcaseBusiness },
 ];
 
@@ -27,8 +26,8 @@ export function Sidebar() {
       <div className="px-3 pb-3">
         <a href="/" className="block">
           <img
-            src="https://cdn.builder.io/api/v1/image/assets%2Fe593452711cd42b29cbfa5d41f1f5a37%2F5dd0ad7f51d347fc928a50c6c2e284f5?format=webp&width=400"
-            alt="Logo"
+            src="/SpaceYouth-logo.png"
+            alt="SpaceYouth"
             className="h-12 w-auto"
           />
         </a>
@@ -61,4 +60,5 @@ export function Sidebar() {
     </aside>
   );
 }
+
 

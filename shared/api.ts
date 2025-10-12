@@ -10,3 +10,40 @@
 export interface DemoResponse {
   message: string;
 }
+
+/**
+ * Video interface for tutorial videos
+ */
+export interface Video {
+  id: string;
+  title: string;
+  description: string;
+  thumbnailUrl?: string;
+  videoUrl: string; // YouTube URL or direct video URL
+  duration?: string; // e.g., "10:45"
+  category?: string;
+  teacherId: string;
+  teacherName: string;
+  views?: number;
+  likes?: number;
+  rating?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateVideoRequest {
+  title: string;
+  description: string;
+  thumbnailUrl?: string;
+  videoUrl: string;
+  duration?: string;
+  category?: string;
+}
+
+export interface VideoListResponse {
+  videos: Video[];
+}
+
+export interface VideoResponse {
+  video: Video;
+}
