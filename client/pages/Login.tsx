@@ -42,75 +42,27 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      // Development mode: Mock login
-      if (import.meta.env.DEV) {
-        // Mock credentials
-        const mockUsers = [
-          { email: "student@test.com", password: "123456", name: "Ahmet Öğrenci", role: "student" },
-          { email: "teacher@test.com", password: "123456", name: "Ayşe Öğretmen", role: "teacher" },
-          { email: "admin@test.com", password: "123456", name: "Admin User", role: "admin" },
-        ];
+      // Mock credentials - Always use mock data
+      const mockUsers = [
+        { email: "student@test.com", password: "123456", name: "Ahmet Öğrenci", role: "student" },
+        { email: "teacher@test.com", password: "123456", name: "Ayşe Öğretmen", role: "teacher" },
+        { email: "admin@test.com", password: "123456", name: "Admin User", role: "admin" },
+      ];
 
-        const user = mockUsers.find(
-          u => u.email === formData.email && u.password === formData.password
-        );
+      const user = mockUsers.find(
+        u => u.email === formData.email && u.password === formData.password
+      );
 
-        if (user) {
-          // Save mock token
-          authService.setToken("dev-token-" + user.role);
-          
-          toast({
-            title: "Başarılı!",
-            description: `${user.name} olarak giriş yapıldı. Yönlendiriliyorsunuz...`,
-          });
-
-          // Refetch user data (will use mock data in dev mode)
-          await refetchUser();
-
-          // Check if onboarding is completed
-          const hasCompletedOnboarding = localStorage.getItem("onboarding.completed") === "true";
-          
-          // Redirect based on onboarding status
-          setTimeout(() => {
-            if (hasCompletedOnboarding) {
-              navigate("/dashboard");
-            } else {
-              // Onboarding modal will be shown automatically
-              navigate("/");
-            }
-          }, 1000);
-        } else {
-          toast({
-            title: "Giriş Başarısız",
-            description: "E-posta veya şifre hatalı.",
-            variant: "destructive",
-          });
-        }
-        setIsLoading(false);
-        return;
-      }
-
-      // Production mode: Real API call
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.token) {
-        // Save token
-        authService.setToken(data.token);
+      if (user) {
+        // Save mock token
+        authService.setToken("dev-token-" + user.role);
         
         toast({
           title: "Başarılı!",
-          description: "Giriş başarılı. Yönlendiriliyorsunuz...",
+          description: `${user.name} olarak giriş yapıldı. Yönlendiriliyorsunuz...`,
         });
 
-        // Refetch user data
+        // Refetch user data (will use mock data)
         await refetchUser();
 
         // Check if onboarding is completed
@@ -128,7 +80,7 @@ export default function Login() {
       } else {
         toast({
           title: "Giriş Başarısız",
-          description: data.message || "E-posta veya şifre hatalı.",
+          description: "E-posta veya şifre hatalı.",
           variant: "destructive",
         });
       }
@@ -288,32 +240,30 @@ export default function Login() {
           </div>
         </Card>
 
-        {/* Development Note */}
-        {import.meta.env.DEV && (
-          <div className="mt-4 p-4 rounded-lg bg-blue-50 text-blue-900 text-sm border border-blue-200">
-            <div className="font-bold mb-2">🔧 Geliştirme Modu - Test Hesapları:</div>
-            <div className="space-y-1 text-xs">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold">Öğrenci:</span>
-                <code className="bg-blue-100 px-2 py-0.5 rounded">student@test.com</code>
-                <span>/</span>
-                <code className="bg-blue-100 px-2 py-0.5 rounded">123456</code>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold">Öğretmen:</span>
-                <code className="bg-blue-100 px-2 py-0.5 rounded">teacher@test.com</code>
-                <span>/</span>
-                <code className="bg-blue-100 px-2 py-0.5 rounded">123456</code>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold">Admin:</span>
-                <code className="bg-blue-100 px-2 py-0.5 rounded">admin@test.com</code>
-                <span>/</span>
-                <code className="bg-blue-100 px-2 py-0.5 rounded">123456</code>
-              </div>
+        {/* Test Accounts Note */}
+        <div className="mt-4 p-4 rounded-lg bg-blue-50 text-blue-900 text-sm border border-blue-200">
+          <div className="font-bold mb-2">🔧 Test Hesapları:</div>
+          <div className="space-y-1 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">Öğrenci:</span>
+              <code className="bg-blue-100 px-2 py-0.5 rounded">student@test.com</code>
+              <span>/</span>
+              <code className="bg-blue-100 px-2 py-0.5 rounded">123456</code>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">Öğretmen:</span>
+              <code className="bg-blue-100 px-2 py-0.5 rounded">teacher@test.com</code>
+              <span>/</span>
+              <code className="bg-blue-100 px-2 py-0.5 rounded">123456</code>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">Admin:</span>
+              <code className="bg-blue-100 px-2 py-0.5 rounded">admin@test.com</code>
+              <span>/</span>
+              <code className="bg-blue-100 px-2 py-0.5 rounded">123456</code>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

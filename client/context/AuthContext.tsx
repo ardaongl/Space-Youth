@@ -44,8 +44,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const storedToken = authService.getToken();
     
     if (!storedToken) {
-      // Development mode: Set default student role for testing
-      if (import.meta.env.DEV && !user) {
+      // Set default student role for testing
+      if (!user) {
         dispatch(setUser({
           id: "student-1",
           name: "Ahmet Öğrenci",
@@ -70,20 +70,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       dispatch(setUser(userData));
     } catch (error) {
       console.error("Failed to fetch user data:", error);
-      // Development mode: Use mock data on API error
-      if (import.meta.env.DEV) {
-        console.warn("⚠️ API hatası, mock data kullanılıyor");
-        dispatch(setUser({
-          id: "student-1",
-          name: "Ahmet Öğrenci",
-          email: "ogrenci@test.com",
-          role: "student",
-        }));
-        dispatch(setUserToken("dev-token"));
-      } else {
-        dispatch(clearUser());
-        authService.removeToken();
-      }
+      // Use mock data on API error
+      console.warn("⚠️ API hatası, mock data kullanılıyor");
+      dispatch(setUser({
+        id: "student-1",
+        name: "Ahmet Öğrenci",
+        email: "ogrenci@test.com",
+        role: "student",
+      }));
+      dispatch(setUserToken("dev-token"));
     } finally {
       dispatch(setLoading(false));
     }
