@@ -1,7 +1,7 @@
 import { store } from '@/store';
 import axios, {AxiosHeaders, InternalAxiosRequestConfig} from 'axios';
 
-const baseUrl = import.meta.env.VITE_BASE_URL;
+const baseUrl = import.meta.env.VITE_BASE_URL || '';
 
 export const api = axios.create({
   baseURL: baseUrl,

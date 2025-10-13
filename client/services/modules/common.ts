@@ -1,12 +1,22 @@
-import { api } from "../api"
-
 export class CommonAPI {
     about = async () => {
         try {
-            const response = await api.get("/api/about", {requiresAuth:false, validateStatus: s => s < 500})
-            return response.data;
-        } catch (error) {
+            // Mock about data - since we don't have real backend
+            const mockAboutData = {
+                title: "Space Youth Hakkında",
+                description: "Gençlerin yeteneklerini keşfetmesi ve geliştirmesi için tasarlanmış kapsamlı bir platform.",
+                stats: {
+                    students: 10000,
+                    courses: 500,
+                    instructors: 100,
+                    projects: 5000
+                }
+            };
             
+            return mockAboutData;
+        } catch (error) {
+            console.error("Error loading about data:", error);
+            return null;
         }
     }
 }
