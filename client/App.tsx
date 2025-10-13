@@ -1,13 +1,14 @@
 import "./global.css";
 
-import AdminPage from "./pages/AdminPage"; 
 import React, { useEffect, useState } from "react";
-import { Toaster } from "@/components/ui/toaster";
 import { createRoot } from "react-dom/client";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Provider } from "react-redux";
+import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+// Pages
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Placeholder from "./pages/Placeholder";
@@ -31,12 +32,6 @@ import { Profile } from "./pages/Profile";
 import { InstructorProfile } from "./pages/InstructorProfile";
 import About from "./pages/About";
 import Settings from "./pages/Settings";
-import { TokensProvider } from "./context/TokensContext";
-import { DraftsProvider } from "./context/DraftsContext";
-import { TaskSubmissionsProvider } from "./context/TaskSubmissionsContext";
-import { TasksProvider } from "./context/TasksContext";
-import { AuthProvider } from "./context/AuthContext";
-import { BookmarksProvider } from "./context/BookmarksContext";
 import MyTasks from "./pages/MyTasks";
 import Leaderboard from "./pages/Leaderboard";
 import Workshops from "./pages/Workshops";
@@ -44,15 +39,27 @@ import EventDetail from "./pages/EventDetail";
 import AddEvent from "./pages/AddEvent";
 import AddEventSessions from "./pages/AddEventSessions";
 import EditEvent from "./pages/EditEvent";
-import TestWizard, { OnboardingData } from "@/components/onboarding/TestWizard";
-import { Provider } from "react-redux";
-const queryClient = new QueryClient();
-import { store } from "./store";
 import Callback from "./pages/Callback";
 import Dashboard from "./pages/Dashboard";
-import RoleSwitcher from "./components/dev/RoleSwitcher";
+import AdminPage from "./pages/AdminPage";
 import BuyCoins from "./pages/BuyCoins";
-import { useAuth } from "./context/AuthContext";
+
+// Contexts
+import { TokensProvider } from "./context/TokensContext";
+import { DraftsProvider } from "./context/DraftsContext";
+import { TaskSubmissionsProvider } from "./context/TaskSubmissionsContext";
+import { TasksProvider } from "./context/TasksContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { BookmarksProvider } from "./context/BookmarksContext";
+
+// Components
+import TestWizard, { OnboardingData } from "@/components/onboarding/TestWizard";
+import RoleSwitcher from "./components/dev/RoleSwitcher";
+
+// Store
+import { store } from "./store";
+
+const queryClient = new QueryClient();
 
 
 const AppContent = () => {
@@ -93,44 +100,42 @@ const AppContent = () => {
 
   return (
     <>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Explore />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/callback" element={<Callback />} />
-          <Route path="/zoom/callback" element={<ZoomCallback />} />
-          <Route path="/tasks" element={<Tasks />} />
-          <Route path="/tasks/:taskId" element={<TaskDetail />} />
-          <Route path="/tasks/:taskId/post" element={<PostProject />} />
-          <Route path="/my-tasks" element={<MyTasks />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="/workshops" element={<Workshops />} />
-          <Route path="/events/add" element={<AddEvent />} />
-          <Route path="/events/add/sessions" element={<AddEventSessions />} />
-          <Route path="/events/:slug/edit" element={<EditEvent />} />
-          <Route path="/events/:slug" element={<EventDetail />} />
-          <Route path="/courses" element={<Index />} />
-          <Route path="/courses/add" element={<AddCourse />} />
-          <Route path="/courses/add/lessons" element={<AddLessons />} />
-          <Route path="/courses/:slug/edit" element={<EditCourse />} />
-          <Route path="/courses/:slug" element={<CourseDetail />} />
-          <Route path="/practice" element={<Tutorials />} />
-          <Route path="/tutorials" element={<Tutorials />} />
-          <Route path="/certifications" element={<Certifications />} />
-          <Route path="/job-board" element={<JobBoard />} />
-          <Route path="/bookmarks" element={<Bookmarks />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/instructor/:id" element={<InstructorProfile />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/about" element={<About />} /> 
-          <Route path="/admin" element={<AdminPage />} />
-          <Route path="/buy-coins" element={<BuyCoins />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Explore />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/callback" element={<Callback />} />
+        <Route path="/zoom/callback" element={<ZoomCallback />} />
+        <Route path="/tasks" element={<Tasks />} />
+        <Route path="/tasks/:taskId" element={<TaskDetail />} />
+        <Route path="/tasks/:taskId/post" element={<PostProject />} />
+        <Route path="/my-tasks" element={<MyTasks />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/workshops" element={<Workshops />} />
+        <Route path="/events/add" element={<AddEvent />} />
+        <Route path="/events/add/sessions" element={<AddEventSessions />} />
+        <Route path="/events/:slug/edit" element={<EditEvent />} />
+        <Route path="/events/:slug" element={<EventDetail />} />
+        <Route path="/courses" element={<Index />} />
+        <Route path="/courses/add" element={<AddCourse />} />
+        <Route path="/courses/add/lessons" element={<AddLessons />} />
+        <Route path="/courses/:slug/edit" element={<EditCourse />} />
+        <Route path="/courses/:slug" element={<CourseDetail />} />
+        <Route path="/practice" element={<Tutorials />} />
+        <Route path="/tutorials" element={<Tutorials />} />
+        <Route path="/certifications" element={<Certifications />} />
+        <Route path="/job-board" element={<JobBoard />} />
+        <Route path="/bookmarks" element={<Bookmarks />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/instructor/:id" element={<InstructorProfile />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/about" element={<About />} /> 
+        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/buy-coins" element={<BuyCoins />} />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
 
       {/* Only show onboarding for logged in users */}
       {auth.user && (
@@ -170,7 +175,9 @@ const App = () => {
                     <TooltipProvider>
                       <Toaster />
                       <Sonner />
-                      <AppContent />
+                      <BrowserRouter>
+                        <AppContent />
+                      </BrowserRouter>
                     </TooltipProvider>
                   </TasksProvider>
                 </TaskSubmissionsProvider>
