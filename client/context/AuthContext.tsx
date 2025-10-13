@@ -41,12 +41,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { token, user, isLoading } = useAppSelector((state) => state.user);
 
   const fetchUserData = async () => {
-    console.log("🔍 fetchUserData called");
     const storedToken = authService.getToken();
-    console.log("🔑 Stored token:", storedToken);
     
     if (!storedToken) {
-      console.log("❌ No token found, clearing user data");
       // No token, clear user data
       dispatch(clearUser());
       return;
@@ -54,18 +51,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // Set token in Redux if not already set
     if (token !== storedToken) {
-      console.log("🔄 Setting token in Redux");
       dispatch(setUserToken(storedToken));
     }
 
     try {
-      console.log("🚀 Fetching user data...");
       dispatch(setLoading(true));
       const userData = await authService.fetchMe();
-      console.log("✅ User data fetched:", userData);
       dispatch(setUser(userData));
     } catch (error) {
-      console.error("❌ Failed to fetch user data:", error);
+      console.error("Failed to fetch user data:", error);
       // Clear user data on error
       dispatch(clearUser());
       authService.removeToken();
