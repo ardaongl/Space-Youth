@@ -52,44 +52,22 @@ import Callback from "./pages/Callback";
 import Dashboard from "./pages/Dashboard";
 import RoleSwitcher from "./components/dev/RoleSwitcher";
 import BuyCoins from "./pages/BuyCoins";
+import { useAuth } from "./context/AuthContext";
 
 
-const App = () => {
+const AppContent = () => {
   const [onboardingOpen, setOnboardingOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const { auth } = useAuth();
 
   useEffect(() => {
-    // Check if user is logged in
-    const token = localStorage.getItem("token");
-    if (token) {
-      // User is logged in, check onboarding status
+    // Check if user is logged in and onboarding status
+    if (auth.user) {
       const done = typeof window !== "undefined" && localStorage.getItem("onboarding.completed") === "true";
       setOnboardingOpen(!done);
-      setUser({ loggedIn: true });
     } else {
-      // User is not logged in, don't show onboarding
       setOnboardingOpen(false);
-      setUser({ loggedIn: false });
     }
-  }, []);
-
-  // Listen for auth state changes
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        const done = typeof window !== "undefined" && localStorage.getItem("onboarding.completed") === "true";
-        setOnboardingOpen(!done);
-        setUser({ loggedIn: true });
-      } else {
-        setOnboardingOpen(false);
-        setUser({ loggedIn: false });
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  }, [auth.user]);
 
   const handleComplete = (data: OnboardingData) => {
     try {
@@ -113,86 +91,93 @@ const App = () => {
   };
 
   return (
+    <>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Explore />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/callback" element={<Callback />} />
+          <Route path="/zoom/callback" element={<ZoomCallback />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/tasks/:taskId" element={<TaskDetail />} />
+          <Route path="/tasks/:taskId/post" element={<PostProject />} />
+          <Route path="/my-tasks" element={<MyTasks />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/workshops" element={<Workshops />} />
+          <Route path="/events/add" element={<AddEvent />} />
+          <Route path="/events/add/sessions" element={<AddEventSessions />} />
+          <Route path="/events/:slug/edit" element={<EditEvent />} />
+          <Route path="/events/:slug" element={<EventDetail />} />
+          <Route path="/courses" element={<Index />} />
+          <Route path="/courses/add" element={<AddCourse />} />
+          <Route path="/courses/add/lessons" element={<AddLessons />} />
+          <Route path="/courses/:slug/edit" element={<EditCourse />} />
+          <Route path="/courses/:slug" element={<CourseDetail />} />
+          <Route path="/practice" element={<Tutorials />} />
+          <Route path="/tutorials" element={<Tutorials />} />
+          <Route path="/certifications" element={<Certifications />} />
+          <Route path="/job-board" element={<JobBoard />} />
+          <Route path="/bookmarks" element={<Bookmarks />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/instructor/:id" element={<InstructorProfile />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/about" element={<About />} /> 
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/buy-coins" element={<BuyCoins />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+
+      {/* Only show onboarding for logged in users */}
+      {auth.user && (
+        <TestWizard
+          open={onboardingOpen}
+          onClose={() => { /* Gate: do nothing to enforce completion */ }}
+          onComplete={handleComplete}
+        />
+      )}
+
+      {import.meta.env.DEV && !onboardingOpen && auth.user && (
+        <>
+          <RoleSwitcher />
+          <button
+            onClick={resetOnboarding}
+            className="fixed bottom-4 right-4 z-50 rounded-full bg-foreground text-background px-4 py-2 text-sm shadow hover:brightness-110"
+            title="Geliştirme: Sorulara dön"
+          >
+            Sorulara dön
+          </button>
+        </>
+      )}
+    </>
+  );
+};
+
+const App = () => {
+  return (
     <Provider store={store}>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-      <TokensProvider>
-        <BookmarksProvider>
-        <DraftsProvider>
-          <TaskSubmissionsProvider>
-          <TasksProvider>
-          <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          {/* Router renders the app UI; TestWizard overlays above to gate access */}
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Explore />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/callback" element={<Callback />} />
-              <Route path="/zoom/callback" element={<ZoomCallback />} />
-              <Route path="/tasks" element={<Tasks />} />
-              <Route path="/tasks/:taskId" element={<TaskDetail />} />
-              <Route path="/tasks/:taskId/post" element={<PostProject />} />
-              <Route path="/my-tasks" element={<MyTasks />} />
-              <Route path="/leaderboard" element={<Leaderboard />} />
-              <Route path="/workshops" element={<Workshops />} />
-              <Route path="/events/add" element={<AddEvent />} />
-              <Route path="/events/add/sessions" element={<AddEventSessions />} />
-              <Route path="/events/:slug/edit" element={<EditEvent />} />
-              <Route path="/events/:slug" element={<EventDetail />} />
-              <Route path="/courses" element={<Index />} />
-              <Route path="/courses/add" element={<AddCourse />} />
-              <Route path="/courses/add/lessons" element={<AddLessons />} />
-              <Route path="/courses/:slug/edit" element={<EditCourse />} />
-              <Route path="/courses/:slug" element={<CourseDetail />} />
-              <Route path="/practice" element={<Tutorials />} />
-              <Route path="/tutorials" element={<Tutorials />} />
-              <Route path="/certifications" element={<Certifications />} />
-              <Route path="/job-board" element={<JobBoard />} />
-              <Route path="/bookmarks" element={<Bookmarks />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/instructor/:id" element={<InstructorProfile />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/about" element={<About />} /> 
-              <Route path="/admin" element={<AdminPage />} />
-              <Route path="/buy-coins" element={<BuyCoins />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-
-          {/* Only show onboarding for logged in users */}
-          {user?.loggedIn && (
-            <TestWizard
-              open={onboardingOpen}
-              onClose={() => { /* Gate: do nothing to enforce completion */ }}
-              onComplete={handleComplete}
-            />
-          )}
-
-          {import.meta.env.DEV && !onboardingOpen && user?.loggedIn && (
-            <>
-              <RoleSwitcher />
-              <button
-                onClick={resetOnboarding}
-                className="fixed bottom-4 right-4 z-50 rounded-full bg-foreground text-background px-4 py-2 text-sm shadow hover:brightness-110"
-                title="Geliştirme: Sorulara dön"
-              >
-                Sorulara dön
-              </button>
-            </>
-          )}
-        </TooltipProvider>
-        </TasksProvider>
-        </TaskSubmissionsProvider>
-        </DraftsProvider>
-        </BookmarksProvider>
-      </TokensProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TokensProvider>
+            <BookmarksProvider>
+              <DraftsProvider>
+                <TaskSubmissionsProvider>
+                  <TasksProvider>
+                    <TooltipProvider>
+                      <Toaster />
+                      <Sonner />
+                      <AppContent />
+                    </TooltipProvider>
+                  </TasksProvider>
+                </TaskSubmissionsProvider>
+              </DraftsProvider>
+            </BookmarksProvider>
+          </TokensProvider>
+        </AuthProvider>
+      </QueryClientProvider>
     </Provider>
   );
 };
