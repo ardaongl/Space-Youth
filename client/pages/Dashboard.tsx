@@ -1,30 +1,54 @@
-import { useEffect, useState } from "react";
-
-interface UserPayload {
-  email: string;
-  role?: string;
-  [k: string]: any;
-}
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 export default function Dashboard() {
-  const [user, setUser] = useState<UserPayload | null>(null);
+  const { auth } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("http://localhost:3000/me", { credentials: "include" });
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data.user as UserPayload);
-        } else {
-          window.location.href = "http://localhost:4001";
-        }
-      } catch {
-        window.location.href = "http://localhost:4001";
-      }
-    })();
-  }, []);
+    // If user is not authenticated, redirect to login
+    if (auth.status === "unauthenticated") {
+      navigate("/login");
+    }
+  }, [auth.status, navigate]);
 
-  if (!user) return <p>Yükleniyor…</p>;
-  return <div style={{ padding: 24 }}>Merhaba, {user.email}</div>;
+  if (auth.isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Yükleniyor…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!auth.user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Giriş Gerekli</h1>
+          <p className="text-muted-foreground mb-4">Bu sayfaya erişmek için giriş yapmanız gerekiyor.</p>
+          <button 
+            onClick={() => navigate("/login")}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:brightness-110"
+          >
+            Giriş Yap
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold mb-4">Dashboard</h1>
+        <p className="text-muted-foreground mb-2">Merhaba, {auth.user.name}!</p>
+        <p className="text-sm text-muted-foreground">Rol: {auth.user.role}</p>
+        <p className="text-sm text-muted-foreground">Email: {auth.user.email}</p>
+      </div>
+    </div>
+  );
 }
