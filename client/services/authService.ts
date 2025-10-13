@@ -15,15 +15,37 @@ export const authService = {
   },
 
   fetchMe: async (): Promise<User> => {
-    const response = await api.get("/api/user", {
-      requiresAuth: true,
-      validateStatus: (s) => s < 500,
-    });
-
-    if (response.status !== 200) {
-      throw new Error("Failed to fetch user data");
+    // Mock user data - since we don't have real backend
+    const token = localStorage.getItem("token");
+    
+    if (!token) {
+      throw new Error("No token found");
     }
 
-    return response.data;
+    // Extract role from token (dev-token-student, dev-token-teacher, etc.)
+    const role = token.replace("dev-token-", "") as "student" | "teacher" | "admin";
+    
+    const mockUsers = {
+      student: {
+        id: "student-1",
+        name: "Ahmet Öğrenci",
+        email: "student@test.com",
+        role: "student" as const,
+      },
+      teacher: {
+        id: "teacher-1", 
+        name: "Ayşe Öğretmen",
+        email: "teacher@test.com",
+        role: "teacher" as const,
+      },
+      admin: {
+        id: "admin-1",
+        name: "Admin User", 
+        email: "admin@test.com",
+        role: "admin" as const,
+      }
+    };
+
+    return mockUsers[role] || mockUsers.student;
   },
 };

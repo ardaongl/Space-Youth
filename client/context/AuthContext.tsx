@@ -60,15 +60,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       dispatch(setUser(userData));
     } catch (error) {
       console.error("Failed to fetch user data:", error);
-      // Use mock data on API error (since we don't have real backend)
-      console.warn("⚠️ API hatası, mock data kullanılıyor");
-      const mockUser = {
-        id: "student-1",
-        name: "Ahmet Öğrenci",
-        email: "ogrenci@test.com",
-        role: "student" as UserRole,
-      };
-      dispatch(setUser(mockUser));
+      // Clear user data on error
+      dispatch(clearUser());
+      authService.removeToken();
     } finally {
       dispatch(setLoading(false));
     }
