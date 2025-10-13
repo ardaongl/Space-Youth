@@ -10,7 +10,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 
-export type TaskStatus = "To Do" | "In Progress" | "Done" | "Overdue";
+export type TaskStatus = "To Do" | "In Progress" | "In Review" | "Accepted" | "Rejected" | "Done" | "Overdue";
 
 export interface Task {
   id: number;
@@ -55,7 +55,7 @@ export const tasks: Task[] = [
     href: "/tasks/product-roadmap",
     icon: Target,
     coins: 200,
-    status: "In Progress",
+    status: "In Review",
     deadline: "2 weeks",
     image: "/image.png",
   },
@@ -100,7 +100,7 @@ export const tasks: Task[] = [
     href: "/tasks/prd",
     icon: FileText,
     coins: 150,
-    status: "In Progress",
+    status: "Accepted",
     deadline: "1 week",
     image: "/image.png",
   },
@@ -145,7 +145,7 @@ export const tasks: Task[] = [
     href: "/tasks/tech-requirements",
     icon: Settings,
     coins: 180,
-    status: "Overdue",
+    status: "Rejected",
     deadline: "1 week",
     image: "/image.png",
   },

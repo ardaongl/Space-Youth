@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDrafts } from "@/context/DraftsContext";
 import { useTaskSubmissions } from "@/context/TaskSubmissionsContext";
+import { useTasks } from "@/context/TasksContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +13,7 @@ export default function PostProject() {
   const { taskId } = useParams();
   const { saveDraft, getDraftByTaskId } = useDrafts();
   const { addSubmission } = useTaskSubmissions();
+  const { tasks, updateTaskStatus } = useTasks();
   
   const [dragActive, setDragActive] = useState(false);
   const [title, setTitle] = useState("");
@@ -83,17 +85,25 @@ export default function PostProject() {
             <Button
               onClick={() => {
                 if (taskId && (title || description || coverImage)) {
+                  // Find the task and update its status to "In Review"
+                  const task = tasks.find(t => t.href.split('/').pop() === taskId);
+                  if (task) {
+                    updateTaskStatus(task.id, "In Review");
+                  }
+                  
+                  // Add submission
                   addSubmission({
                     taskId,
                     title,
                     description,
                     coverImage: coverImage || undefined
                   });
+                  
                   navigate('/my-tasks');
                 }
               }}
             >
-              Devam Et
+              Görevi Gönder
             </Button>
           </div>
         </div>

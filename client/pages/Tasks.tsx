@@ -22,7 +22,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Search, Filter, Plus, Pencil, Trash2, MoreHorizontal } from "lucide-react";
-import { tasks, TaskStatus } from "@/data/tasks";
+import { TaskStatus } from "@/data/tasks";
+import { useTasks } from "@/context/TasksContext";
 import { useAuth } from "@/context/AuthContext";
 import { isAdmin } from "@/utils/roles";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,7 @@ import { cn } from "@/lib/utils";
 export default function Tasks() {
   const navigate = useNavigate();
   const { auth } = useAuth();
+  const { tasks } = useTasks();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<TaskStatus[]>([]);
 
@@ -45,6 +47,12 @@ export default function Tasks() {
         return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
       case "In Progress":
         return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300";
+      case "In Review":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+      case "Accepted":
+        return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300";
+      case "Rejected":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
       case "To Do":
         return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
       case "Overdue":
@@ -117,7 +125,7 @@ export default function Tasks() {
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuLabel>Duruma Göre Filtrele</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {(["To Do", "In Progress", "Done", "Overdue"] as TaskStatus[]).map((status) => (
+                  {(["To Do", "In Progress", "In Review", "Accepted", "Rejected", "Done", "Overdue"] as TaskStatus[]).map((status) => (
                     <DropdownMenuCheckboxItem
                       key={status}
                       checked={statusFilter.includes(status)}

@@ -14,7 +14,7 @@ function PrimaryButton({ children }: { children: React.ReactNode }) {
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-2xl border bg-card shadow-sm ${className}`}>{children}</div>
+    <div className={`rounded-2xl border bg-card shadow-sm w-full ${className}`}>{children}</div>
   );
 }
 
@@ -28,18 +28,19 @@ export default function Home() {
     { id: '5', date: new Date(2025, 9, 20), title: 'Project Demo', color: 'bg-rose-500' },
   ];
 
+  // TODO: Date and streak sections temporarily removed - keep code for future use
   const Right = (
     <aside className="hidden lg:block sticky top-[4.5rem] h-max space-y-4">
-      {/* Takvim */}
-      <Card className="p-0 overflow-hidden">
+      {/* Takvim - TEMPORARILY COMMENTED OUT */}
+      {/* <Card className="p-0 overflow-hidden">
         <EventCalendar 
           events={sampleEvents}
           onDateSelect={(date) => console.log('Selected date:', date)}
         />
-      </Card>
+      </Card> */}
 
-      {/* Streak */}
-      <Card className="p-0 overflow-hidden">
+      {/* Streak - TEMPORARILY COMMENTED OUT */}
+      {/* <Card className="p-0 overflow-hidden">
         <div className="bg-gradient-to-br from-gray-900 to-gray-800 p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="font-semibold text-white text-lg">Streak</div>
@@ -75,73 +76,73 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </Card>
+      </Card> */}
     </aside>
   );
 
   const CourseCard = ({ popular }: { popular?: boolean }) => (
-    <Card className="p-6">
+    <Card className="p-4 sm:p-6">
       <div className="relative">
         {popular && (
-          <span className="absolute left-2 top-2 rounded-full bg-amber-100 text-amber-800 text-[10px] font-semibold px-2 py-0.5 border border-amber-200">Popular</span>
+          <span className="absolute left-2 top-2 rounded-full bg-amber-100 text-amber-800 text-[8px] sm:text-[10px] font-semibold px-1.5 sm:px-2 py-0.5 border border-amber-200">Popular</span>
         )}
-        <div className="aspect-[5/3] w-full rounded-xl bg-accent grid place-items-center mb-4">
-          <div className="h-20 w-20 rounded-lg bg-secondary" />
+        <div className="aspect-[5/3] w-full rounded-xl bg-accent grid place-items-center mb-3 sm:mb-4">
+          <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-lg bg-secondary" />
         </div>
       </div>
-      <div className="text-[10px] font-semibold tracking-widest text-muted-foreground">COURSE</div>
-      <div className="mt-1 text-lg font-semibold">Workshop Facilitation</div>
-      <div className="mt-1 text-sm text-muted-foreground">Colin Michael Pace</div>
-      <p className="mt-3 text-sm text-muted-foreground line-clamp-2">Learn the essentials of planning and leading effective workshops. Build skills in facilitation and collaboration.</p>
-      <div className="mt-4 flex items-center gap-6 text-sm text-muted-foreground">
-        <span className="inline-flex items-center gap-1"><Clock className="h-4 w-4 text-primary" /> 4h</span>
+      <div className="text-[8px] sm:text-[10px] font-semibold tracking-widest text-muted-foreground">COURSE</div>
+      <div className="mt-1 text-base sm:text-lg font-semibold">Workshop Facilitation</div>
+      <div className="mt-1 text-xs sm:text-sm text-muted-foreground">Colin Michael Pace</div>
+      <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground line-clamp-2">Learn the essentials of planning and leading effective workshops. Build skills in facilitation and collaboration.</p>
+      <div className="mt-3 sm:mt-4 flex items-center gap-3 sm:gap-6 text-xs sm:text-sm text-muted-foreground">
+        <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3 sm:h-4 sm:w-4 text-primary" /> 4h</span>
         <span className="inline-flex items-center gap-1">Advanced</span>
       </div>
-      <div className="mt-4 flex items-center gap-2">
-        <Link to="/courses/workshop-facilitation" className="rounded-full border px-3 py-1.5 text-sm">Kursu Gör</Link>
-        <button className="rounded-full border px-3 py-1.5 text-sm">Okundu işaretle</button>
+      <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
+        <Link to="/courses/workshop-facilitation" className="rounded-full border px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">Kursu Gör</Link>
+        <button className="rounded-full border px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">Okundu işaretle</button>
       </div>
     </Card>
   );
 
   return (
-    <AppLayout right={Right}>
-      <div className="py-6 space-y-12">
+    <AppLayout>
+      <div className="py-4 sm:py-6 space-y-8 sm:space-y-12 w-full max-w-full overflow-x-hidden">
         {/* Feature Slider Section */}
         <section>
           <FeatureSlider />
         </section>
 
         {/* Önerilen Görevler */}
-        <section>
-          <div className="flex items-center justify-between mb-5">
+        <section className="w-full">
+          <div className="flex items-center justify-between mb-4 sm:mb-5">
             <div className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">Önerilen Görevler</h2>
+              <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <h2 className="text-lg sm:text-xl font-semibold">Önerilen Görevler</h2>
             </div>
-            <Link to="/tasks" className="text-base text-muted-foreground hover:underline">Tümünü Gör</Link>
+            <Link to="/tasks" className="text-sm sm:text-base text-muted-foreground hover:underline">Tümünü Gör</Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
             {[
               { title: "Kullanıcı Araştırması Yapma", coins: 120, level: "Orta", time: "2h" },
               { title: "Wireframe Oluşturma", coins: 100, level: "Başlangıç", time: "1.5h" },
             ].map((task, i) => (
-              <Card key={i} className="p-12 hover:shadow-lg transition">
+              <Card key={i} className="p-6 sm:p-8 lg:p-12 hover:shadow-lg transition">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-base">{task.title}</h3>
-                    <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        <Clock className="h-4 w-4" /> {task.time}
+                    <h3 className="font-semibold text-sm sm:text-base">{task.title}</h3>
+                    <div className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1 sm:gap-1.5">
+                        <Clock className="h-3 w-3 sm:h-4 sm:w-4" /> {task.time}
                       </span>
                       <span>{task.level}</span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-base font-semibold text-yellow-600">{task.coins} coins</div>
+                    <div className="text-sm sm:text-base font-semibold text-yellow-600">{task.coins} coins</div>
                   </div>
                 </div>
-                <Link to="/tasks" className="mt-4 inline-block text-base text-primary hover:underline font-medium">
+                <Link to="/tasks" className="mt-3 sm:mt-4 inline-block text-sm sm:text-base text-primary hover:underline font-medium">
                   Görevi Gör →
                 </Link>
               </Card>
@@ -150,49 +151,49 @@ export default function Home() {
         </section>
 
         {/* Önerilen Kurslar */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
+        <section className="w-full">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
             <div className="flex items-center gap-2">
-              <GraduationCap className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">Önerilen Kurslar</h2>
+              <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <h2 className="text-lg sm:text-xl font-semibold">Önerilen Kurslar</h2>
             </div>
-            <Link to="/courses" className="text-sm text-muted-foreground hover:underline">Tümünü Gör</Link>
+            <Link to="/courses" className="text-xs sm:text-sm text-muted-foreground hover:underline">Tümünü Gör</Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full">
             <CourseCard />
             <CourseCard popular />
           </div>
         </section>
 
         {/* Önerilen Eğitimler (Tutorials) */}
-        <section>
-          <div className="flex items-center justify-between mb-5">
+        <section className="w-full">
+          <div className="flex items-center justify-between mb-4 sm:mb-5">
             <div className="flex items-center gap-2">
-              <Bookmark className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">Önerilen Eğitimler</h2>
+              <Bookmark className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <h2 className="text-lg sm:text-xl font-semibold">Önerilen Eğitimler</h2>
             </div>
-            <Link to="/tutorials" className="text-base text-muted-foreground hover:underline">Tümünü Gör</Link>
+            <Link to="/tutorials" className="text-sm sm:text-base text-muted-foreground hover:underline">Tümünü Gör</Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full">
             {[
               { title: "React Hooks Kullanımı", duration: "30 dk", difficulty: "Orta" },
               { title: "CSS Grid Layout", duration: "45 dk", difficulty: "Başlangıç" },
               { title: "TypeScript Temelleri", duration: "1 saat", difficulty: "Orta" },
             ].map((tutorial, i) => (
-              <Card key={i} className="p-6 hover:shadow-lg transition">
-                <div className="aspect-video bg-gradient-to-br from-primary/20 to-purple-200 rounded-lg mb-4 flex items-center justify-center">
-                  <div className="h-16 w-16 rounded-full bg-white/80 flex items-center justify-center">
-                    <Bookmark className="h-8 w-8 text-primary" />
+              <Card key={i} className="p-4 sm:p-6 hover:shadow-lg transition">
+                <div className="aspect-video bg-gradient-to-br from-primary/20 to-purple-200 rounded-lg mb-3 sm:mb-4 flex items-center justify-center">
+                  <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-white/80 flex items-center justify-center">
+                    <Bookmark className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                   </div>
                 </div>
-                <h3 className="font-semibold text-base">{tutorial.title}</h3>
-                <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="h-4 w-4" /> {tutorial.duration}
+                <h3 className="font-semibold text-sm sm:text-base">{tutorial.title}</h3>
+                <div className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1 sm:gap-1.5">
+                    <Clock className="h-3 w-3 sm:h-4 sm:w-4" /> {tutorial.duration}
                   </span>
                   <span>{tutorial.difficulty}</span>
                 </div>
-                <Link to="/tutorials" className="mt-4 inline-block text-base text-primary hover:underline font-medium">
+                <Link to="/tutorials" className="mt-3 sm:mt-4 inline-block text-sm sm:text-base text-primary hover:underline font-medium">
                   Başla →
                 </Link>
               </Card>
@@ -201,29 +202,29 @@ export default function Home() {
         </section>
 
         {/* Önerilen Workshop'lar */}
-        <section>
-          <div className="flex items-center justify-between mb-5">
+        <section className="w-full">
+          <div className="flex items-center justify-between mb-4 sm:mb-5">
             <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">Önerilen Workshop'lar</h2>
+              <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <h2 className="text-lg sm:text-xl font-semibold">Önerilen Workshop'lar</h2>
             </div>
-            <Link to="/workshops" className="text-base text-muted-foreground hover:underline">Tümünü Gör</Link>
+            <Link to="/workshops" className="text-sm sm:text-base text-muted-foreground hover:underline">Tümünü Gör</Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full">
             {[
               { title: "Design Thinking Workshop", date: "15 Ekim 2025", time: "14:00" },
               { title: "Agile Metodolojiler", date: "20 Ekim 2025", time: "16:00" },
             ].map((workshop, i) => (
               <Card key={i} className="overflow-hidden hover:shadow-lg transition">
-                <div className="h-48 bg-gradient-to-br from-primary/30 to-indigo-300" />
-                <div className="p-6">
-                  <h3 className="font-semibold text-base">{workshop.title}</h3>
-                  <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
+                <div className="h-32 sm:h-40 lg:h-48 bg-gradient-to-br from-primary/30 to-indigo-300" />
+                <div className="p-4 sm:p-6">
+                  <h3 className="font-semibold text-sm sm:text-base">{workshop.title}</h3>
+                  <div className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground">
                     <span>{workshop.date}</span>
                     <span>•</span>
                     <span>{workshop.time}</span>
                   </div>
-                  <Link to="/workshops" className="mt-4 inline-block text-base text-primary hover:underline font-medium">
+                  <Link to="/workshops" className="mt-3 sm:mt-4 inline-block text-sm sm:text-base text-primary hover:underline font-medium">
                     Detayları Gör →
                   </Link>
                 </div>

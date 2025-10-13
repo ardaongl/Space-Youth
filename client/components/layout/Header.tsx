@@ -50,8 +50,13 @@ function TokenWallet() {
 
 export function Header() {
   const navigate = useNavigate();
-  const { auth } = useAuth();
+  const { auth, logout } = useAuth();
   const userName = auth.user?.name || "User";
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
   
   return (
     <header className="sticky top-0 z-30 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
@@ -141,68 +146,90 @@ export function Header() {
         </div>
         {/* Right side buttons - sağ tarafa dayalı */}
         <div className="flex items-center gap-2 ml-auto">
-          <button 
-            className="px-3 py-2 rounded-full hover:bg-secondary"
-            onClick={() => navigate('/bookmarks')}
-            aria-label="Bookmarks"
-          >
-            <Bookmark className="h-6 w-6" />
-          </button>
-          <TokenWallet />
-          <NotificationsPopover />
-          <HoverCard openDelay={0}>
-            <HoverCardTrigger asChild>
-              <div className="cursor-pointer hover:opacity-80 transition-opacity">
-                <AvatarDisplay name={userName} size="sm" />
-              </div>
-            </HoverCardTrigger>
-            <HoverCardContent className="w-80 p-0" align="end">
-              <div className="p-4">
-                {/* Üst Bölüm - Kullanıcı Bilgileri */}
-                <div className="flex flex-col items-center text-center mb-4">
-                  <div className="mb-2">
-                    <AvatarDisplay name={userName} size="md" />
+          {auth.user ? (
+            <>
+              <button 
+                className="px-3 py-2 rounded-full hover:bg-secondary"
+                onClick={() => navigate('/bookmarks')}
+                aria-label="Bookmarks"
+              >
+                <Bookmark className="h-6 w-6" />
+              </button>
+              <TokenWallet />
+              <NotificationsPopover />
+              <HoverCard openDelay={0}>
+                <HoverCardTrigger asChild>
+                  <div className="cursor-pointer hover:opacity-80 transition-opacity">
+                    <AvatarDisplay name={userName} size="sm" />
                   </div>
-                  <div className="font-semibold text-foreground">{userName}</div>
-                  <div className="text-sm text-muted-foreground">Başlangıç Planı</div>
-                </div>
-                
-                <Separator className="mb-4" />
-                
-                {/* Orta Bölüm - Ana Menü Öğeleri */}
-                <div className="space-y-1 mb-4">
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer" onClick={() => navigate('/profile')}>
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Profil</span>
+                </HoverCardTrigger>
+                <HoverCardContent className="w-80 p-0" align="end">
+                  <div className="p-4">
+                    {/* Üst Bölüm - Kullanıcı Bilgileri */}
+                    <div className="flex flex-col items-center text-center mb-4">
+                      <div className="mb-2">
+                        <AvatarDisplay name={userName} size="md" />
+                      </div>
+                      <div className="font-semibold text-foreground">{userName}</div>
+                      <div className="text-sm text-muted-foreground">Başlangıç Planı</div>
+                    </div>
+                    
+                    <Separator className="mb-4" />
+                    
+                    {/* Orta Bölüm - Ana Menü Öğeleri */}
+                    <div className="space-y-1 mb-4">
+                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer" onClick={() => navigate('/profile')}>
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">Profil</span>
+                      </div>
+                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer" onClick={() => navigate('/settings')}>
+                        <Settings className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">Ayarlar</span>
+                      </div>
+                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
+                        <Gift className="h-4 w-4 text-red-500" />
+                        <span className="text-sm">Arkadaşlarını davet et, ödül kazan</span>
+                      </div>
+                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
+                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">Ekipler için SpaceYouth</span>
+                      </div>
+                    </div>
+                    
+                    <Separator className="mb-4" />
+                    
+                    {/* Alt Bölüm - Ek Seçenekler ve Çıkış */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
+                        <span className="text-sm">Yardım Merkezi</span>
+                      </div>
+                      <div 
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-destructive/10 text-destructive cursor-pointer transition-colors"
+                        onClick={handleLogout}
+                      >
+                        <span className="text-sm font-medium">Çıkış Yap</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer" onClick={() => navigate('/settings')}>
-                    <Settings className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Ayarlar</span>
-                  </div>
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
-                    <Gift className="h-4 w-4 text-red-500" />
-                    <span className="text-sm">Arkadaşlarını davet et, ödül kazan</span>
-                  </div>
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
-                    <Building2 className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Ekipler için SpaceYouth</span>
-                  </div>
-                </div>
-                
-                <Separator className="mb-4" />
-                
-                {/* Alt Bölüm - Ek Seçenekler ve Çıkış */}
-                <div className="space-y-1">
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
-                    <span className="text-sm">Yardım Merkezi</span>
-                  </div>
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
-                    <span className="text-sm">Çıkış Yap</span>
-                  </div>
-                </div>
-              </div>
-            </HoverCardContent>
-          </HoverCard>
+                </HoverCardContent>
+              </HoverCard>
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => navigate('/login')}
+                className="px-4 py-2 rounded-full text-sm font-medium hover:bg-secondary transition-colors"
+              >
+                Giriş Yap
+              </button>
+              <button 
+                onClick={() => navigate('/register')}
+                className="px-4 py-2 rounded-full text-sm font-semibold bg-primary text-primary-foreground hover:brightness-110 transition-all shadow"
+              >
+                Kayıt Ol
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

@@ -17,6 +17,9 @@ import AddCourse from "./pages/AddCourse";
 import AddLessons from "./pages/AddLessons";
 import EditCourse from "./pages/EditCourse";
 import Home from "./pages/Home";
+import Explore from "./pages/Explore";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Tasks from "./pages/Tasks";
 import TaskDetail from "./pages/TaskDetail";
 import PostProject from "./pages/PostProject";
@@ -31,6 +34,7 @@ import Settings from "./pages/Settings";
 import { TokensProvider } from "./context/TokensContext";
 import { DraftsProvider } from "./context/DraftsContext";
 import { TaskSubmissionsProvider } from "./context/TaskSubmissionsContext";
+import { TasksProvider } from "./context/TasksContext";
 import { AuthProvider } from "./context/AuthContext";
 import { BookmarksProvider } from "./context/BookmarksContext";
 import MyTasks from "./pages/MyTasks";
@@ -87,16 +91,19 @@ const App = () => {
         <BookmarksProvider>
         <DraftsProvider>
           <TaskSubmissionsProvider>
+          <TasksProvider>
           <TooltipProvider>
           <Toaster />
           <Sonner />
           {/* Router renders the app UI; TestWizard overlays above to gate access */}
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<Explore />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/dashboard" element={<Home />} />
               <Route path="/callback" element={<Callback />} />
               <Route path="/zoom/callback" element={<ZoomCallback />} />
-              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/tasks" element={<Tasks />} />
               <Route path="/tasks/:taskId" element={<TaskDetail />} />
               <Route path="/tasks/:taskId/post" element={<PostProject />} />
@@ -147,6 +154,7 @@ const App = () => {
             </>
           )}
         </TooltipProvider>
+        </TasksProvider>
         </TaskSubmissionsProvider>
         </DraftsProvider>
         </BookmarksProvider>
