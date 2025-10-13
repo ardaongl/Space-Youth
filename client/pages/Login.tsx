@@ -54,10 +54,8 @@ export default function Login() {
       );
 
       if (user) {
-        console.log("🔑 Login successful for user:", user);
         // Save mock token
         authService.setToken("dev-token-" + user.role);
-        console.log("💾 Token saved:", "dev-token-" + user.role);
         
         toast({
           title: "Başarılı!",
@@ -65,14 +63,12 @@ export default function Login() {
         });
 
         // Refetch user data (will use mock data)
-        console.log("🔄 Refetching user data...");
         await refetchUser();
 
         // Redirect to dashboard after successful login
         // Onboarding modal will be shown automatically if not completed
-        console.log("🚀 Redirecting to dashboard...");
         setTimeout(() => {
-          window.location.href = "/dashboard";
+          navigate("/dashboard");
         }, 1000);
       } else {
         toast({
