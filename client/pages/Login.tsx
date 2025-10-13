@@ -65,17 +65,10 @@ export default function Login() {
         // Refetch user data (will use mock data)
         await refetchUser();
 
-        // Check if onboarding is completed
-        const hasCompletedOnboarding = localStorage.getItem("onboarding.completed") === "true";
-        
-        // Redirect based on onboarding status
+        // Redirect to dashboard after successful login
+        // Onboarding modal will be shown automatically if not completed
         setTimeout(() => {
-          if (hasCompletedOnboarding) {
-            navigate("/dashboard");
-          } else {
-            // Onboarding modal will be shown automatically
-            navigate("/");
-          }
+          navigate("/dashboard");
         }, 1000);
       } else {
         toast({
