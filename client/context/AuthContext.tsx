@@ -20,6 +20,7 @@ interface AuthContextType {
   auth: AuthState;
   refetchUser: () => Promise<void>;
   logout: () => void;
+  refreshAuth: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -81,6 +82,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const refreshAuth = () => {
+    // Force re-evaluation of auth state
+    fetchUserData();
+  };
+
   useEffect(() => {
     fetchUserData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -121,7 +127,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ auth, refetchUser: fetchUserData, logout }}>
+    <AuthContext.Provider value={{ auth, refetchUser: fetchUserData, logout, refreshAuth }}>
       {children}
     </AuthContext.Provider>
   );
