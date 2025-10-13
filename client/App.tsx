@@ -56,10 +56,21 @@ import BuyCoins from "./pages/BuyCoins";
 
 const App = () => {
   const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const done = typeof window !== "undefined" && localStorage.getItem("onboarding.completed") === "true";
-    setOnboardingOpen(!done);
+    // Check if user is logged in
+    const token = localStorage.getItem("token");
+    if (token) {
+      // User is logged in, check onboarding status
+      const done = typeof window !== "undefined" && localStorage.getItem("onboarding.completed") === "true";
+      setOnboardingOpen(!done);
+      setUser({ loggedIn: true });
+    } else {
+      // User is not logged in, don't show onboarding
+      setOnboardingOpen(false);
+      setUser({ loggedIn: false });
+    }
   }, []);
 
   const handleComplete = (data: OnboardingData) => {
@@ -68,9 +79,9 @@ const App = () => {
     } catch {}
     localStorage.setItem("onboarding.completed", "true");
     setOnboardingOpen(false);
-    // Redirect to profile after completion
+    // Redirect to dashboard after completion
     try {
-      window.location.assign("/profile");
+      window.location.assign("/dashboard");
     } catch {}
   };
   
@@ -135,13 +146,16 @@ const App = () => {
             </Routes>
           </BrowserRouter>
 
-          <TestWizard
-            open={onboardingOpen}
-            onClose={() => { /* Gate: do nothing to enforce completion */ }}
-            onComplete={handleComplete}
-          />
+          {/* Only show onboarding for logged in users */}
+          {user?.loggedIn && (
+            <TestWizard
+              open={onboardingOpen}
+              onClose={() => { /* Gate: do nothing to enforce completion */ }}
+              onComplete={handleComplete}
+            />
+          )}
 
-          {import.meta.env.DEV && !onboardingOpen && (
+          {import.meta.env.DEV && !onboardingOpen && user?.loggedIn && (
             <>
               <RoleSwitcher />
               <button

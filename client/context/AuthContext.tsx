@@ -110,12 +110,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const hasCompletedOnboarding = React.useMemo(() => {
     if (typeof window === "undefined") return false;
+    // Only check onboarding if user is logged in
+    if (!user) return false;
     try {
       return localStorage.getItem("onboarding.completed") === "true";
     } catch {
       return false;
     }
-  }, []);
+  }, [user]);
 
   const auth: AuthState = {
     status: getAuthStatus(),
