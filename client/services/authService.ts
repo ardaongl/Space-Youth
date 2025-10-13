@@ -15,15 +15,19 @@ export const authService = {
   },
 
   fetchMe: async (): Promise<User> => {
+    console.log("🔍 authService.fetchMe called");
     // Mock user data - since we don't have real backend
     const token = localStorage.getItem("token");
+    console.log("🔑 Token from localStorage:", token);
     
     if (!token) {
+      console.log("❌ No token found in localStorage");
       throw new Error("No token found");
     }
 
     // Extract role from token (dev-token-student, dev-token-teacher, etc.)
     const role = token.replace("dev-token-", "") as "student" | "teacher" | "admin";
+    console.log("👤 Extracted role:", role);
     
     const mockUsers = {
       student: {
@@ -46,6 +50,8 @@ export const authService = {
       }
     };
 
-    return mockUsers[role] || mockUsers.student;
+    const userData = mockUsers[role] || mockUsers.student;
+    console.log("✅ Returning user data:", userData);
+    return userData;
   },
 };
