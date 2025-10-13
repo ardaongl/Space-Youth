@@ -12,13 +12,13 @@ const statusConfig: Record<SubmissionStatus, { icon: typeof Clock, color: string
   },
   approved: { 
     icon: CheckCircle2, 
-    color: "text-green-500 bg-green-500/10", 
-    text: "Onaylandı" 
+    color: "text-emerald-500 bg-emerald-500/10", 
+    text: "Kabul Edildi" 
   },
   rejected: { 
     icon: XCircle, 
     color: "text-red-500 bg-red-500/10", 
-    text: "Revizyon Gerekli" 
+    text: "Reddedildi" 
   }
 };
 

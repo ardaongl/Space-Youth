@@ -13,6 +13,7 @@ export interface AuthState {
     role: UserRole;
   } | null;
   isLoading: boolean;
+  hasCompletedOnboarding: boolean;
 }
 
 interface AuthContextType {
@@ -91,6 +92,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     dispatch(clearUser());
     authService.removeToken();
+    
+    // Clear onboarding data on logout
+    try {
+      localStorage.removeItem("onboarding.completed");
+      localStorage.removeItem("onboarding.data");
+    } catch {
+      console.warn("Could not clear onboarding data");
+    }
   };
 
   useEffect(() => {
@@ -104,10 +113,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return "unauthenticated";
   };
 
+  const hasCompletedOnboarding = React.useMemo(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return localStorage.getItem("onboarding.completed") === "true";
+    } catch {
+      return false;
+    }
+  }, []);
+
   const auth: AuthState = {
     status: getAuthStatus(),
     user,
     isLoading,
+    hasCompletedOnboarding,
   };
 
   return (

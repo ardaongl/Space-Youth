@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type SubmissionStatus = 'pending' | 'approved' | 'rejected';
 
@@ -23,6 +23,11 @@ const TaskSubmissionsContext = createContext<TaskSubmissionsContextType | undefi
 
 export function TaskSubmissionsProvider({ children }: { children: React.ReactNode }) {
   const [submissions, setSubmissions] = useState<TaskSubmission[]>([]);
+
+  // Reset submissions on every page load
+  useEffect(() => {
+    setSubmissions([]);
+  }, []);
 
   const addSubmission = (submission: Omit<TaskSubmission, 'id' | 'status' | 'submittedAt'>) => {
     setSubmissions(prev => [...prev, {

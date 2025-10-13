@@ -9,6 +9,7 @@ import {
   Trophy,
   Users,
   Video,
+  Compass,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -17,8 +18,10 @@ import { UserRole } from "@/utils/roles";
 import { Button } from "@/components/ui/button";
 import React from "react";
 
+const exploreItem = { to: "/", label: "Explore", icon: Compass };
+
 const items = [
-  { to: "/", label: "Ana Ekran", icon: Home },
+  { to: "/dashboard", label: "Ana Ekran", icon: Home },
   { to: "/tasks", label: "Görevler", icon: ClipboardList },
   { to: "/courses", label: "Kurslar", icon: BookOpen },
   { to: "/workshops", label: "Workshops & Hackathons", icon: Users },
@@ -49,6 +52,12 @@ export function Sidebar() {
   const [zoomConnected, setZoomConnected] = React.useState<boolean>(() => {
     try { return localStorage.getItem("zoom.connected") === "true"; } catch { return false; }
   });
+
+  // Check if user is authenticated and has completed onboarding
+  const isAuthenticated = auth.status === "authenticated" && auth.user !== null;
+  const hasCompletedOnboarding = typeof window !== "undefined" && 
+    localStorage.getItem("onboarding.completed") === "true";
+  const canAccessPlatform = isAuthenticated && hasCompletedOnboarding;
 
   // Listen for storage changes to update Zoom connection status
   React.useEffect(() => {
@@ -90,57 +99,98 @@ export function Sidebar() {
       </div>
       <nav className="flex-1 overflow-auto pr-2">
         <ul className="space-y-1.5">
+          {/* Explore Item - Always accessible, separated from others */}
+          <li key={exploreItem.to}>
+            <NavLink
+              to={exploreItem.to}
+              className={({ isActive }) =>
+                cn(
+                  "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors",
+                  isActive
+                    ? "bg-gradient-to-r from-primary/20 to-purple-500/20 text-primary border border-primary/30"
+                    : "text-muted-foreground hover:bg-sidebar-accent/60",
+                )
+              }
+            >
+              <span className="absolute left-1 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-primary origin-center scale-y-0 transition-transform group-hover:scale-y-100" />
+              <span className="relative">
+                <exploreItem.icon className="h-5 w-5" />
+              </span>
+              <span className="font-medium">{exploreItem.label}</span>
+            </NavLink>
+          </li>
+
+          {/* Divider */}
+          <li className="py-2">
+            <div className="h-px bg-border" />
+          </li>
+
+          {/* Platform Items - Disabled if not authenticated or onboarding not complete */}
           {items.map(({ to, label, icon: Icon }) => (
             <li key={to}>
-              <NavLink
-                to={to}
-                className={({ isActive }) =>
-                  cn(
-                    "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors",
-                    isActive
-                      ? "bg-sidebar-accent/70 text-sidebar-foreground border border-sidebar-border"
-                      : "text-muted-foreground hover:bg-sidebar-accent/60",
-                  )
-                }
-              >
-                <span className="absolute left-1 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-sidebar-ring origin-center scale-y-0 transition-transform group-hover:scale-y-100" />
-                <span className="relative">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <span className="font-medium">{label}</span>
-              </NavLink>
+              {canAccessPlatform ? (
+                <NavLink
+                  to={to}
+                  className={({ isActive }) =>
+                    cn(
+                      "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors",
+                      isActive
+                        ? "bg-sidebar-accent/70 text-sidebar-foreground border border-sidebar-border"
+                        : "text-muted-foreground hover:bg-sidebar-accent/60",
+                    )
+                  }
+                >
+                  <span className="absolute left-1 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-sidebar-ring origin-center scale-y-0 transition-transform group-hover:scale-y-100" />
+                  <span className="relative">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <span className="font-medium">{label}</span>
+                </NavLink>
+              ) : (
+                <div
+                  className="group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors text-muted-foreground/50 cursor-not-allowed opacity-50"
+                  title="Giriş yapın ve onboarding'i tamamlayın"
+                >
+                  <span className="relative">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <span className="font-medium">{label}</span>
+                </div>
+              )}
             </li>
           ))}
         </ul>
       </nav>
 
-      {/* Zoom Integration */}
-      <div className="px-2 pb-3 mb-2">
-        <div className="flex items-center justify-between gap-2 px-2">
-          <div className="flex items-center gap-2">
-            <div className="h-9 w-9 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Video className="h-5 w-5 text-white" />
+      {/* Zoom Integration - Only show for authenticated users */}
+      {canAccessPlatform && (
+        <div className="px-2 pb-3 mb-2">
+          <div className="flex items-center justify-between gap-2 px-2">
+            <div className="flex items-center gap-2">
+              <div className="h-9 w-9 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Video className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-sm font-medium">Zoom</span>
             </div>
-            <span className="text-sm font-medium">Zoom</span>
+            <Button
+              size="sm"
+              variant="outline"
+              className={cn(
+                "h-8 px-3 text-xs font-medium flex-shrink-0",
+                zoomConnected 
+                  ? "border-green-600 text-green-700 hover:bg-green-50 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-950/30" 
+                  : "border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950/30"
+              )}
+              onClick={handleZoomConnect}
+            >
+              {zoomConnected ? "Bağlanıldı" : "Bağlan"}
+            </Button>
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            className={cn(
-              "h-8 px-3 text-xs font-medium flex-shrink-0",
-              zoomConnected 
-                ? "border-green-600 text-green-700 hover:bg-green-50 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-950/30" 
-                : "border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950/30"
-            )}
-            onClick={handleZoomConnect}
-          >
-            {zoomConnected ? "Bağlanıldı" : "Bağlan"}
-          </Button>
         </div>
-      </div>
+      )}
 
-      {/* User profile section */}
-      {auth.user && (
+      {/* User profile section - Only show for authenticated users */}
+      {auth.user && canAccessPlatform && (
         <div className="px-2 pb-3 border-t pt-3">
           <div className="flex items-center gap-3 px-2">
             <Avatar className="h-10 w-10">

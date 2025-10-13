@@ -3,12 +3,16 @@ import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Coins, Calendar, CheckCircle2, ArrowLeft } from "lucide-react";
-import { tasks } from "@/data/tasks";
+import { useTasks } from "@/context/TasksContext";
+import { useTaskSubmissions } from "@/context/TaskSubmissionsContext";
 import { cn } from "@/lib/utils";
 
 export default function TaskDetail() {
   const navigate = useNavigate();
   const { taskId } = useParams();
+  const { tasks, updateTaskStatus } = useTasks();
+  const { addSubmission } = useTaskSubmissions();
+  
   const task = tasks.find(t => t.href.split('/').pop() === taskId);
 
   if (!task) {
@@ -30,6 +34,12 @@ export default function TaskDetail() {
         return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
       case "In Progress":
         return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300";
+      case "In Review":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+      case "Accepted":
+        return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300";
+      case "Rejected":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
       case "To Do":
         return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
       case "Overdue":
@@ -39,9 +49,11 @@ export default function TaskDetail() {
     }
   };
 
-  const handleAcceptTask = () => {
-    console.log("Task accepted:", task.id);
-    // TODO: Implement task acceptance logic
+  const handleSubmitWork = () => {
+    if (task) {
+      // Navigate to PostProject page for file upload
+      navigate(`/tasks/${taskId}/post`);
+    }
   };
 
   return (
@@ -97,12 +109,8 @@ export default function TaskDetail() {
                 <div className="flex flex-wrap gap-6 mb-6 text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Coins className="h-5 w-5 text-yellow-600" />
-                    <span className="font-semibold text-yellow-600">{task.coins}</span>
+                    <span className="font-semibold text-yellow-600">+{task.coins}</span>
                     <span>coins</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-5 w-5" />
-                    <span>Duration: {task.duration}</span>
                   </div>
                 </div>
 
@@ -161,29 +169,45 @@ export default function TaskDetail() {
                   </div>
                 </div>
 
-                {/* Accept Task Button */}
+                {/* Submit Work Button */}
                 <div className="mt-8 pt-6 border-t">
                   <div className="flex items-center gap-4">
                     <Button
                       size="lg"
                       className="flex-1 gap-2"
-                      onClick={handleAcceptTask}
-                      disabled={task.status === "Done"}
+                      onClick={handleSubmitWork}
+                      disabled={task.status === "Done" || task.status === "Accepted" || task.status === "Rejected"}
                     >
                       <CheckCircle2 className="h-5 w-5" />
-                      {task.status === "Done" ? "Task Completed" : "Accept Task"}
-                    </Button>
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      onClick={() => navigate(`/tasks/${taskId}/post`)}
-                    >
-                      Submit Work
+                      {task.status === "Done" ? "Task Completed" : 
+                       task.status === "Accepted" ? "Work Accepted" :
+                       task.status === "Rejected" ? "Work Rejected" :
+                       task.status === "In Review" ? "Work Under Review" : "Submit Work"}
                     </Button>
                   </div>
-                  {task.status !== "Done" && (
+                  {task.status === "To Do" && (
                     <p className="text-sm text-muted-foreground mt-4 text-center">
-                      By accepting this task, you commit to completing it within the deadline.
+                      Complete your work and submit it for review to earn {task.coins} coins.
+                    </p>
+                  )}
+                  {task.status === "In Review" && (
+                    <p className="text-sm text-muted-foreground mt-4 text-center">
+                      Your work is currently under review. You will be notified of the result soon.
+                    </p>
+                  )}
+                  {task.status === "Accepted" && (
+                    <p className="text-sm text-green-600 mt-4 text-center">
+                      Congratulations! Your work has been accepted and you earned {task.coins} coins.
+                    </p>
+                  )}
+                  {task.status === "Rejected" && (
+                    <p className="text-sm text-red-600 mt-4 text-center">
+                      Your work needs revision. Please review the feedback and resubmit.
+                    </p>
+                  )}
+                  {task.status === "Done" && (
+                    <p className="text-sm text-green-600 dark:text-green-400 mt-4 text-center font-medium">
+                      🎉 Tebrikler! Bu görevi tamamladınız ve {task.coins} coin kazandınız!
                     </p>
                   )}
                 </div>
