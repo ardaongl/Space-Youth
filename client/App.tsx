@@ -73,6 +73,24 @@ const App = () => {
     }
   }, []);
 
+  // Listen for auth state changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        const done = typeof window !== "undefined" && localStorage.getItem("onboarding.completed") === "true";
+        setOnboardingOpen(!done);
+        setUser({ loggedIn: true });
+      } else {
+        setOnboardingOpen(false);
+        setUser({ loggedIn: false });
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   const handleComplete = (data: OnboardingData) => {
     try {
       localStorage.setItem("onboarding.data", JSON.stringify(data));
