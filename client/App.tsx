@@ -85,8 +85,8 @@ const AppContent = () => {
     setOnboardingOpen(false);
     // Refresh auth state to update onboarding status
     refreshAuth();
-    // Redirect to dashboard after completion
-    navigate("/dashboard");
+    // Redirect to home page (main platform) after completion
+    navigate("/");
   };
   
   const resetOnboarding = () => {

@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { 
   Rocket, 
@@ -18,6 +19,14 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function Explore() {
   const { auth } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect logged in users to dashboard (which is now the main platform)
+  useEffect(() => {
+    if (auth.user) {
+      navigate("/dashboard");
+    }
+  }, [auth.user, navigate]);
 
   const features = [
     {
@@ -110,12 +119,12 @@ export default function Explore() {
                 </Link>
               </div>
             ) : (
-              <Link to="/dashboard">
+              <Link to="/">
                 <Button 
                   size="lg" 
                   className="rounded-full px-8 py-6 text-base font-semibold shadow-lg hover:shadow-xl transition-all"
                 >
-                  Dashboard'a Git <ArrowRight className="ml-2 h-5 w-5" />
+                  Platforma Git <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
             )}
