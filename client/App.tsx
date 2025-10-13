@@ -130,7 +130,7 @@ const App = () => {
               <Route path="/" element={<Explore />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/dashboard" element={<Home />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/callback" element={<Callback />} />
               <Route path="/zoom/callback" element={<ZoomCallback />} />
               <Route path="/tasks" element={<Tasks />} />
