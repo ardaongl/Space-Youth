@@ -68,7 +68,7 @@ export default function Login() {
         // Redirect to dashboard after successful login
         // Onboarding modal will be shown automatically if not completed
         setTimeout(() => {
-          navigate("/dashboard");
+          window.location.href = "/dashboard";
         }, 1000);
       } else {
         toast({
