@@ -8,6 +8,10 @@ import { Rocket, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { authService } from "@/services/authService";
 import { useAuth } from "@/context/AuthContext";
+import { apis } from "@/services";
+import { email } from "zod/v4";
+import { useDispatch } from "react-redux";
+import { setUserToken } from "@/store/slices/userSlice";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -19,6 +23,8 @@ export default function Login() {
     email: "",
     password: "",
   });
+
+  const dispatch = useDispatch();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -42,7 +48,12 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      // Mock credentials - Always use mock data
+      
+      const response = await apis.user.login(formData.email, formData.password)
+      console.log(response);
+      if(response.status == 200){
+        dispatch(setUserToken(response.data.auth_token))
+      }
       const mockUsers = [
         { email: "student@test.com", password: "123456", name: "Ahmet Öğrenci", role: "student" },
         { email: "teacher@test.com", password: "123456", name: "Ayşe Öğretmen", role: "teacher" },
