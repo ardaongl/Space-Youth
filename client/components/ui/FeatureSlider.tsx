@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, TrendingUp, DollarSign, Grid3X3, Sparkles, CheckCircle } from 'lucide-react';
+import { ChevronRight, BookOpen, Coins, Users, Code, Play } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface FeatureCard {
   id: number;
@@ -12,21 +13,26 @@ interface FeatureCard {
 const FeatureSlider: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const { t } = useLanguage();
 
   const features: FeatureCard[] = [
     {
       id: 1,
-      icon: <TrendingUp className="h-5 w-5 text-purple-600" />,
-      title: "Higher Search Rankings",
-      description: "Get your profile, services, and design work in front of clients searching for designers to hire.",
+      icon: <BookOpen className="h-5 w-5 text-blue-600" />,
+      title: t('announcements.newCourse.title'),
+      description: t('announcements.newCourse.description'),
       content: (
-        <div className="bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg p-8 h-48 lg:h-56 flex items-center justify-center">
+        <div className="bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg p-8 h-48 lg:h-56 flex items-center justify-center">
           <div className="bg-white rounded-lg px-5 py-4 lg:px-6 lg:py-5 w-full max-w-md flex items-center gap-3">
-            <span className="text-gray-600 text-base truncate">Landing Page Designers</span>
-            <div className="ml-auto bg-pink-500 rounded-full p-2 flex-shrink-0">
-              <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <BookOpen className="h-6 w-6 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-sm text-gray-900 truncate">Space Technology Fundamentals</h4>
+              <p className="text-xs text-gray-600 mt-1">Advanced Course • 4.8 ⭐</p>
+              <button className="mt-2 bg-blue-600 text-white text-xs px-3 py-1 rounded hover:bg-blue-700 transition-colors">
+                {t('announcements.newCourse.action')}
+              </button>
             </div>
           </div>
         </div>
@@ -34,24 +40,27 @@ const FeatureSlider: React.FC = () => {
     },
     {
       id: 2,
-      icon: <DollarSign className="h-5 w-5 text-purple-600" />,
-      title: "No Fee Transactions",
-      description: "Pay no fees when you transact on Dribbble (non-Pro users pay 3.5% of earnings).",
+      icon: <Coins className="h-5 w-5 text-yellow-600" />,
+      title: t('announcements.coinUpdate.title'),
+      description: t('announcements.coinUpdate.description'),
       content: (
-        <div className="bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg p-8 h-48 lg:h-56 flex items-center justify-center">
+        <div className="bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-lg p-8 h-48 lg:h-56 flex items-center justify-center">
           <div className="bg-white rounded-lg px-5 py-4 lg:px-6 lg:py-5 w-full max-w-md">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-gray-600">Project Cost</span>
-              <span className="font-semibold text-base">$3,000</span>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
+                <Coins className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-sm text-gray-900">Coin Balance</h4>
+                <p className="text-xs text-gray-600">Current Balance</p>
+              </div>
             </div>
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-gray-600">Platform Fee</span>
-              <span className="text-sm">- $105</span>
-            </div>
-            <div className="text-sm text-pink-600 mb-2">0% with PRO subscription.</div>
-            <div className="flex justify-between items-center border-t pt-2">
-              <span className="font-semibold text-sm">Total Payout</span>
-              <span className="font-bold text-base">$3000</span>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-yellow-600">1,250</div>
+              <div className="text-xs text-gray-600 mb-3">Coins Available</div>
+              <button className="bg-yellow-600 text-white text-xs px-4 py-2 rounded hover:bg-yellow-700 transition-colors">
+                {t('announcements.coinUpdate.action')}
+              </button>
             </div>
           </div>
         </div>
@@ -59,29 +68,26 @@ const FeatureSlider: React.FC = () => {
     },
     {
       id: 3,
-      icon: <Grid3X3 className="h-5 w-5 text-purple-600" />,
-      title: "Recommended to Clients",
-      description: "Show up as a recommended designer for clients ready to hire now.",
+      icon: <Users className="h-5 w-5 text-green-600" />,
+      title: t('announcements.workshopAnnouncement.title'),
+      description: t('announcements.workshopAnnouncement.description'),
       content: (
-        <div className="bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg p-8 h-48 lg:h-56 flex items-center justify-center">
+        <div className="bg-gradient-to-br from-green-100 to-green-200 rounded-lg p-8 h-48 lg:h-56 flex items-center justify-center">
           <div className="bg-white rounded-lg px-5 py-4 lg:px-6 lg:py-5 w-full max-w-md">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm truncate">Breno Bitencourt</span>
-                  <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded flex-shrink-0">PRO</span>
-                </div>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <CheckCircle className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
-                  <span className="text-sm text-gray-600 truncate">16 projects completed</span>
-                </div>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                <Users className="h-5 w-5 text-white" />
               </div>
-              <div className="bg-purple-600 rounded p-2 flex-shrink-0">
-                <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
+              <div>
+                <h4 className="font-semibold text-sm text-gray-900">Design Thinking Workshop</h4>
+                <p className="text-xs text-gray-600">March 15, 2024</p>
               </div>
+            </div>
+            <div className="text-center">
+              <div className="text-sm text-gray-600 mb-2">Limited Spots Available</div>
+              <button className="bg-green-600 text-white text-xs px-4 py-2 rounded hover:bg-green-700 transition-colors">
+                {t('announcements.workshopAnnouncement.action')}
+              </button>
             </div>
           </div>
         </div>
@@ -89,22 +95,26 @@ const FeatureSlider: React.FC = () => {
     },
     {
       id: 4,
-      icon: <Sparkles className="h-5 w-5 text-purple-600" />,
-      title: "Advanced Profile Features",
-      description: "Convert more leads by presenting yourself and your work in the best light.",
+      icon: <Code className="h-5 w-5 text-purple-600" />,
+      title: t('announcements.hackathonNews.title'),
+      description: t('announcements.hackathonNews.description'),
       content: (
         <div className="bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg p-8 h-48 lg:h-56 flex items-center justify-center">
           <div className="bg-white rounded-lg px-5 py-4 lg:px-6 lg:py-5 w-full max-w-md">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-sm truncate">Kirk! Wallace</div>
-                <div className="text-sm text-gray-600 truncate">Independent Art Studio</div>
-                <div className="flex gap-2 lg:gap-3 mt-1.5 text-sm text-gray-500">
-                  <span className="truncate">11,073 followers</span>
-                  <span className="truncate">278 following</span>
-                </div>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                <Code className="h-5 w-5 text-white" />
               </div>
+              <div>
+                <h4 className="font-semibold text-sm text-gray-900">Space Innovation Hackathon</h4>
+                <p className="text-xs text-gray-600">48 Hours • $10K Prize</p>
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-sm text-gray-600 mb-2">Registration Opens Soon</div>
+              <button className="bg-purple-600 text-white text-xs px-4 py-2 rounded hover:bg-purple-700 transition-colors">
+                {t('announcements.hackathonNews.action')}
+              </button>
             </div>
           </div>
         </div>
@@ -112,21 +122,26 @@ const FeatureSlider: React.FC = () => {
     },
     {
       id: 5,
-      icon: <CheckCircle className="h-5 w-5 text-purple-600" />,
-      title: "Webflow for Free",
-      description: "Get 12 months free of Webflow's Freelancer ($192 value) or Agency ($420 value) plans.",
+      icon: <Play className="h-5 w-5 text-red-600" />,
+      title: t('announcements.videoContent.title'),
+      description: t('announcements.videoContent.description'),
       content: (
-        <div className="bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg p-8 h-48 lg:h-56 flex items-center justify-center">
+        <div className="bg-gradient-to-br from-red-100 to-red-200 rounded-lg p-8 h-48 lg:h-56 flex items-center justify-center">
           <div className="bg-white rounded-lg px-5 py-4 lg:px-6 lg:py-5 w-full max-w-md">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-sm truncate">Webflow Interface</div>
-                <div className="text-sm text-gray-600 truncate">Design tool interface</div>
-                <div className="text-sm text-gray-500 truncate mt-1">
-                  Elements • Layouts • Structure
-                </div>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
+                <Play className="h-5 w-5 text-white" />
               </div>
+              <div>
+                <h4 className="font-semibold text-sm text-gray-900">New Video Series</h4>
+                <p className="text-xs text-gray-600">50+ New Videos Added</p>
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-sm text-gray-600 mb-2">Tutorials & Lectures</div>
+              <button className="bg-red-600 text-white text-xs px-4 py-2 rounded hover:bg-red-700 transition-colors">
+                {t('announcements.videoContent.action')}
+              </button>
             </div>
           </div>
         </div>
@@ -200,7 +215,7 @@ const FeatureSlider: React.FC = () => {
             key={index}
             onClick={() => goToSlide(index)}
             className={`w-1.5 h-1.5 rounded-full transition-colors ${
-              index === currentIndex ? 'bg-purple-600' : 'bg-gray-400'
+              index === currentIndex ? 'bg-blue-600' : 'bg-gray-400'
             }`}
           />
         ))}

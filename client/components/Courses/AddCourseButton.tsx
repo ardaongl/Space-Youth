@@ -2,10 +2,12 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { canSeeAddCourse } from "@/utils/roles";
 import { Plus } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function AddCourseButton() {
   const navigate = useNavigate();
   const { auth } = useAuth();
+  const { t } = useLanguage();
   // Use role directly to support DEV role switching without strict status check
   const role = auth.user?.role ?? null;
 
@@ -20,7 +22,7 @@ export default function AddCourseButton() {
       onClick={() => navigate('/courses/add')}
     >
       <Plus className="h-5 w-5" />
-      İçerik Ekle
+{t('addCourseButton.addContent')}
     </button>
   );
 }

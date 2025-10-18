@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X, Image as ImageIcon } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface AddCourseModalProps {
   isOpen: boolean;
@@ -7,6 +8,7 @@ interface AddCourseModalProps {
 }
 
 export default function AddCourseModal({ isOpen, onClose }: AddCourseModalProps) {
+  const { t } = useLanguage();
   const [title, setTitle] = useState("");
   const [fullDescription, setFullDescription] = useState("");
   const [category, setCategory] = useState("");
@@ -51,7 +53,7 @@ export default function AddCourseModal({ isOpen, onClose }: AddCourseModalProps)
         <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
           {/* Header */}
           <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
-            <h2 className="text-2xl font-bold text-gray-800">Yeni Kurs Ekle</h2>
+            <h2 className="text-2xl font-bold text-gray-800">{t('addCourseModal.addNewCourse')}</h2>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -68,7 +70,7 @@ export default function AddCourseModal({ isOpen, onClose }: AddCourseModalProps)
                 {/* Media Upload */}
                 <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
                   <div className="px-4 pt-3 pb-2">
-                    <span className="text-sm font-semibold text-gray-700">Medya</span>
+                    <span className="text-sm font-semibold text-gray-700">{t('addCourseModal.media')}</span>
                   </div>
                   <div className="px-4 pb-4">
                     <div
@@ -79,9 +81,9 @@ export default function AddCourseModal({ isOpen, onClose }: AddCourseModalProps)
                         <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-3">
                           <ImageIcon className="h-6 w-6 text-indigo-600" />
                         </div>
-                        <p className="text-[13px] font-semibold text-gray-800">Dosyayı buraya bırakın</p>
-                        <p className="text-xs text-gray-500">veya <button type="button" className="text-indigo-600 hover:underline font-medium">Dosya yükle</button></p>
-                        <p className="text-[11px] text-gray-400 mt-1">(en fazla 10 dosya)</p>
+                        <p className="text-[13px] font-semibold text-gray-800">{t('addCourseModal.dropFileHere')}</p>
+                        <p className="text-xs text-gray-500">{t('addCourseModal.or')} <button type="button" className="text-indigo-600 hover:underline font-medium">{t('addCourseModal.uploadFile')}</button></p>
+                        <p className="text-[11px] text-gray-400 mt-1">{t('addCourseModal.maxFiles')}</p>
                       </div>
                     </div>
                   </div>
@@ -90,7 +92,7 @@ export default function AddCourseModal({ isOpen, onClose }: AddCourseModalProps)
                 {/* Intro Video (compact) */}
                 <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
                   <div className="px-4 pt-3 pb-2">
-                    <span className="text-sm font-semibold text-gray-700">Tanıtım Videosu</span>
+                    <span className="text-sm font-semibold text-gray-700">{t('addCourseModal.introVideo')}</span>
                   </div>
                   <div className="px-4 pb-4">
                     <div className="rounded-lg overflow-hidden bg-gray-100">
@@ -112,13 +114,13 @@ export default function AddCourseModal({ isOpen, onClose }: AddCourseModalProps)
                 {/* Title */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Başlık <span className="text-red-500">*</span>
+                    {t('addCourseModal.title')} <span className="text-red-500">{t('addCourseModal.required')}</span>
                   </label>
                   <input
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Açıklamayı buraya yazın"
+                    placeholder={t('addCourseModal.enterDescription')}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     required
                   />
@@ -127,15 +129,15 @@ export default function AddCourseModal({ isOpen, onClose }: AddCourseModalProps)
                 {/* Full Description */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Tam Açıklama <span className="text-red-500">*</span>
+                    {t('addCourseModal.fullDescription')} <span className="text-red-500">{t('addCourseModal.required')}</span>
                   </label>
                   <div className="border border-gray-300 rounded-lg overflow-hidden">
                     {/* Toolbar */}
                     <div className="bg-gray-50 border-b border-gray-300 px-3 py-2 flex items-center gap-2">
                       <select className="text-sm border-0 bg-transparent">
-                        <option>Normal</option>
-                        <option>Başlık 1</option>
-                        <option>Başlık 2</option>
+                        <option>{t('addCourseModal.normal')}</option>
+                        <option>{t('addCourseModal.heading1')}</option>
+                        <option>{t('addCourseModal.heading2')}</option>
                       </select>
                       <div className="flex gap-1 ml-2">
                         <button type="button" className="p-1.5 hover:bg-gray-200 rounded">
@@ -152,7 +154,7 @@ export default function AddCourseModal({ isOpen, onClose }: AddCourseModalProps)
                     <textarea
                       value={fullDescription}
                       onChange={(e) => setFullDescription(e.target.value)}
-                      placeholder="Açıklamayı buraya yazın"
+                      placeholder={t('addCourseModal.enterDescription')}
                       rows={6}
                       className="w-full px-4 py-3 focus:outline-none resize-none"
                       required
@@ -162,7 +164,7 @@ export default function AddCourseModal({ isOpen, onClose }: AddCourseModalProps)
 
                 {/* Options */}
                 <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-gray-700">Seçenekler</h3>
+                  <h3 className="text-sm font-semibold text-gray-700">{t('addCourseModal.options')}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Category */}
                     <select
@@ -170,11 +172,11 @@ export default function AddCourseModal({ isOpen, onClose }: AddCourseModalProps)
                       onChange={(e) => setCategory(e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     >
-                      <option value="">Kategori</option>
-                      <option value="programming">Programlama</option>
-                      <option value="design">Tasarım</option>
-                      <option value="business">İş Geliştirme</option>
-                      <option value="marketing">Pazarlama</option>
+                      <option value="">{t('addCourseModal.category')}</option>
+                      <option value="programming">{t('addCourseModal.programming')}</option>
+                      <option value="design">{t('addCourseModal.design')}</option>
+                      <option value="business">{t('addCourseModal.business')}</option>
+                      <option value="marketing">{t('addCourseModal.marketing')}</option>
                     </select>
 
                     {/* Duration */}
@@ -183,11 +185,11 @@ export default function AddCourseModal({ isOpen, onClose }: AddCourseModalProps)
                       onChange={(e) => setDuration(e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     >
-                      <option value="">Tahmini Süre</option>
-                      <option value="1-2">1-2 saat</option>
-                      <option value="3-5">3-5 saat</option>
-                      <option value="6-10">6-10 saat</option>
-                      <option value="10+">10+ saat</option>
+                      <option value="">{t('addCourseModal.estimatedDuration')}</option>
+                      <option value="1-2">{t('addCourseModal.duration1')}</option>
+                      <option value="3-5">{t('addCourseModal.duration2')}</option>
+                      <option value="6-10">{t('addCourseModal.duration3')}</option>
+                      <option value="10+">{t('addCourseModal.duration4')}</option>
                     </select>
 
                     {/* Trainer */}
@@ -196,7 +198,7 @@ export default function AddCourseModal({ isOpen, onClose }: AddCourseModalProps)
                       onChange={(e) => setTrainer(e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     >
-                      <option value="">Eğitmen</option>
+                      <option value="">{t('addCourseModal.trainer')}</option>
                       <option value="trainer1">Ahmet Yılmaz</option>
                       <option value="trainer2">Ayşe Demir</option>
                       <option value="trainer3">Mehmet Kaya</option>
@@ -208,10 +210,10 @@ export default function AddCourseModal({ isOpen, onClose }: AddCourseModalProps)
                       onChange={(e) => setLanguage(e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     >
-                      <option value="">Dil</option>
-                      <option value="tr">Türkçe</option>
-                      <option value="en">İngilizce</option>
-                      <option value="de">Almanca</option>
+                      <option value="">{t('addCourseModal.language')}</option>
+                      <option value="tr">{t('addCourseModal.turkish')}</option>
+                      <option value="en">{t('addCourseModal.english')}</option>
+                      <option value="de">{t('addCourseModal.german')}</option>
                     </select>
                   </div>
                 </div>
@@ -226,13 +228,13 @@ export default function AddCourseModal({ isOpen, onClose }: AddCourseModalProps)
                 onClick={onClose}
                 className="px-6 py-2.5 border border-black-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
               >
-                İptal
+                {t('common.cancel')}
               </button>
               <button
                 type="submit"
                 className="px-6 py-2.5 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
               >
-                Kursu Oluştur
+                {t('addCourseModal.createCourse')}
               </button>
             </div>
           </form>

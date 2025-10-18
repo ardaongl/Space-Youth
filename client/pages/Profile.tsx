@@ -1,4 +1,4 @@
-import { Edit, Share2, MoreHorizontal, Plus, Info, Video } from "lucide-react";
+import { Edit, Video, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import AppLayout from "@/components/layout/AppLayout";
@@ -9,6 +9,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useLanguage } from "@/context/LanguageContext";
+import { useNavigate } from "react-router-dom";
 
 type OnboardingData = {
   phase1: any;
@@ -18,14 +20,15 @@ type OnboardingData = {
 };
 
 function useOnboardingScores() {
+  const { t } = useLanguage();
   const [scores, setScores] = React.useState<
     { key: string; label: string; value: number }[]
   >([
-    { key: "selfControl", label: "Kendini kontrol", value: 0 },
-    { key: "reliability", label: "Güvenilirlik", value: 0 },
-    { key: "conscientiousness", label: "Vicdanlı Olma", value: 0 },
-    { key: "openness", label: "Yeniliklere açık olma", value: 0 },
-    { key: "adaptability", label: "Uyum yeteneği", value: 0 },
+    { key: "selfControl", label: t('profile.selfControl'), value: 0 },
+    { key: "reliability", label: t('profile.reliability'), value: 0 },
+    { key: "conscientiousness", label: t('profile.conscientiousness'), value: 0 },
+    { key: "openness", label: t('profile.openness'), value: 0 },
+    { key: "adaptability", label: t('profile.adaptability'), value: 0 },
   ]);
 
   React.useEffect(() => {
@@ -45,19 +48,21 @@ function useOnboardingScores() {
       const reliability = team ? 95 : 85;
 
       setScores([
-        { key: "selfControl", label: "Kendini kontrol", value: selfControl },
-        { key: "reliability", label: "Güvenilirlik", value: reliability },
-        { key: "conscientiousness", label: "Vicdanlı Olma", value: conscientiousness },
-        { key: "openness", label: "Yeniliklere açık olma", value: openness },
-        { key: "adaptability", label: "Uyum yeteneği", value: adaptability },
+        { key: "selfControl", label: t('profile.selfControl'), value: selfControl },
+        { key: "reliability", label: t('profile.reliability'), value: reliability },
+        { key: "conscientiousness", label: t('profile.conscientiousness'), value: conscientiousness },
+        { key: "openness", label: t('profile.openness'), value: openness },
+        { key: "adaptability", label: t('profile.adaptability'), value: adaptability },
       ]);
     } catch {}
-  }, []);
+  }, [t]);
 
   return scores;
 }
 
 export function Profile() {
+  const { t } = useLanguage();
+  const navigate = useNavigate();
   const scores = useOnboardingScores();
   const [onboarding, setOnboarding] = React.useState<OnboardingData | null>(null);
   const [zoomConnected, setZoomConnected] = React.useState<boolean>(() => {
@@ -84,7 +89,7 @@ export function Profile() {
         <div className="flex justify-center pt-4 pb-2">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-full text-sm">
             <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-            Available for work
+            {t('profile.availableForWork')}
           </div>
         </div>
 
@@ -98,8 +103,8 @@ export function Profile() {
                 <div className="absolute inset-1 bg-primary/40 rounded"></div>
               </div>
             </div>
-            <p className="text-muted-foreground text-sm mb-2">Add a cover image. We recommend 2288 x 512.</p>
-            <Button variant="link" className="text-blue-600 p-0 h-auto">Upload file</Button>
+            <p className="text-muted-foreground text-sm mb-2">{t('profile.addCoverImage')}</p>
+            <Button variant="link" className="text-blue-600 p-0 h-auto">{t('profile.uploadFile')}</Button>
           </div>
 
           {/* Profile Picture - İsmin tam üstünde, merkezi 'C' harfi ile hizalı */}
@@ -121,15 +126,12 @@ export function Profile() {
             
             {/* Sağ taraf - Aksiyon butonları */}
             <div className="flex items-center gap-3 mr-8">
-              <Button className="bg-primary hover:bg-primary/90">
+              <Button 
+                className="bg-primary hover:bg-primary/90"
+                onClick={() => navigate('/settings')}
+              >
                 <Edit className="h-4 w-4 mr-2" />
-                Edit profile
-              </Button>
-              <Button variant="ghost" size="icon">
-                <Share2 className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
+                {t('profile.editProfile')}
               </Button>
             </div>
           </div>
@@ -149,17 +151,17 @@ export function Profile() {
                 <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start h-full">
                   {/* Left: Title, Intro, Badge (text column) */}
                   <div className="min-w-0 flex flex-col self-start space-y-4 sm:space-y-5">
-                    <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Yaratıcı Problem Çözme Profilin Hazır!</h2>
-                    <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">Yanıtların yapay zekâ ile incelendi. Aşağıda kişilik tipin, güçlü yönlerin ve sana özel atölye önerileri var.</p>
+                    <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t('profile.creativeProfileReady')}</h2>
+                    <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{t('profile.profileAnalysis')}</p>
                     <div>
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs sm:text-[13px] font-medium text-white shadow ${primaryArchetype.color}`}
-                        aria-label="Kişilik Rozeti"
+                        aria-label={t('profile.personalityBadge')}
                       >
                         {primaryArchetype.name} • {primaryArchetype.tr}
                       </span>
                     </div>
-                    <p className="text-sm sm:text-base leading-relaxed">Büyük düşünüyorsun, hızlı prototipliyorsun ve kısıtlı kaynakları fırsata çeviriyorsun.</p>
+                    <p className="text-sm sm:text-base leading-relaxed">{t('profile.personalityDescription')}</p>
                   </div>
 
                   {/* Right: Visual column (image background + similarity block pinned bottom-right) */}
@@ -175,9 +177,9 @@ export function Profile() {
                       <div className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap">
                         <span className="font-semibold text-white">Elon Musk</span>
                         <Tooltip>
-                          <TooltipTrigger aria-label="Eşleşmenin nasıl hesaplandığı"><Info className="h-4 w-4 text-muted-foreground text-white" /></TooltipTrigger>
+                          <TooltipTrigger aria-label={t('profile.matchCalculation')}><Info className="h-4 w-4 text-muted-foreground text-white" /></TooltipTrigger>
                           <TooltipContent>
-                            Bu eşleşme, çözüm yaklaşımındaki risk alma, sistem düşüncesi ve kaynak yaratma kalıplarına göre hesaplandı.
+                            {t('profile.matchDescription')}
                           </TooltipContent>
                         </Tooltip>
                       </div>
@@ -204,11 +206,11 @@ export function Profile() {
               <Tabs defaultValue="overview" className="w-full">
                 <div className="overflow-x-auto">
                   <TabsList className="min-w-max">
-                    <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="strengths">Strengths</TabsTrigger>
-                    <TabsTrigger value="growth">Growth</TabsTrigger>
-                    <TabsTrigger value="evidence">Evidence</TabsTrigger>
-                    <TabsTrigger value="workshops">Workshops</TabsTrigger>
+                    <TabsTrigger value="overview">{t('profile.overview')}</TabsTrigger>
+                    <TabsTrigger value="strengths">{t('profile.strengths')}</TabsTrigger>
+                    <TabsTrigger value="growth">{t('profile.growth')}</TabsTrigger>
+                    <TabsTrigger value="evidence">{t('profile.evidence')}</TabsTrigger>
+                    <TabsTrigger value="workshops">{t('profile.workshops')}</TabsTrigger>
                   </TabsList>
                 </div>
 
@@ -217,20 +219,20 @@ export function Profile() {
                   <div className="grid gap-4 md:grid-cols-3">
                     {/* AI Summary */}
                     <div className="md:col-span-2 border rounded-lg p-4">
-                      <h3 className="font-semibold mb-2">AI Özeti</h3>
-                      <p className="mb-2">Cevaplarında risk almayı ve ilkelerini hızlıca test etmeyi tercih ediyorsun. Karmaşık problemleri parçalara bölüp pratik çözüm üretmede iyisin.</p>
-                      <p className="mb-2">Kısıtları fırsata çevirme yaklaşımın, sınırlı kaynaklarla ilerleme hızını artırıyor. Prototip odaklı yaklaşımınla hızla öğreniyorsun.</p>
-                      <p className="text-muted-foreground">Bazen ayrıntı planlama adımlarını atlama eğilimi gösterebilirsin; iletişim çerçevesini netleştirmen faydalı olur.</p>
+                      <h3 className="font-semibold mb-2">{t('profile.aiSummary')}</h3>
+                      <p className="mb-2">{t('profile.aiSummary1')}</p>
+                      <p className="mb-2">{t('profile.aiSummary2')}</p>
+                      <p className="text-muted-foreground">{t('profile.aiSummary3')}</p>
                     </div>
                     {/* Feature Chips */}
                     <div className="border rounded-lg p-4">
-                      <h3 className="font-semibold mb-3">Ana Özellikler</h3>
+                      <h3 className="font-semibold mb-3">{t('profile.mainFeatures')}</h3>
                       <div className="flex flex-wrap gap-2">
                         {[
-                          { label: "Sistem Düşüncesi", tip: "Bileşenler arası ilişkileri görebilme" },
-                          { label: "Kaynak Üreticiliği", tip: "Kısıtları yarara çevirme" },
-                          { label: "Hızlı Deney", tip: "Hipotez – prototip – ölçüm döngüsü" },
-                          { label: "Vizyon", tip: "Büyük resim ve hedef uyumu" },
+                          { label: t('profile.systemThinking'), tip: t('profile.systemThinkingTip') },
+                          { label: t('profile.resourceGeneration'), tip: t('profile.resourceGenerationTip') },
+                          { label: t('profile.rapidExperiment'), tip: t('profile.rapidExperimentTip') },
+                          { label: t('profile.vision'), tip: t('profile.visionTip') },
                         ].map((c) => (
                           <Tooltip key={c.label}>
                             <TooltipTrigger className="rounded-full bg-muted px-3 py-1 text-xs">{c.label}</TooltipTrigger>
@@ -239,11 +241,11 @@ export function Profile() {
                         ))}
                       </div>
                       <div className="mt-4">
-                        <h4 className="text-sm font-semibold mb-1">Kariyer İpuçları</h4>
+                        <h4 className="text-sm font-semibold mb-1">{t('profile.careerTips')}</h4>
                         <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
-                          <li>Product Management stajlarına bak</li>
-                          <li>Teknoloji girişim topluluğuna katıl</li>
-                          <li>Hackathon’larda rol al</li>
+                          <li>{t('profile.careerTip1')}</li>
+                          <li>{t('profile.careerTip2')}</li>
+                          <li>{t('profile.careerTip3')}</li>
                         </ul>
                       </div>
                     </div>
@@ -254,11 +256,11 @@ export function Profile() {
                 <TabsContent value="strengths">
                   <div className="grid md:grid-cols-2 gap-4">
                     {[
-                      { name: "Yaratıcılık", value: 90, proof: "Fil taşımada çok modlu lojistik önerdin." },
-                      { name: "Uygulanabilirlik", value: 82, proof: "Kaynak sınırlamalarını ölçülü çözümlerle dengeledin." },
-                      { name: "Yapılandırma", value: 70, proof: "Adımları şematik hale getirdin; daha da detaylanabilir." },
-                      { name: "İletişim", value: 76, proof: "Çözümün ana fikrini net aktardın." },
-                      { name: "İşbirliği", value: 80, proof: "Takım rollerine atıfta bulundun." },
+                      { name: t('profile.creativity'), value: 90, proof: t('profile.creativityProof') },
+                      { name: t('profile.applicability'), value: 82, proof: t('profile.applicabilityProof') },
+                      { name: t('profile.structuring'), value: 70, proof: t('profile.structuringProof') },
+                      { name: t('profile.communication'), value: 76, proof: t('profile.communicationProof') },
+                      { name: t('profile.collaboration'), value: 80, proof: t('profile.collaborationProof') },
                     ].map((m) => (
                       <div key={m.name} className="border rounded-lg p-4">
                         <div className="flex items-center justify-between">
@@ -278,14 +280,14 @@ export function Profile() {
                 <TabsContent value="growth">
                   <div className="grid md:grid-cols-3 gap-4">
                     {[
-                      { title: "Plan Derinliği", tip: "Çözümüne 3 kademeli risk azaltma ekle" },
-                      { title: "İletişim Netliği", tip: "Sunumunu 1-2-3 formatı ile yapılandır" },
-                      { title: "Ekip İşbirliği", tip: "Rolleri ve bağımlılıkları erken netleştir" },
+                      { title: t('profile.planDepth'), tip: t('profile.planDepthTip') },
+                      { title: t('profile.communicationClarity'), tip: t('profile.communicationClarityTip') },
+                      { title: t('profile.teamCollaboration'), tip: t('profile.teamCollaborationTip') },
                     ].map((g) => (
                       <div key={g.title} className="border rounded-lg p-4">
                         <h4 className="font-medium">{g.title}</h4>
                         <p className="text-sm text-muted-foreground">{g.tip}</p>
-                        <div className="mt-3 text-xs text-muted-foreground">Mini alıştırmalar: 15dk constraint-to-idea, 5-5-5 fikir üretimi</div>
+                        <div className="mt-3 text-xs text-muted-foreground">{t('profile.miniExercises')}</div>
                       </div>
                     ))}
                   </div>
@@ -296,25 +298,25 @@ export function Profile() {
                   <div className="space-y-3">
                     {(
                       [
-                        { t: "Köy aydınlatma", k: onboarding?.phase3?.a1 || "…", q: "1" },
-                        { t: "Fil taşıma", k: onboarding?.phase3?.a2 || "…", q: "2" },
-                        { t: "Kütüphane kapısı", k: onboarding?.phase3?.a3 || "…", q: "3" },
-                        { t: "Mars ikmal", k: onboarding?.phase3?.a4 || "…", q: "4" },
-                        { t: "Telefon yok iletişim", k: onboarding?.phase3?.a5 || "…", q: "5" },
+                        { t: t('profile.villageLighting'), k: onboarding?.phase3?.a1 || "…", q: "1" },
+                        { t: t('profile.elephantTransport'), k: onboarding?.phase3?.a2 || "…", q: "2" },
+                        { t: t('profile.libraryDoor'), k: onboarding?.phase3?.a3 || "…", q: "3" },
+                        { t: t('profile.marsSupply'), k: onboarding?.phase3?.a4 || "…", q: "4" },
+                        { t: t('profile.noPhoneCommunication'), k: onboarding?.phase3?.a5 || "…", q: "5" },
                       ] as const
                     ).map((row, idx) => (
                       <div key={idx} className="border rounded-lg p-4">
                         <div className="flex items-center justify-between gap-3">
                           <div>
                             <div className="font-medium">{row.t}</div>
-                            <div className="text-sm text-muted-foreground line-clamp-2">“{row.k}”</div>
+                            <div className="text-sm text-muted-foreground line-clamp-2">"{row.k}"</div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs bg-muted rounded-full px-2 py-1">Rubrik: 4.2/5</span>
+                            <span className="text-xs bg-muted rounded-full px-2 py-1">{t('profile.rubric')}: 4.2/5</span>
                             {onboarding?.phase4?.recordingUrl && (
                               <Dialog>
                                 <DialogTrigger asChild>
-                                  <Button size="sm" variant="outline">İzle</Button>
+                                  <Button size="sm" variant="outline">{t('profile.watch')}</Button>
                                 </DialogTrigger>
                                 <DialogContent className="max-w-3xl">
                                   <DialogHeader>
@@ -327,10 +329,10 @@ export function Profile() {
                           </div>
                         </div>
                         <details className="mt-3">
-                          <summary className="text-sm cursor-pointer">AI gerekçesi ve zaman çizgisi</summary>
+                          <summary className="text-sm cursor-pointer">{t('profile.aiReasoningAndTimeline')}</summary>
                           <div className="text-sm text-muted-foreground mt-2 space-y-1">
-                            <p>AI gerekçesi: Anahtar kelimeler ve çözüm kalıpları üzerinden benzerlik analizi.</p>
-                            <p>Zaman çizgisi: Yanıt süresi ~{15 + idx * 5}s, ikinci deneme yok.</p>
+                            <p>{t('profile.aiReasoning')}</p>
+                            <p>{t('profile.timeline', { time: 15 + idx * 5 })}</p>
                           </div>
                         </details>
                       </div>
@@ -341,22 +343,22 @@ export function Profile() {
                 {/* Workshops */}
                 <TabsContent value="workshops">
                   <div className="space-y-4">
-                    <div className="text-sm text-muted-foreground">Bu içerikler profilinle iyi eşleşiyor.</div>
+                    <div className="text-sm text-muted-foreground">{t('profile.workshopsMatch')}</div>
                     <div className="grid md:grid-cols-2 gap-4">
                       {[
-                        { title: "Design Thinking Bootcamp", tags: "Uygulamalı • 2 gün • Başlangıç-Orta", benefit: "Hızlı prototipleme ve kullanıcı içgörüsü" },
-                        { title: "Rapid Prototyping 101", tags: "Uygulamalı • 1 gün • Başlangıç", benefit: "No-code/Maker araçlarıyla hızlı deneme" },
-                        { title: "Systems Thinking Lab", tags: "Atölye • 3 saat • Orta", benefit: "Sistem haritalama ve geri-besleme" },
-                        { title: "Pitch & Storytelling", tags: "Atölye • 2 saat • Başlangıç", benefit: "Net iletişim ve yapılandırma" },
+                        { title: t('profile.designThinkingBootcamp'), tags: t('profile.practical2Days'), benefit: t('profile.rapidPrototypingBenefit') },
+                        { title: t('profile.rapidPrototyping101'), tags: t('profile.practical1Day'), benefit: t('profile.noCodeBenefit') },
+                        { title: t('profile.systemsThinkingLab'), tags: t('profile.workshop3Hours'), benefit: t('profile.systemMappingBenefit') },
+                        { title: t('profile.pitchStorytelling'), tags: t('profile.workshop2Hours'), benefit: t('profile.clearCommunicationBenefit') },
                       ].map((w) => (
                         <div key={w.title} className="border rounded-lg p-4">
                           <div className="font-medium mb-1">{w.title}</div>
                           <div className="text-xs text-muted-foreground mb-2">{w.tags}</div>
                           <div className="text-sm mb-3">{w.benefit}</div>
                           <div className="flex items-center gap-2">
-                            <Button size="sm" className="bg-primary">Kayıt Ol</Button>
-                            <Button size="sm" variant="outline">Takvime Ekle</Button>
-                            <Button size="sm" variant="ghost">Bilgi İste</Button>
+                            <Button size="sm" className="bg-primary">{t('profile.register')}</Button>
+                            <Button size="sm" variant="outline">{t('profile.addToCalendar')}</Button>
+                            <Button size="sm" variant="ghost">{t('profile.requestInfo')}</Button>
                           </div>
                         </div>
                       ))}
@@ -375,14 +377,14 @@ export function Profile() {
             <div className="bg-card border rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold flex items-center gap-2">
-                  <Video className="h-4 w-4 text-primary" /> Zoom Entegrasyonu
+                  <Video className="h-4 w-4 text-primary" /> {t('profile.zoomIntegration')}
                 </h3>
                 <span className={`text-xs px-2 py-0.5 rounded-full ${zoomConnected ? "bg-green-100 text-green-700" : "bg-muted text-foreground"}`}>
-                  {zoomConnected ? "Bağlı" : "Bağlı değil"}
+                  {zoomConnected ? t('profile.connected') : t('profile.notConnected')}
                 </span>
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                Zoom hesabınızı bağlayarak dersler için otomatik toplantı linkleri oluşturabilirsiniz.
+                {t('profile.zoomDescription')}
               </p>
               <div className="mt-3 flex gap-2">
                 {!zoomConnected ? (
@@ -394,7 +396,7 @@ export function Profile() {
                     }}
                     className="flex-1"
                   >
-                    Zoom Hesabını Bağla
+                    {t('profile.connectZoomAccount')}
                   </Button>
                 ) : (
                   <>
@@ -402,34 +404,34 @@ export function Profile() {
                       variant="outline"
                       className="flex-1"
                       onClick={() => {
-                        alert("Toplantı oluşturma yetkiniz aktif. Ders sayfalarından Zoom linkleri üretebilirsiniz.");
+                        alert(t('profile.meetingCreationActive'));
                       }}
                     >
-                      Durum: Aktif
+                      {t('profile.statusActive')}
                     </Button>
                     <Button
                       variant="ghost"
                       onClick={() => { try { localStorage.removeItem("zoom.connected"); } catch {}; setZoomConnected(false); }}
                     >
-                      Bağlantıyı Kes
+                      {t('profile.disconnect')}
                     </Button>
                   </>
                 )}
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Not: Bu bir arayüz simülasyonudur. Backend ile OAuth tamamlandığında bu buton geri dönüş URL'siyle çalışacaktır.
+                {t('profile.zoomNote')}
               </p>
             </div>
             {/* Skill Graph Section */}
             <div className="bg-card border rounded-lg p-4">
-                <div className="h-64 lg:h-80">
+                <div className="h-56 lg:h-64">
                   <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart data={scores.map((s) => ({ subject: s.label, A: s.value }))} outerRadius={110}>
+                    <RadarChart data={scores.map((s) => ({ subject: s.label, A: s.value }))} outerRadius={85}>
                       <PolarGrid />
-                      <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11 }} />
-                      <PolarRadiusAxis angle={90} domain={[0, 100]} tickFormatter={(v) => `${v}`} />
-                      <ReTooltip formatter={(v: number) => [`% ${v.toFixed(0)}`, "Skor"]} />
-                      <Radar name="Skor" dataKey="A" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.3} />
+                      <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10 }} />
+                      <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}`} />
+                      <ReTooltip formatter={(v: number) => [`% ${v.toFixed(0)}`, t('profile.score')]} />
+                      <Radar name={t('profile.score')} dataKey="A" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.3} />
                     </RadarChart>
                   </ResponsiveContainer>
                 </div>
@@ -445,8 +447,8 @@ export function Profile() {
             {/* Recommended Course Roadmap */}
             <div className="border rounded-lg p-4 bg-background shadow-sm">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold">Önerilen Kurs Yol Haritası</h3>
-                <div className="text-sm text-muted-foreground">İlerleme: %35</div>
+                <h3 className="font-semibold">{t('profile.recommendedCourseRoadmap')}</h3>
+                <div className="text-sm text-muted-foreground">{t('profile.progress')}: %35</div>
               </div>
               <div className="h-2 bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={35}>
                 <div className="h-full bg-indigo-500" style={{ width: "35%" }} />
@@ -454,32 +456,32 @@ export function Profile() {
               <div className="mt-4 grid gap-4">
                 {[
                   { 
-                    title: "Design Thinking Temelleri", 
-                    description: "Yaratıcı problem çözme metodolojisi ve kullanıcı odaklı düşünme",
+                    title: t('profile.designThinkingFundamentals'), 
+                    description: t('profile.designThinkingDescription'),
                     status: "completed",
-                    duration: "2 hafta",
-                    level: "Başlangıç"
+                    duration: t('profile.weeks2'),
+                    level: t('courses.beginner')
                   },
                   { 
-                    title: "Rapid Prototyping", 
-                    description: "Hızlı prototip geliştirme teknikleri ve no-code araçları",
+                    title: t('profile.rapidPrototyping'), 
+                    description: t('profile.rapidPrototypingDescription'),
                     status: "in-progress",
-                    duration: "3 hafta",
-                    level: "Orta"
+                    duration: t('profile.weeks3'),
+                    level: t('courses.intermediate')
                   },
                   { 
-                    title: "Systems Thinking", 
-                    description: "Sistem düşüncesi ve karmaşık problemleri analiz etme",
+                    title: t('profile.systemsThinking'), 
+                    description: t('profile.systemsThinkingDescription'),
                     status: "upcoming",
-                    duration: "2 hafta",
-                    level: "Orta"
+                    duration: t('profile.weeks2'),
+                    level: t('courses.intermediate')
                   },
                   { 
-                    title: "Pitch & Storytelling", 
-                    description: "Etkili sunum teknikleri ve hikaye anlatımı",
+                    title: t('profile.pitchStorytelling'), 
+                    description: t('profile.pitchStorytellingDescription'),
                     status: "upcoming",
-                    duration: "1 hafta",
-                    level: "Başlangıç"
+                    duration: t('profile.weeks1'),
+                    level: t('courses.beginner')
                   }
                 ].map((course, i) => (
                   <div key={i} className="flex items-start gap-4">
@@ -501,20 +503,20 @@ export function Profile() {
                       <div className="text-sm text-muted-foreground mb-3">{course.description}</div>
                       {course.status === "in-progress" && (
                         <div className="flex items-center gap-2">
-                          <Button size="sm" className="bg-primary text-white">Devam Et</Button>
-                          <Button size="sm" variant="outline">Detaylar</Button>
+                          <Button size="sm" className="bg-primary text-white">{t('common.continue')}</Button>
+                          <Button size="sm" variant="outline">{t('common.viewDetails')}</Button>
                         </div>
                       )}
                       {course.status === "upcoming" && (
                         <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline" disabled>Yakında</Button>
-                          <Button size="sm" variant="ghost">Önizleme</Button>
+                          <Button size="sm" variant="outline" disabled>{t('profile.comingSoon')}</Button>
+                          <Button size="sm" variant="ghost">{t('profile.preview')}</Button>
                         </div>
                       )}
                       {course.status === "completed" && (
                         <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline">Tekrar İzle</Button>
-                          <Button size="sm" variant="ghost">Sertifika</Button>
+                          <Button size="sm" variant="outline">{t('profile.watchAgain')}</Button>
+                          <Button size="sm" variant="ghost">{t('profile.certificate')}</Button>
                         </div>
                       )}
                     </div>

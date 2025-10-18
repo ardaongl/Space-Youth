@@ -1,7 +1,10 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { Briefcase, Rocket, Sparkles } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function JobBoard() {
+  const { t } = useLanguage();
+  
   return (
     <AppLayout>
       <div className="min-h-[calc(100vh-4rem)] w-full bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-950 flex items-center justify-center px-4">
@@ -23,18 +26,17 @@ export default function JobBoard() {
             <div className="flex items-center justify-center gap-3 mb-4">
               <Briefcase className="w-8 h-8 text-indigo-600 dark:text-indigo-400 animate-bounce" />
               <h1 className="text-6xl md:text-8xl font-black bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Job Board
+                {t('jobBoard.title')}
               </h1>
               <Sparkles className="w-8 h-8 text-purple-600 dark:text-purple-400 animate-pulse" />
             </div>
             
             <p className="text-4xl md:text-5xl font-bold text-gray-800 dark:text-gray-200 animate-in fade-in delay-300">
-              Coming Soon
+              {t('jobBoard.comingSoon')}
             </p>
             
             <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto animate-in fade-in delay-500">
-              Uzay teknolojileri ve eğitim alanında kariyer fırsatlarını keşfetmeye hazır olun. 
-              Yakında sizlerle!
+              {t('jobBoard.description')}
             </p>
           </div>
 
@@ -43,7 +45,7 @@ export default function JobBoard() {
             <div className="flex items-center gap-2 px-4 py-2 bg-white/50 dark:bg-gray-800/50 rounded-full backdrop-blur-sm border border-gray-200 dark:border-gray-700">
               <Rocket className="w-5 h-5 text-indigo-600 dark:text-indigo-400 animate-bounce" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Yakında Açılıyor
+                {t('jobBoard.openingSoon')}
               </span>
             </div>
           </div>

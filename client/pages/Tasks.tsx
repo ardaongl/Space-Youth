@@ -25,15 +25,19 @@ import { Search, Filter, Plus, Pencil, Trash2, MoreHorizontal } from "lucide-rea
 import { TaskStatus } from "@/data/tasks";
 import { useTasks } from "@/context/TasksContext";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { isAdmin } from "@/utils/roles";
 import { cn } from "@/lib/utils";
+import { AddTaskModal } from "@/components/tasks/AddTaskModal";
 
 export default function Tasks() {
   const navigate = useNavigate();
   const { auth } = useAuth();
+  const { t } = useLanguage();
   const { tasks } = useTasks();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<TaskStatus[]>([]);
+  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
 
   const filteredTasks = tasks.filter((task) => {
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
@@ -59,6 +63,19 @@ export default function Tasks() {
         return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
       default:
         return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getStatusTranslation = (status: TaskStatus) => {
+    switch (status) {
+      case "Done": return t('tasks.completed');
+      case "In Progress": return t('tasks.inProgress');
+      case "In Review": return t('tasks.inReview');
+      case "Accepted": return t('tasks.accepted');
+      case "Rejected": return t('tasks.rejected');
+      case "To Do": return t('tasks.pending');
+      case "Overdue": return t('tasks.overdue');
+      default: return status;
     }
   };
 
@@ -96,9 +113,9 @@ export default function Tasks() {
           {/* Header Section */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold">Tüm Görevler</h1>
+              <h1 className="text-3xl font-bold">{t('tasks.title')}</h1>
               <p className="text-muted-foreground mt-1">
-                {filteredTasks.length} {filteredTasks.length === 1 ? "görev" : "görev"}
+                {filteredTasks.length} {filteredTasks.length === 1 ? t('tasks.task') : t('tasks.tasks')}
               </p>
             </div>
 
@@ -107,7 +124,7 @@ export default function Tasks() {
               <div className="relative w-80">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Görevlerde Ara"
+                  placeholder={t('common.search')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -119,11 +136,11 @@ export default function Tasks() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="default" className="gap-2">
                     <Filter className="h-4 w-4" />
-                    Filtrele
+                    {t('common.filter')}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel>Duruma Göre Filtrele</DropdownMenuLabel>
+                  <DropdownMenuLabel>{t('tasks.filterByStatus')}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {(["To Do", "In Progress", "In Review", "Accepted", "Rejected", "Done", "Overdue"] as TaskStatus[]).map((status) => (
                     <DropdownMenuCheckboxItem
@@ -131,7 +148,7 @@ export default function Tasks() {
                       checked={statusFilter.includes(status)}
                       onCheckedChange={() => toggleStatusFilter(status)}
                     >
-                      {status}
+                      {getStatusTranslation(status)}
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuContent>
@@ -139,23 +156,33 @@ export default function Tasks() {
 
               {/* Admin: Add New Task Button */}
               {adminUser && (
-                <Button className="gap-2">
+                <Button className="gap-2" onClick={() => setIsAddTaskModalOpen(true)}>
                   <Plus className="h-4 w-4" />
-                  Yeni görev ekle
+                  {t('tasks.addTask')}
                 </Button>
               )}
             </div>
           </div>
+
+          {/* Add Task Modal */}
+          <AddTaskModal
+            open={isAddTaskModalOpen}
+            onOpenChange={setIsAddTaskModalOpen}
+            onTaskAdded={() => {
+              // Reload tasks or refresh the page
+              console.log("Task added successfully");
+            }}
+          />
 
           {/* Tasks Table */}
           <div className="rounded-lg border bg-card">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Görev Adı</TableHead>
-                  <TableHead>Coin Değeri</TableHead>
-                  <TableHead>Durum</TableHead>
-                  {adminUser && <TableHead className="text-right">İşlemler</TableHead>}
+                  <TableHead>{t('tasks.taskName')}</TableHead>
+                  <TableHead>{t('tasks.coinValue')}</TableHead>
+                  <TableHead>{t('tasks.status')}</TableHead>
+                  {adminUser && <TableHead className="text-right">{t('tasks.actions')}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -165,7 +192,7 @@ export default function Tasks() {
                       colSpan={adminUser ? 4 : 3}
                       className="h-24 text-center text-muted-foreground"
                     >
-                      Görev bulunamadı
+                      {t('tasks.noTasksFound')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -190,7 +217,7 @@ export default function Tasks() {
                             getStatusColor(task.status)
                           )}
                         >
-                          {task.status}
+                          {getStatusTranslation(task.status)}
                         </Badge>
                       </TableCell>
                       {adminUser && (
@@ -207,7 +234,7 @@ export default function Tasks() {
                                 className="gap-2"
                               >
                                 <Pencil className="h-4 w-4" />
-                                Düzenle
+                                {t('tasks.editTask')}
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
@@ -215,7 +242,7 @@ export default function Tasks() {
                                 className="gap-2 text-red-600 dark:text-red-400"
                               >
                                 <Trash2 className="h-4 w-4" />
-                                Sil
+                                {t('tasks.deleteTask')}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>

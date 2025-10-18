@@ -9,11 +9,13 @@ import { useToast } from "@/hooks/use-toast";
 import { authService } from "@/services/authService";
 import { useAuth } from "@/context/AuthContext";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function Register() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { refetchUser } = useAuth();
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -35,8 +37,8 @@ export default function Register() {
   const validateForm = () => {
     if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
       toast({
-        title: "Hata",
-        description: "Lütfen tüm alanları doldurun.",
+        title: t('auth.error'),
+        description: t('auth.fillAllFields'),
         variant: "destructive",
       });
       return false;
@@ -44,8 +46,8 @@ export default function Register() {
 
     if (formData.name.length < 3) {
       toast({
-        title: "Hata",
-        description: "İsim en az 3 karakter olmalıdır.",
+        title: t('auth.error'),
+        description: t('auth.nameMinLength'),
         variant: "destructive",
       });
       return false;
@@ -54,8 +56,8 @@ export default function Register() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       toast({
-        title: "Hata",
-        description: "Geçerli bir e-posta adresi girin.",
+        title: t('auth.error'),
+        description: t('auth.validEmail'),
         variant: "destructive",
       });
       return false;
@@ -63,8 +65,8 @@ export default function Register() {
 
     if (formData.password.length < 6) {
       toast({
-        title: "Hata",
-        description: "Şifre en az 6 karakter olmalıdır.",
+        title: t('auth.error'),
+        description: t('auth.passwordMinLength'),
         variant: "destructive",
       });
       return false;
@@ -72,8 +74,8 @@ export default function Register() {
 
     if (formData.password !== formData.confirmPassword) {
       toast({
-        title: "Hata",
-        description: "Şifreler eşleşmiyor.",
+        title: t('auth.error'),
+        description: t('auth.passwordsDoNotMatch'),
         variant: "destructive",
       });
       return false;
@@ -81,8 +83,8 @@ export default function Register() {
 
     if (!acceptTerms) {
       toast({
-        title: "Hata",
-        description: "Kullanım şartlarını kabul etmelisiniz.",
+        title: t('auth.error'),
+        description: t('auth.acceptTerms'),
         variant: "destructive",
       });
       return false;
@@ -119,8 +121,8 @@ export default function Register() {
         authService.setToken(data.token);
         
         toast({
-          title: "Başarılı!",
-          description: "Hesabınız oluşturuldu. Yönlendiriliyorsunuz...",
+          title: t('auth.success'),
+          description: t('auth.registerSuccess'),
         });
 
         // Refetch user data
@@ -140,8 +142,8 @@ export default function Register() {
     } catch (error) {
       console.error("Register error:", error);
       toast({
-        title: "Hata",
-        description: "Kayıt olurken bir hata oluştu. Lütfen tekrar deneyin.",
+        title: t('auth.error'),
+        description: t('auth.registerError'),
         variant: "destructive",
       });
     } finally {
@@ -160,9 +162,9 @@ export default function Register() {
     if (/\d/.test(password)) strength++;
     if (/[^a-zA-Z\d]/.test(password)) strength++;
 
-    if (strength <= 2) return { strength, label: "Zayıf", color: "text-red-500" };
-    if (strength <= 3) return { strength, label: "Orta", color: "text-amber-500" };
-    return { strength, label: "Güçlü", color: "text-green-500" };
+    if (strength <= 2) return { strength, label: t('auth.weak'), color: "text-red-500" };
+    if (strength <= 3) return { strength, label: t('auth.medium'), color: "text-amber-500" };
+    return { strength, label: t('auth.strong'), color: "text-green-500" };
   };
 
   const strength = passwordStrength();
@@ -180,7 +182,7 @@ export default function Register() {
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Explore'a Dön
+{t('auth.backToExplore')}
         </Link>
 
         <Card className="p-8 shadow-xl">
@@ -189,21 +191,21 @@ export default function Register() {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary to-purple-600 mb-4">
               <Rocket className="h-8 w-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold mb-2">Hesap Oluştur</h1>
+            <h1 className="text-2xl font-bold mb-2">{t('auth.createAccount')}</h1>
             <p className="text-muted-foreground">
-              Space Youth topluluğuna katılmak için kayıt ol
+              {t('auth.registerDescription')}
             </p>
           </div>
 
           {/* Register Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="name">Ad Soyad</Label>
+              <Label htmlFor="name">{t('auth.fullName')}</Label>
               <Input
                 id="name"
                 name="name"
                 type="text"
-                placeholder="Ahmet Yılmaz"
+                placeholder={t('auth.fullNamePlaceholder')}
                 value={formData.name}
                 onChange={handleChange}
                 disabled={isLoading}
@@ -213,12 +215,12 @@ export default function Register() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">E-posta</Label>
+              <Label htmlFor="email">{t('auth.email')}</Label>
               <Input
                 id="email"
                 name="email"
                 type="email"
-                placeholder="ornek@email.com"
+                placeholder={t('auth.emailPlaceholder')}
                 value={formData.email}
                 onChange={handleChange}
                 disabled={isLoading}
@@ -228,13 +230,13 @@ export default function Register() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Şifre</Label>
+              <Label htmlFor="password">{t('auth.password')}</Label>
               <div className="relative">
                 <Input
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="En az 6 karakter"
+                  placeholder={t('auth.passwordMinPlaceholder')}
                   value={formData.password}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -279,13 +281,13 @@ export default function Register() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Şifre Tekrar</Label>
+              <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
                   name="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Şifreni tekrar gir"
+                  placeholder={t('auth.confirmPasswordPlaceholder')}
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -309,10 +311,10 @@ export default function Register() {
                   {formData.password === formData.confirmPassword ? (
                     <>
                       <CheckCircle2 className="h-3 w-3 text-green-500" />
-                      <span className="text-green-500">Şifreler eşleşiyor</span>
+                      <span className="text-green-500">{t('auth.passwordsMatch')}</span>
                     </>
                   ) : (
-                    <span className="text-red-500">Şifreler eşleşmiyor</span>
+                    <span className="text-red-500">{t('auth.passwordsDoNotMatch')}</span>
                   )}
                 </div>
               )}
@@ -331,13 +333,13 @@ export default function Register() {
                 className="text-sm text-muted-foreground leading-tight cursor-pointer"
               >
                 <Link to="/terms" className="text-primary hover:underline">
-                  Kullanım Şartları
+                  {t('auth.termsOfService')}
                 </Link>
-                {" "}ve{" "}
+                {" "}{t('auth.and')}{" "}
                 <Link to="/privacy" className="text-primary hover:underline">
-                  Gizlilik Politikası
+                  {t('auth.privacyPolicy')}
                 </Link>
-                'nı okudum ve kabul ediyorum.
+                {t('auth.termsAcceptance')}
               </label>
             </div>
 
@@ -346,7 +348,7 @@ export default function Register() {
               className="w-full h-11 text-base font-semibold"
               disabled={isLoading || !acceptTerms}
             >
-              {isLoading ? "Kayıt Oluşturuluyor..." : "Hesap Oluştur"}
+{isLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
             </Button>
           </form>
 
@@ -357,7 +359,7 @@ export default function Register() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-card px-2 text-muted-foreground">
-                veya
+{t('auth.or')}
               </span>
             </div>
           </div>
@@ -388,18 +390,18 @@ export default function Register() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Google ile Devam Et
+{t('auth.continueWithGoogle')}
             </Button>
           </div>
 
           {/* Login Link */}
           <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">Zaten hesabın var mı? </span>
+            <span className="text-muted-foreground">{t('auth.alreadyHaveAccount')} </span>
             <Link 
               to="/login" 
               className="text-primary font-semibold hover:underline"
             >
-              Giriş Yap
+              {t('auth.login')}
             </Link>
           </div>
         </Card>
@@ -407,7 +409,7 @@ export default function Register() {
         {/* Development Note */}
         {import.meta.env.DEV && (
           <div className="mt-4 p-4 rounded-lg bg-amber-100 text-amber-800 text-sm">
-            <strong>Geliştirme Modu:</strong> Backend hazır olduğunda kayıt işlevi çalışacak.
+            <strong>{t('auth.developmentMode')}:</strong> {t('auth.backendReady')}
           </div>
         )}
       </div>

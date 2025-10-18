@@ -3,7 +3,7 @@ import axios, {AxiosHeaders, InternalAxiosRequestConfig} from 'axios';
 
 const baseUrl = import.meta.env.VITE_BASE_URL || '';
 
-export const api = axios.create({
+export const axiosInstance = axios.create({
   baseURL: baseUrl,
   timeout: 15000,
 });
@@ -14,7 +14,7 @@ declare module 'axios' {
   }
 }
 
-api.interceptors.request.use(
+axiosInstance.interceptors.request.use(
   async (config: InternalAxiosRequestConfig & {requiresAuth?: boolean}) => {
     const headers = (config.headers ?? new AxiosHeaders()) as AxiosHeaders;
 

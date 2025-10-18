@@ -4,9 +4,11 @@ import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Upload, X, Image as ImageIcon, Video } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function AddCourse() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [courseName, setCourseName] = useState("");
   const [courseDescription, setCourseDescription] = useState("");
   const [achievements, setAchievements] = useState<string[]>([""]);
@@ -80,27 +82,27 @@ export default function AddCourse() {
           onClick={() => navigate('/courses')}
         >
           <ArrowLeft className="h-4 w-4" />
-          Geri Dön
+          {t('common.back')}
         </Button>
 
         <div className="max-w-4xl mx-auto">
           <div className="bg-card rounded-lg border shadow-sm p-8">
             <div className="mb-6">
-              <h1 className="text-3xl font-bold">Yeni Kurs Ekle</h1>
-              <p className="text-muted-foreground mt-2">Adım 1/2: Kurs Bilgileri</p>
+              <h1 className="text-3xl font-bold">{t('courses.addCourse')}</h1>
+              <p className="text-muted-foreground mt-2">{t('courses.step1Info')}</p>
             </div>
 
             <div className="space-y-6">
               {/* Course Name */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Kursun Adı <span className="text-red-500">*</span>
+                  {t('courses.courseTitle')} <span className="text-red-500">*</span>
                 </label>
                 <Input
                   type="text"
                   value={courseName}
                   onChange={(e) => setCourseName(e.target.value)}
-                  placeholder="Örn: Web Geliştirme Temelleri"
+                  placeholder={t('courses.enterCourseTitle')}
                   className="w-full"
                 />
               </div>
@@ -108,12 +110,12 @@ export default function AddCourse() {
               {/* Course Description */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Kursun Açıklaması <span className="text-red-500">*</span>
+                  {t('courses.description')} <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={courseDescription}
                   onChange={(e) => setCourseDescription(e.target.value)}
-                  placeholder="Kursunuz hakkında detaylı bilgi verin..."
+                  placeholder={t('courses.enterDescription')}
                   rows={6}
                   className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 />
@@ -122,7 +124,7 @@ export default function AddCourse() {
               {/* Achievements */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Kurs Sonunda Kazanılacaklar
+                  {t('courses.achievements')}
                 </label>
                 <div className="space-y-3">
                   {achievements.map((achievement, index) => (
@@ -131,7 +133,7 @@ export default function AddCourse() {
                         type="text"
                         value={achievement}
                         onChange={(e) => handleAchievementChange(index, e.target.value)}
-                        placeholder={`Kazanım ${index + 1}`}
+                        placeholder={t('courses.achievement', { number: index + 1 })}
                         className="flex-1"
                       />
                       {achievements.length > 1 && (
@@ -151,7 +153,7 @@ export default function AddCourse() {
                     onClick={handleAddAchievement}
                     className="w-full"
                   >
-                    + Kazanım Ekle
+                    + {t('courses.addAchievement')}
                   </Button>
                 </div>
               </div>
@@ -159,7 +161,7 @@ export default function AddCourse() {
               {/* File Upload - Photo and Video side by side */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Dosya Ekle
+                  {t('courses.addFiles')}
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Photo Upload */}
@@ -178,9 +180,9 @@ export default function AddCourse() {
                         className="cursor-pointer flex flex-col items-center gap-2"
                       >
                         <ImageIcon className="h-10 w-10 text-muted-foreground" />
-                        <p className="text-sm font-medium">Fotoğraf Yükle</p>
+                        <p className="text-sm font-medium">{t('courses.uploadPhotos')}</p>
                         <p className="text-xs text-muted-foreground">
-                          JPG, PNG formatlarında yükleyebilirsiniz
+                          {t('courses.photoFormats')}
                         </p>
                       </label>
                     </div>
@@ -224,9 +226,9 @@ export default function AddCourse() {
                         className="cursor-pointer flex flex-col items-center gap-2"
                       >
                         <Video className="h-10 w-10 text-muted-foreground" />
-                        <p className="text-sm font-medium">Video Yükle</p>
+                        <p className="text-sm font-medium">{t('courses.uploadVideos')}</p>
                         <p className="text-xs text-muted-foreground">
-                          MP4, MOV formatlarında yükleyebilirsiniz
+                          {t('courses.videoFormats')}
                         </p>
                       </label>
                     </div>
@@ -263,14 +265,14 @@ export default function AddCourse() {
                   variant="outline"
                   onClick={() => navigate('/courses')}
                 >
-                  İptal
+                  {t('common.cancel')}
                 </Button>
                 <Button
                   onClick={handleContinue}
                   disabled={!isValid}
                   size="lg"
                 >
-                  Devam Et
+                  {t('common.continue')}
                 </Button>
               </div>
             </div>

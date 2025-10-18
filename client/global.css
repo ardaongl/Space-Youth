@@ -131,4 +131,23 @@
   .animation-delay-4000 {
     animation-delay: 4s;
   }
+
+  /* Slow spin animation for gradient border */
+  @keyframes spin-slow {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-spin-slow {
+    animation: spin-slow 8s linear infinite;
+  }
+
+  /* Delay for pulse animation */
+  .delay-75 {
+    animation-delay: 75ms;
+  }
 }

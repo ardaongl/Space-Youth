@@ -29,6 +29,11 @@ export default function Login() {
   const auth_token = useAppSelector(state => state.user.token)
   const user = useAppSelector(state => state.user.user);
 
+  const dispatch = useDispatch();
+
+  const auth_token = useAppSelector(state => state.user.token)
+  const user = useAppSelector(state => state.user.user);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
@@ -38,7 +43,7 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.email || !formData.password) {
       toast({
         title: "Hata",
@@ -277,4 +282,3 @@ export default function Login() {
     </div>
   );
 }
-

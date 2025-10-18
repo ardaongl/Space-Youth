@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { isAdmin } from "@/utils/roles";
 import { useBookmarks, BookmarkedContent, EnrolledContent } from "@/context/BookmarksContext";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/context/LanguageContext";
 
 type EventType = "workshop" | "hackathon";
 
@@ -14,6 +15,7 @@ export default function EventDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { auth } = useAuth();
+  const { t } = useLanguage();
   const adminUser = isAdmin(auth.user?.role);
   const { addBookmark, removeBookmark, isBookmarked, addEnrollment, isEnrolled } = useBookmarks();
   const { toast } = useToast();
@@ -60,8 +62,8 @@ export default function EventDetail() {
     if (bookmarked) {
       removeBookmark(eventData.id);
       toast({
-        title: "Kayıt kaldırıldı",
-        description: `${eventData.title} kayıtlılardan çıkarıldı.`,
+        title: t('bookmarks.removedFromBookmarks'),
+        description: `${eventData.title} ${t('bookmarks.removedFromBookmarks')}.`,
       });
     } else {
       const bookmarkItem: BookmarkedContent = {
@@ -81,8 +83,8 @@ export default function EventDetail() {
       };
       addBookmark(bookmarkItem);
       toast({
-        title: "Kaydedildi",
-        description: `${eventData.title} kayıtlılara eklendi.`,
+        title: t('bookmarks.addedToBookmarks'),
+        description: `${eventData.title} ${t('bookmarks.addedToBookmarks')}.`,
       });
     }
   };
@@ -90,8 +92,8 @@ export default function EventDetail() {
   const handleJoin = () => {
     if (enrolled) {
       toast({
-        title: "Zaten kayıtlısınız",
-        description: "Bu etkinliğe zaten kayıt oldunuz.",
+        title: t('workshops.alreadyRegistered'),
+        description: t('workshops.alreadyRegisteredDescription'),
       });
       return;
     }
@@ -130,7 +132,7 @@ export default function EventDetail() {
           onClick={() => navigate('/workshops')}
         >
           <ArrowLeft className="h-4 w-4" />
-          Geri Dön
+          {t('common.back')}
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-8">
@@ -145,7 +147,7 @@ export default function EventDetail() {
                     ? "bg-blue-100 text-blue-800 border-blue-200" 
                     : "bg-purple-100 text-purple-800 border-purple-200"
                 }`}>
-                  {eventType === "workshop" ? "🎯 Workshop" : "💻 Hackathon"}
+                  {eventType === "workshop" ? `🎯 ${t('workshops.workshop')}` : `💻 ${t('workshops.hackathon')}`}
                 </span>
               </div>
 
@@ -160,7 +162,7 @@ export default function EventDetail() {
                       className="gap-2"
                       onClick={() => navigate(`/events/${slug}/edit`)}
                     >
-                      Düzenle
+                      {t('common.edit')}
                     </Button>
                   )}
                   <Button 
@@ -184,15 +186,15 @@ export default function EventDetail() {
                     disabled={enrolled}
                   >
                     {enrolled ? (
-                      "Kayıtlı"
+                      t('workshops.alreadyRegistered')
                     ) : eventData.price > 0 ? (
                       <>
                         <Coins className="h-5 w-5" />
-                        {eventData.price} coin ile {eventType === "workshop" ? "katıl" : "kayıt ol"}
+                        {eventData.price} {t('common.coins')} {t('common.with')} {eventType === "workshop" ? t('workshops.join') : t('workshops.register')}
                       </>
                     ) : (
                       <>
-                        Ücretsiz {eventType === "workshop" ? "katıl" : "kayıt ol"}
+                        {t('common.free')} {eventType === "workshop" ? t('workshops.join') : t('workshops.register')}
                       </>
                     )}
                   </Button>
@@ -201,7 +203,7 @@ export default function EventDetail() {
 
               {/* Description */}
               <div className="mt-8">
-                <h2 className="text-2xl font-semibold mb-4">Açıklama</h2>
+                <h2 className="text-2xl font-semibold mb-4">{t('courses.description')}</h2>
                 <p className="text-muted-foreground leading-7">
                   {eventData.description}
                 </p>
@@ -209,12 +211,12 @@ export default function EventDetail() {
 
               {/* Details Section */}
               <div className="mt-8">
-                <h2 className="text-2xl font-semibold mb-4">Detaylar</h2>
+                <h2 className="text-2xl font-semibold mb-4">{t('courseDetail.details')}</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <BookOpen className="h-5 w-5 text-primary flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-medium">Organizatör</p>
+                      <p className="text-sm font-medium">{t('events.organizer')}</p>
                       <p className="text-sm text-muted-foreground">{eventData.organizerName}</p>
                     </div>
                   </div>
@@ -222,7 +224,7 @@ export default function EventDetail() {
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <Clock className="h-5 w-5 text-primary flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-medium">Süre</p>
+                      <p className="text-sm font-medium">{t('courses.duration')}</p>
                       <p className="text-sm text-muted-foreground">{eventData.duration}</p>
                     </div>
                   </div>
@@ -230,9 +232,9 @@ export default function EventDetail() {
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <Calendar className="h-5 w-5 text-primary flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-medium">Tarih</p>
+                      <p className="text-sm font-medium">{t('tasks.dueDate')}</p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(eventData.date).toLocaleDateString("tr-TR", {
+                        {new Date(eventData.date).toLocaleDateString(t('common.locale') === 'tr' ? "tr-TR" : "en-US", {
                           weekday: "long",
                           year: "numeric",
                           month: "long",
@@ -245,7 +247,7 @@ export default function EventDetail() {
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <MapPin className="h-5 w-5 text-primary flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-medium">Konum</p>
+                      <p className="text-sm font-medium">{t('events.location')}</p>
                       <p className="text-sm text-muted-foreground">{eventData.location}</p>
                     </div>
                   </div>
@@ -253,9 +255,9 @@ export default function EventDetail() {
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-medium">Sertifika</p>
+                      <p className="text-sm font-medium">{t('courseDetail.certificate')}</p>
                       <p className="text-sm text-muted-foreground">
-                        {eventData.certification ? "Sertifikalı" : "Sertifikasız"}
+                        {eventData.certification ? t('courseDetail.certified') : t('courseDetail.nonCertified')}
                       </p>
                     </div>
                   </div>
@@ -263,9 +265,9 @@ export default function EventDetail() {
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <Users2 className="h-5 w-5 text-primary flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-medium">Katılımcılar</p>
+                      <p className="text-sm font-medium">{t('workshops.participants')}</p>
                       <p className="text-sm text-muted-foreground">
-                        {eventData.currentParticipants}/{eventData.maxParticipants} kişi
+                        {eventData.currentParticipants}/{eventData.maxParticipants} {t('events.participantCount', { count: eventData.maxParticipants })}
                       </p>
                     </div>
                   </div>
@@ -275,7 +277,7 @@ export default function EventDetail() {
               {/* Skills/Benefits Section */}
               <div className="mt-8">
                 <h2 className="text-2xl font-semibold mb-4">
-                  {eventType === "workshop" ? "Bu workshop'ta kazanacağınız beceriler:" : "Bu hackathon'da kazanacaklarınız:"}
+                  {eventType === "workshop" ? t('workshops.skillsYouWillGain') : t('workshops.benefitsYouWillGain')}
                 </h2>
                 <ul className="space-y-3">
                   {eventType === "workshop" ? (
@@ -283,22 +285,22 @@ export default function EventDetail() {
                       <li className="flex items-start gap-3">
                         <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
                         <p className="leading-7">
-                          <span className="font-semibold">Başarılı UX araştırmaları planlama ve yürütme</span> — 
-                          Kullanıcı araştırmasının ne zaman yapılacağını, hedeflerin nasıl belirleneceğini ve doğru sonuçları elde etmek için uygun yöntemleri nasıl seçeceğinizi öğrenin.
+                          <span className="font-semibold">{t('workshops.skill1Title')}</span> — 
+                          {t('workshops.skill1Description')}
                         </p>
                       </li>
                       <li className="flex items-start gap-3">
                         <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
                         <p className="leading-7">
-                          <span className="font-semibold">Veri toplama ve analiz teknikleri</span> — 
-                          Kullanıcı görüşmeleri, anketler ve kullanılabilirlik testleri ile nasıl etkili veri toplanacağını ve analiz edileceğini keşfedin.
+                          <span className="font-semibold">{t('workshops.skill2Title')}</span> — 
+                          {t('workshops.skill2Description')}
                         </p>
                       </li>
                       <li className="flex items-start gap-3">
                         <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
                         <p className="leading-7">
-                          <span className="font-semibold">İçgörüleri eyleme dönüştürme</span> — 
-                          Araştırma bulgularınızı tasarım kararlarına nasıl çevireceğinizi ve paydaşlara nasıl sunacağınızı öğrenin.
+                          <span className="font-semibold">{t('workshops.skill3Title')}</span> — 
+                          {t('workshops.skill3Description')}
                         </p>
                       </li>
                     </>
@@ -307,22 +309,22 @@ export default function EventDetail() {
                       <li className="flex items-start gap-3">
                         <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
                         <p className="leading-7">
-                          <span className="font-semibold">Gerçek dünya problem çözme deneyimi</span> — 
-                          Zaman baskısı altında çalışarak, hızlı prototipleme ve MVP geliştirme becerilerinizi geliştirin.
+                          <span className="font-semibold">{t('workshops.benefit1Title')}</span> — 
+                          {t('workshops.benefit1Description')}
                         </p>
                       </li>
                       <li className="flex items-start gap-3">
                         <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
                         <p className="leading-7">
-                          <span className="font-semibold">Ekip çalışması ve networking</span> — 
-                          Farklı disiplinlerden insanlarla çalışın, yeni bağlantılar kurun ve sektör profesyonelleriyle tanışın.
+                          <span className="font-semibold">{t('workshops.benefit2Title')}</span> — 
+                          {t('workshops.benefit2Description')}
                         </p>
                       </li>
                       <li className="flex items-start gap-3">
                         <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
                         <p className="leading-7">
-                          <span className="font-semibold">Değerli ödüller ve tanınma</span> — 
-                          Projenizi endüstri liderlerine sunun, geri bildirim alın ve kazanma şansınızı yakalayın.
+                          <span className="font-semibold">{t('workshops.benefit3Title')}</span> — 
+                          {t('workshops.benefit3Description')}
                         </p>
                       </li>
                     </>
@@ -346,7 +348,7 @@ export default function EventDetail() {
             {/* Participants Progress */}
             <div className="rounded-lg border bg-card p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Katılım Durumu</span>
+                <span className="text-sm font-medium">{t('workshops.participationStatus')}</span>
                 <span className="text-sm text-muted-foreground">
                   {eventData.currentParticipants}/{eventData.maxParticipants}
                 </span>
@@ -358,7 +360,7 @@ export default function EventDetail() {
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                {eventData.maxParticipants - eventData.currentParticipants} kişilik kontenjan kaldı
+                {eventData.maxParticipants - eventData.currentParticipants} {t('workshops.spotsRemaining')}
               </p>
             </div>
 

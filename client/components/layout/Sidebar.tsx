@@ -13,30 +13,15 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserRole } from "@/utils/roles";
 import { Button } from "@/components/ui/button";
 import React from "react";
 
-const exploreItem = { to: "/", label: "Explore", icon: Compass };
+// These will be moved inside the component to use translations
 
-const items = [
-  { to: "/dashboard", label: "Ana Ekran", icon: Home },
-  { to: "/tasks", label: "Görevler", icon: ClipboardList },
-  { to: "/courses", label: "Kurslar", icon: BookOpen },
-  { to: "/workshops", label: "Workshops & Hackathons", icon: Users },
-  { to: "/tutorials", label: "Ders Videoları", icon: PencilRuler },
-  { to: "/job-board", label: "Job Board", icon: BriefcaseBusiness },
-];
-
-const getRoleLabel = (role: UserRole): string => {
-  const roleLabels: Record<UserRole, string> = {
-    student: "Öğrenci",
-    teacher: "Öğretmen",
-    admin: "Yönetici",
-  };
-  return roleLabels[role];
-};
+// This will be moved inside the component to use translations
 
 const getInitials = (name: string): string => {
   return name
@@ -49,6 +34,27 @@ const getInitials = (name: string): string => {
 
 export function Sidebar() {
   const { auth } = useAuth();
+  const { t } = useLanguage();
+
+  const exploreItem = { to: "/", label: t('navigation.explore'), icon: Compass };
+
+  const items = [
+    { to: "/dashboard", label: t('navigation.dashboard'), icon: Home },
+    { to: "/tasks", label: t('navigation.tasks'), icon: ClipboardList },
+    { to: "/courses", label: t('navigation.courses'), icon: BookOpen },
+    { to: "/workshops", label: t('navigation.workshops'), icon: Users },
+    { to: "/tutorials", label: t('navigation.tutorials'), icon: PencilRuler },
+    { to: "/job-board", label: t('navigation.jobBoard'), icon: BriefcaseBusiness },
+  ];
+
+  const getRoleLabel = (role: UserRole): string => {
+    const roleLabels: Record<UserRole, string> = {
+      student: t('profile.student'),
+      teacher: t('profile.teacher'),
+      admin: t('profile.admin'),
+    };
+    return roleLabels[role];
+  };
   const [zoomConnected, setZoomConnected] = React.useState<boolean>(() => {
     try { return localStorage.getItem("zoom.connected") === "true"; } catch { return false; }
   });
@@ -183,7 +189,7 @@ export function Sidebar() {
               )}
               onClick={handleZoomConnect}
             >
-              {zoomConnected ? "Bağlanıldı" : "Bağlan"}
+              {zoomConnected ? t('zoom.connected') : t('zoom.connect')}
             </Button>
           </div>
         </div>

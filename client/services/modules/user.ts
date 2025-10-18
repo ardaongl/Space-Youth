@@ -1,10 +1,10 @@
-import { api } from "../api";
+import { axiosInstance } from "../api";
 
 export class UserAPI {
-    
+
     login = async (email:string, password: string) => {
         try {
-            const response = await api.post(
+            const response = await axiosInstance.post(
                 '/user/login',
                 {email: email, password: password},
                 {validateStatus: s => s < 500},

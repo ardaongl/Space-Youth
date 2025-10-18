@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useLanguage } from "@/context/LanguageContext";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 
 type Phase1Form = {
   firstName: string;
@@ -51,6 +53,7 @@ export default function TestWizard({
   onClose?: () => void;
   onComplete: (data: OnboardingData) => void;
 }) {
+  const { t } = useLanguage();
   const [step, setStep] = useState(1);
   const [phase1, setPhase1] = useState<Phase1Form>({
     firstName: "",
@@ -68,13 +71,13 @@ export default function TestWizard({
   const [phase3, setPhase3] = useState<Phase3Form>({ a1: "", a2: "", a3: "", a4: "", a5: "" });
   const phase4Questions = useMemo(
     () => [
-      "Introduce yourself briefly (name, interests, what excites you).",
-      "Tell us about a challenge you faced and how you overcame it.",
-      "Describe a project you are proud of and your role in it.",
-      "What is a topic you are curious about right now?",
-      "Why do you want to join Space Youth and what do you hope to achieve?",
+      t('testWizard.videoQuestions.introduce'),
+      t('testWizard.videoQuestions.challenge'),
+      t('testWizard.videoQuestions.project'),
+      t('testWizard.videoQuestions.curiosity'),
+      t('testWizard.videoQuestions.spaceYouth'),
     ],
-    []
+    [t]
   );
   const [phase4, setPhase4] = useState<Phase4Form>({
     recordingUrl: null,
@@ -211,10 +214,11 @@ export default function TestWizard({
       <div className="h-14 border-b flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <img src="/2.png" alt="SpaceYouth" className="h-8 w-auto" />
-          <div className="text-sm text-muted-foreground hidden sm:block">Student Onboarding Test</div>
+          <div className="text-sm text-muted-foreground hidden sm:block">{t('testWizard.studentOnboardingTest')}</div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="text-xs text-muted-foreground hidden sm:block">Welcome</div>
+          <LanguageSwitcher />
+          <div className="text-xs text-muted-foreground hidden sm:block">{t('testWizard.welcome')}</div>
           <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-indigo-500 text-white grid place-items-center text-sm font-bold">
             S
           </div>
@@ -235,33 +239,33 @@ export default function TestWizard({
           {step === 1 && (
             <div className="p-6">
               <div className="mb-4">
-                <h2 className="text-lg font-semibold">Phase 1 — Personal Information</h2>
-                <p className="text-sm text-muted-foreground">Fill in your basic information to access the platform.</p>
+                <h2 className="text-lg font-semibold">{t('testWizard.phase1')}</h2>
+                <p className="text-sm text-muted-foreground">{t('testWizard.phase1Description')}</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="First Name">
+                <Field label={t('testWizard.firstName')}>
                   <input
                     className="w-full h-10 rounded-xl border px-3 text-sm"
                     value={phase1.firstName}
                     onChange={(e) => setPhase1((p) => ({ ...p, firstName: e.target.value }))}
                   />
                 </Field>
-                <Field label="Last Name">
+                <Field label={t('testWizard.lastName')}>
                   <input
                     className="w-full h-10 rounded-xl border px-3 text-sm"
                     value={phase1.lastName}
                     onChange={(e) => setPhase1((p) => ({ ...p, lastName: e.target.value }))}
                   />
                 </Field>
-                <Field label="School">
+                <Field label={t('testWizard.school')}>
                   <input
                     className="w-full h-10 rounded-xl border px-3 text-sm"
                     value={phase1.school}
                     onChange={(e) => setPhase1((p) => ({ ...p, school: e.target.value }))}
                   />
                 </Field>
-                <Field label="Age">
+                <Field label={t('testWizard.age')}>
                   <input
                     type="number"
                     min={10}
@@ -270,14 +274,14 @@ export default function TestWizard({
                     onChange={(e) => setPhase1((p) => ({ ...p, age: e.target.value }))}
                   />
                 </Field>
-                <Field label="Department">
+                <Field label={t('testWizard.department')}>
                   <input
                     className="w-full h-10 rounded-xl border px-3 text-sm"
                     value={phase1.department}
                     onChange={(e) => setPhase1((p) => ({ ...p, department: e.target.value }))}
                   />
                 </Field>
-                <Field label="Email">
+                <Field label={t('testWizard.email')}>
                   <input
                     type="email"
                     className="w-full h-10 rounded-xl border px-3 text-sm"
@@ -285,9 +289,9 @@ export default function TestWizard({
                     onChange={(e) => setPhase1((p) => ({ ...p, email: e.target.value }))}
                   />
                 </Field>
-                <Field label="CV (filename will be saved)">
+                <Field label={t('testWizard.cv')}>
                   <label className="h-10 rounded-xl border px-3 text-sm flex items-center justify-between cursor-pointer bg-secondary/50">
-                    <span className="truncate">{phase1.cvFileName || "Choose file"}</span>
+                    <span className="truncate">{phase1.cvFileName || t('testWizard.chooseFile')}</span>
                     <input
                       type="file"
                       accept="application/pdf,.doc,.docx"
@@ -299,21 +303,21 @@ export default function TestWizard({
                     />
                   </label>
                 </Field>
-                <Field label="Project / School">
+                <Field label={t('testWizard.projectOrSchool')}>
                   <input
                     className="w-full h-10 rounded-xl border px-3 text-sm"
                     value={phase1.projectOrSchool}
                     onChange={(e) => setPhase1((p) => ({ ...p, projectOrSchool: e.target.value }))}
                   />
                 </Field>
-                <Field label="Reference">
+                <Field label={t('testWizard.reference')}>
                   <input
                     className="w-full h-10 rounded-xl border px-3 text-sm"
                     value={phase1.reference}
                     onChange={(e) => setPhase1((p) => ({ ...p, reference: e.target.value }))}
                   />
                 </Field>
-                <Field label="Awards, competitions, certificates (if any)">
+                <Field label={t('testWizard.awards')}>
                   <input
                     className="w-full h-10 rounded-xl border px-3 text-sm"
                     value={phase1.awards}
@@ -327,8 +331,8 @@ export default function TestWizard({
           {step === 4 && (
             <div className="p-6">
               <div className="mb-4">
-                <h2 className="text-lg font-semibold">Phase 4 — Video Interview</h2>
-                <p className="text-sm text-muted-foreground">Record a short video while answering the rotating questions below.</p>
+                <h2 className="text-lg font-semibold">{t('testWizard.phase4')}</h2>
+                <p className="text-sm text-muted-foreground">{t('testWizard.phase4Description')}</p>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -343,18 +347,18 @@ export default function TestWizard({
                   {recorderRef.current && recorderRef.current.state === "recording" && (
                     <div className="absolute top-3 left-3 flex items-center gap-2 text-white text-xs">
                       <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
-                      <span>Recording… {phase4.durationSec}s</span>
+                      <span>{t('testWizard.recording')} {phase4.durationSec}s</span>
                     </div>
                   )}
                 </div>
 
                 {/* Right: Questions */}
                 <div className="rounded-xl border p-4 bg-card">
-                  <div className="text-xs text-muted-foreground mb-2">Question {phase4.questionIndex + 1} / {phase4Questions.length}</div>
+                  <div className="text-xs text-muted-foreground mb-2">{t('testWizard.question')} {phase4.questionIndex + 1} {t('testWizard.of')} {phase4Questions.length}</div>
                   <div className="text-sm font-medium mb-3">{phase4Questions[phase4.questionIndex]}</div>
                   <textarea
                     className="w-full min-h-28 rounded-xl border px-3 py-2 text-sm"
-                    placeholder="Optional: jot down your answer while speaking"
+                    placeholder={t('testWizard.optionalAnswer')}
                     value={phase4.answers[phase4.questionIndex]}
                     onChange={(e) =>
                       setPhase4((p) => {
@@ -370,7 +374,7 @@ export default function TestWizard({
                       className="rounded-full border px-3 py-1.5 text-sm"
                       onClick={() => setPhase4((p) => ({ ...p, questionIndex: (p.questionIndex - 1 + phase4Questions.length) % phase4Questions.length }))}
                     >
-                      Prev
+                      {t('testWizard.prev')}
                     </button>
                     <div className="flex items-center gap-1">
                       {phase4Questions.map((_, i) => (
@@ -382,7 +386,7 @@ export default function TestWizard({
                       className="rounded-full border px-3 py-1.5 text-sm"
                       onClick={() => setPhase4((p) => ({ ...p, questionIndex: (p.questionIndex + 1) % phase4Questions.length }))}
                     >
-                      Next
+                      {t('testWizard.next')}
                     </button>
                   </div>
                 </div>
@@ -392,15 +396,15 @@ export default function TestWizard({
               <div className="mt-4 flex items-center gap-2">
                 {!recorderRef.current || recorderRef.current.state !== "recording" ? (
                   <>
-                    <button type="button" onClick={startCamera} className="rounded-full border px-4 py-2 text-sm">Enable Camera</button>
-                    <button type="button" onClick={startRecording} className="rounded-full px-4 py-2 text-sm font-semibold shadow bg-primary text-primary-foreground">Start Recording</button>
+                    <button type="button" onClick={startCamera} className="rounded-full border px-4 py-2 text-sm">{t('testWizard.enableCamera')}</button>
+                    <button type="button" onClick={startRecording} className="rounded-full px-4 py-2 text-sm font-semibold shadow bg-primary text-primary-foreground">{t('testWizard.startRecording')}</button>
                     {phase4.recordingUrl && (
-                      <button type="button" onClick={resetRecording} className="rounded-full border px-4 py-2 text-sm">Retake</button>
+                      <button type="button" onClick={resetRecording} className="rounded-full border px-4 py-2 text-sm">{t('testWizard.retake')}</button>
                     )}
                   </>
                 ) : (
                   <>
-                    <button type="button" onClick={stopRecording} className="rounded-full px-4 py-2 text-sm font-semibold shadow bg-destructive text-destructive-foreground">Stop Recording</button>
+                    <button type="button" onClick={stopRecording} className="rounded-full px-4 py-2 text-sm font-semibold shadow bg-destructive text-destructive-foreground">{t('testWizard.stopRecording')}</button>
                   </>
                 )}
               </div>
@@ -410,39 +414,39 @@ export default function TestWizard({
           {step === 2 && (
             <div className="p-6">
               <div className="mb-4">
-                <h2 className="text-lg font-semibold">Phase 2 — Personality Questions</h2>
-                <p className="text-sm text-muted-foreground">How would you describe yourself?</p>
+                <h2 className="text-lg font-semibold">{t('testWizard.phase2')}</h2>
+                <p className="text-sm text-muted-foreground">{t('testWizard.phase2Description')}</p>
               </div>
 
               <div className="space-y-5">
                 <ChoiceRow
-                  label="Which suits you better: teamwork or individual work?"
+                  label={t('testWizard.teamVsSolo')}
                   name="q1"
                   value={phase2.q1}
                   onChange={(v) => setPhase2((p) => ({ ...p, q1: v }))}
                   options={[
-                    { value: "team", label: "Team" },
-                    { value: "solo", label: "Individual" },
+                    { value: 'team', label: t('testWizard.team') },
+                    { value: 'solo', label: t('testWizard.solo') },
                   ]}
                 />
                 <ChoiceRow
-                  label="What do you prefer more: structured processes or creative exploration?"
+                  label={t('testWizard.structuredVsCreative')}
                   name="q2"
                   value={phase2.q2}
                   onChange={(v) => setPhase2((p) => ({ ...p, q2: v }))}
                   options={[
-                    { value: "structured", label: "Structured" },
-                    { value: "creative", label: "Creative" },
+                    { value: 'structured', label: t('testWizard.structured') },
+                    { value: 'creative', label: t('testWizard.creative') },
                   ]}
                 />
                 <ScaleRow
-                  label="Perseverance in the face of challenges"
+                  label={t('testWizard.perseverance')}
                   name="q3"
                   value={phase2.q3}
                   onChange={(v) => setPhase2((p) => ({ ...p, q3: v }))}
                 />
                 <ScaleRow
-                  label="Communication and presentation skills"
+                  label={t('testWizard.communication')}
                   name="q4"
                   value={phase2.q4}
                   onChange={(v) => setPhase2((p) => ({ ...p, q4: v }))}
@@ -454,12 +458,12 @@ export default function TestWizard({
           {step === 3 && (
             <div className="p-6">
               <div className="mb-4">
-                <h2 className="text-lg font-semibold">Phase 3 — Psychological Test</h2>
-                <p className="text-sm text-muted-foreground">Answer the following scenario questions concisely.</p>
+                <h2 className="text-lg font-semibold">{t('testWizard.phase3')}</h2>
+                <p className="text-sm text-muted-foreground">{t('testWizard.phase3Description')}</p>
               </div>
 
               <div className="grid grid-cols-1 gap-4">
-                <Field label="1. In a village, all electricity has gone out and people are left in the dark. The power company will arrive in three days. You only have a bicycle, a desk lamp, and a few plastic bottles. How would you light up the village?">
+                <Field label={t('testWizard.psychologicalTest1')}>
                   <textarea
                     className="w-full min-h-28 rounded-xl border px-3 py-2 text-sm"
                     value={phase3.a1}
@@ -467,7 +471,7 @@ export default function TestWizard({
                   />
                 </Field>
 
-                <Field label="2. An elephant urgently needs to travel to another country, but all the plane tickets are sold out. How else would you transport it?">
+                <Field label={t('testWizard.psychologicalTest2')}>
                   <textarea
                     className="w-full min-h-28 rounded-xl border px-3 py-2 text-sm"
                     value={phase3.a2}
@@ -475,7 +479,7 @@ export default function TestWizard({
                   />
                 </Field>
 
-                <Field label="3. The door to the school library has accidentally been locked from the inside, and students inside are preparing for an exam. Without breaking the door, how would you get them out?">
+                <Field label={t('testWizard.psychologicalTest3')}>
                   <textarea
                     className="w-full min-h-28 rounded-xl border px-3 py-2 text-sm"
                     value={phase3.a3}
@@ -483,7 +487,7 @@ export default function TestWizard({
                   />
                 </Field>
 
-                <Field label="4. You can only send 3 containers of supplies to a Mars settlement. Which 3 things would you choose and why?">
+                <Field label={t('testWizard.psychologicalTest4')}>
                   <textarea
                     className="w-full min-h-28 rounded-xl border px-3 py-2 text-sm"
                     value={phase3.a4}
@@ -491,7 +495,7 @@ export default function TestWizard({
                   />
                 </Field>
 
-                <Field label="5. In a park, everyone’s cell phone suddenly stops working, and people can’t communicate. How would you help them find each other within one hour?">
+                <Field label={t('testWizard.psychologicalTest5')}>
                   <textarea
                     className="w-full min-h-28 rounded-xl border px-3 py-2 text-sm"
                     value={phase3.a5}
@@ -508,7 +512,7 @@ export default function TestWizard({
               onClick={onClose}
               className="rounded-full border px-4 py-2 text-sm hidden sm:inline-flex"
             >
-              İptal
+              {t('testWizard.cancel')}
             </button>
             <div className="flex items-center gap-2 ml-auto">
               {step > 1 && (
@@ -516,7 +520,7 @@ export default function TestWizard({
                   onClick={() => setStep((s) => Math.max(1, s - 1))}
                   className="rounded-full border px-4 py-2 text-sm"
                 >
-                  Geri
+                  {t('testWizard.back')}
                 </button>
               )}
               {step < 4 && (
@@ -527,7 +531,7 @@ export default function TestWizard({
                     canNext ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground cursor-not-allowed"
                   }`}
                 >
-                  Next
+                  {t('common.next')}
                 </button>
               )}
               {step === 4 && (
@@ -538,7 +542,7 @@ export default function TestWizard({
                     canNext ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground cursor-not-allowed"
                   }`}
                 >
-                  Finish and Start
+                  {t('testWizard.finishAndStart')}
                 </button>
               )}
             </div>

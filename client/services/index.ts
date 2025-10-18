@@ -16,4 +16,5 @@ export class API {
   }
 }
 
-export const apis = new API();
+// Export a default instance
+export const api = new API();

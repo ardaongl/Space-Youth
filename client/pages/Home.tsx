@@ -3,6 +3,7 @@ import { ArrowRight, CheckCircle2, Clock, Bookmark, Bell, Briefcase, GraduationC
 import { Link } from "react-router-dom";
 import { EventCalendar } from "@/components/ui/event-calendar";
 import FeatureSlider from "@/components/ui/FeatureSlider";
+import { useLanguage } from "@/context/LanguageContext";
 
 function PrimaryButton({ children }: { children: React.ReactNode }) {
   return (
@@ -19,6 +20,8 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
 }
 
 export default function Home() {
+  const { t } = useLanguage();
+  
   // Sample events data - replace with actual data from your backend
   const sampleEvents = [
     { id: '1', date: new Date(2025, 9, 8), title: 'AI Workshop', color: 'bg-blue-500' },
@@ -84,23 +87,23 @@ export default function Home() {
     <Card className="p-4 sm:p-6">
       <div className="relative">
         {popular && (
-          <span className="absolute left-2 top-2 rounded-full bg-amber-100 text-amber-800 text-[8px] sm:text-[10px] font-semibold px-1.5 sm:px-2 py-0.5 border border-amber-200">Popular</span>
+          <span className="absolute left-2 top-2 rounded-full bg-amber-100 text-amber-800 text-[8px] sm:text-[10px] font-semibold px-1.5 sm:px-2 py-0.5 border border-amber-200">{t('courses.popular')}</span>
         )}
         <div className="aspect-[5/3] w-full rounded-xl bg-accent grid place-items-center mb-3 sm:mb-4">
           <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-lg bg-secondary" />
         </div>
       </div>
-      <div className="text-[8px] sm:text-[10px] font-semibold tracking-widest text-muted-foreground">COURSE</div>
-      <div className="mt-1 text-base sm:text-lg font-semibold">Workshop Facilitation</div>
-      <div className="mt-1 text-xs sm:text-sm text-muted-foreground">Colin Michael Pace</div>
-      <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground line-clamp-2">Learn the essentials of planning and leading effective workshops. Build skills in facilitation and collaboration.</p>
+      <div className="text-[8px] sm:text-[10px] font-semibold tracking-widest text-muted-foreground">{t('courses.courseType').toUpperCase()}</div>
+      <div className="mt-1 text-base sm:text-lg font-semibold">{t('courses.sampleTitle')}</div>
+      <div className="mt-1 text-xs sm:text-sm text-muted-foreground">{t('courses.sampleAuthor')}</div>
+      <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground line-clamp-2">{t('courses.sampleDescription')}</p>
       <div className="mt-3 sm:mt-4 flex items-center gap-3 sm:gap-6 text-xs sm:text-sm text-muted-foreground">
-        <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3 sm:h-4 sm:w-4 text-primary" /> 4h</span>
-        <span className="inline-flex items-center gap-1">Advanced</span>
+        <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3 sm:h-4 sm:w-4 text-primary" /> 4{t('common.hours')}</span>
+        <span className="inline-flex items-center gap-1">{t('courses.advanced')}</span>
       </div>
       <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
-        <Link to="/courses/workshop-facilitation" className="rounded-full border px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">Kursu Gör</Link>
-        <button className="rounded-full border px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">Okundu işaretle</button>
+        <Link to="/courses/workshop-facilitation" className="rounded-full border px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">{t('courses.viewCourse')}</Link>
+        <button className="rounded-full border px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">{t('courses.markAsRead')}</button>
       </div>
     </Card>
   );
@@ -118,14 +121,14 @@ export default function Home() {
           <div className="flex items-center justify-between mb-4 sm:mb-5">
             <div className="flex items-center gap-2">
               <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-              <h2 className="text-lg sm:text-xl font-semibold">Önerilen Görevler</h2>
+              <h2 className="text-lg sm:text-xl font-semibold">{t('dashboard.recommendedTasks')}</h2>
             </div>
-            <Link to="/tasks" className="text-sm sm:text-base text-muted-foreground hover:underline">Tümünü Gör</Link>
+            <Link to="/tasks" className="text-sm sm:text-base text-muted-foreground hover:underline">{t('common.viewAll')}</Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
             {[
-              { title: "Kullanıcı Araştırması Yapma", coins: 120, level: "Orta", time: "2h" },
-              { title: "Wireframe Oluşturma", coins: 100, level: "Başlangıç", time: "1.5h" },
+              { title: t('tasks.sampleTask1'), coins: 120, level: t('tasks.medium'), time: `2${t('common.hours')}` },
+              { title: t('tasks.sampleTask2'), coins: 100, level: t('tasks.beginner'), time: `1.5${t('common.hours')}` },
             ].map((task, i) => (
               <Card key={i} className="p-6 sm:p-8 lg:p-12 hover:shadow-lg transition">
                 <div className="flex items-start justify-between">
@@ -143,7 +146,7 @@ export default function Home() {
                   </div>
                 </div>
                 <Link to="/tasks" className="mt-3 sm:mt-4 inline-block text-sm sm:text-base text-primary hover:underline font-medium">
-                  Görevi Gör →
+                  {t('tasks.viewTask')} →
                 </Link>
               </Card>
             ))}
@@ -155,9 +158,9 @@ export default function Home() {
           <div className="flex items-center justify-between mb-3 sm:mb-4">
             <div className="flex items-center gap-2">
               <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-              <h2 className="text-lg sm:text-xl font-semibold">Önerilen Kurslar</h2>
+              <h2 className="text-lg sm:text-xl font-semibold">{t('dashboard.recommendedCourses')}</h2>
             </div>
-            <Link to="/courses" className="text-xs sm:text-sm text-muted-foreground hover:underline">Tümünü Gör</Link>
+            <Link to="/courses" className="text-xs sm:text-sm text-muted-foreground hover:underline">{t('common.viewAll')}</Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full">
             <CourseCard />
@@ -170,15 +173,15 @@ export default function Home() {
           <div className="flex items-center justify-between mb-4 sm:mb-5">
             <div className="flex items-center gap-2">
               <Bookmark className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-              <h2 className="text-lg sm:text-xl font-semibold">Önerilen Eğitimler</h2>
+              <h2 className="text-lg sm:text-xl font-semibold">{t('dashboard.recommendedTutorials')}</h2>
             </div>
-            <Link to="/tutorials" className="text-sm sm:text-base text-muted-foreground hover:underline">Tümünü Gör</Link>
+            <Link to="/tutorials" className="text-sm sm:text-base text-muted-foreground hover:underline">{t('common.viewAll')}</Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full">
             {[
-              { title: "React Hooks Kullanımı", duration: "30 dk", difficulty: "Orta" },
-              { title: "CSS Grid Layout", duration: "45 dk", difficulty: "Başlangıç" },
-              { title: "TypeScript Temelleri", duration: "1 saat", difficulty: "Orta" },
+              { title: t('tutorials.reactHooks'), duration: `30 ${t('common.minutes')}`, difficulty: t('courses.intermediate') },
+              { title: "CSS Grid Layout", duration: `45 ${t('common.minutes')}`, difficulty: t('courses.beginner') },
+              { title: t('tutorials.typescriptBasics'), duration: `1 ${t('common.hours')}`, difficulty: t('courses.intermediate') },
             ].map((tutorial, i) => (
               <Card key={i} className="p-4 sm:p-6 hover:shadow-lg transition">
                 <div className="aspect-video bg-gradient-to-br from-primary/20 to-purple-200 rounded-lg mb-3 sm:mb-4 flex items-center justify-center">
@@ -194,7 +197,7 @@ export default function Home() {
                   <span>{tutorial.difficulty}</span>
                 </div>
                 <Link to="/tutorials" className="mt-3 sm:mt-4 inline-block text-sm sm:text-base text-primary hover:underline font-medium">
-                  Başla →
+                  {t('common.start')} →
                 </Link>
               </Card>
             ))}
@@ -206,14 +209,14 @@ export default function Home() {
           <div className="flex items-center justify-between mb-4 sm:mb-5">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-              <h2 className="text-lg sm:text-xl font-semibold">Önerilen Workshop'lar</h2>
+              <h2 className="text-lg sm:text-xl font-semibold">{t('dashboard.recommendedWorkshops')}</h2>
             </div>
-            <Link to="/workshops" className="text-sm sm:text-base text-muted-foreground hover:underline">Tümünü Gör</Link>
+            <Link to="/workshops" className="text-sm sm:text-base text-muted-foreground hover:underline">{t('common.viewAll')}</Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full">
             {[
-              { title: "Design Thinking Workshop", date: "15 Ekim 2025", time: "14:00" },
-              { title: "Agile Metodolojiler", date: "20 Ekim 2025", time: "16:00" },
+              { title: "Design Thinking Workshop", date: t('workshops.october15'), time: "14:00" },
+              { title: t('workshops.agileMethodologies'), date: t('workshops.october20'), time: "16:00" },
             ].map((workshop, i) => (
               <Card key={i} className="overflow-hidden hover:shadow-lg transition">
                 <div className="h-32 sm:h-40 lg:h-48 bg-gradient-to-br from-primary/30 to-indigo-300" />
@@ -225,7 +228,7 @@ export default function Home() {
                     <span>{workshop.time}</span>
                   </div>
                   <Link to="/workshops" className="mt-3 sm:mt-4 inline-block text-sm sm:text-base text-primary hover:underline font-medium">
-                    Detayları Gör →
+                    {t('common.viewDetails')} →
                   </Link>
                 </div>
               </Card>

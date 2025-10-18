@@ -3,7 +3,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { setUserToken } from "@/store/slices/userSlice";
 import { useDispatch } from "react-redux";
-import { apis } from "@/services";
+import { api } from "@/services";
 const baseUrl = import.meta.env.VITE_BASE_URL;
 interface AboutResponse {
   message: string;
@@ -19,7 +19,7 @@ export default function About() {
   const handleLogin = async () => {
     try {
       //const response = await login("dev.berat55@gmail.com", "123456");
-      const response = await apis.user.login("dev.berat55@gmail.com", "123456");
+      const response = await api.user.login("dev.berat55@gmail.com", "123456");
       console.log(response);
       const get_user_response = await apis.user.get_user();
       console.log("get_user_response: ", get_user_response);
@@ -33,13 +33,13 @@ export default function About() {
   const fetchAboutData = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
 
-      const res = await apis.common.about();
+      const res = await api.common.about();
       console.log(res);
-    
-      
+
+
       console.log("🎉 Response received from Space Youth API:", res);
       console.log("📅 Response timestamp:", new Date().toISOString());
       console.log("💬 API Message:", res);
@@ -56,9 +56,9 @@ export default function About() {
   };
 
   const fetchCourses = async () => {
-    const response = await apis.course.getAllCourses();
+    const response = await api.course.getAllCourses();
     console.log(response);
-    
+
   }
 
   useEffect(() => {
@@ -87,14 +87,14 @@ export default function About() {
             >
               {loading ? "Yükleniyor..." : "Yenile"}
             </Button>
-            
+
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                 <h3 className="font-semibold text-red-800 mb-2">Hata:</h3>
                 <p className="text-red-700">{error}</p>
               </div>
             )}
-            
+
             {response && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <h3 className="font-semibold text-green-800 mb-2">Space Youth API Yanıtı:</h3>

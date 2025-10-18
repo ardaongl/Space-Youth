@@ -31,7 +31,9 @@ import { useTokens } from "@/context/TokensContext";
 import { Separator } from "@/components/ui/separator";
 import { NotificationsPopover } from "./NotificationsPopover";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { AvatarDisplay } from "@/components/ui/avatar-display";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 
 function TokenWallet() {
   const { tokens } = useTokens();
@@ -51,6 +53,7 @@ function TokenWallet() {
 export function Header() {
   const navigate = useNavigate();
   const { auth, logout } = useAuth();
+  const { t } = useLanguage();
   const userName = auth.user?.name || "User";
 
   const handleLogout = () => {
@@ -61,14 +64,15 @@ export function Header() {
   return (
     <header className="sticky top-0 z-30 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
       <div className="h-14 flex items-center gap-3 px-4">
-        {/* Mobile hamburger menu */}
-        <div className="lg:hidden">
-          <Sheet>
-            <SheetTrigger asChild>
-              <button className="p-2 rounded-full hover:bg-secondary" aria-label="Open menu">
-                <Menu className="h-5 w-5" />
-              </button>
-            </SheetTrigger>
+        {/* Mobile hamburger menu - only show when user is authenticated */}
+        {auth.user && (
+          <div className="lg:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <button className="p-2 rounded-full hover:bg-secondary" aria-label="Open menu">
+                  <Menu className="h-5 w-5" />
+                </button>
+              </SheetTrigger>
             <SheetContent side="left" className="p-0 w-[20rem] sm:max-w-xs overflow-y-auto">
               {/* Branded header */}
               <div className="px-4 pt-3 pb-2 border-b bg-gradient-to-br from-primary/10 via-transparent to-indigo-400/10">
@@ -89,14 +93,14 @@ export function Header() {
                   </div>
                   <ul className="space-y-0 mt-0">
                     {[
-                      { to: "/", label: "Ana Ekran", icon: Home },
-                      { to: "/tasks", label: "Görevler", icon: ClipboardList },
-                      { to: "/courses", label: "Kurslar", icon: BookOpen },
-                      { to: "/workshops", label: "Atölyeler & Hackathonlar", icon: Users },
-                      { to: "/tutorials", label: "Ders Videoları", icon: PencilRuler },
-                      { to: "/job-board", label: "İş İlanları", icon: BriefcaseBusiness },
-                      { to: "/profile", label: "Profil", icon: User },
-                      { to: "/settings", label: "Ayarlar", icon: Settings },
+                      { to: "/", label: t('navigation.home'), icon: Home },
+                      { to: "/tasks", label: t('navigation.tasks'), icon: ClipboardList },
+                      { to: "/courses", label: t('navigation.courses'), icon: BookOpen },
+                      { to: "/workshops", label: t('navigation.workshops'), icon: Users },
+                      { to: "/tutorials", label: t('navigation.tutorials'), icon: PencilRuler },
+                      { to: "/job-board", label: t('navigation.jobBoard'), icon: BriefcaseBusiness },
+                      { to: "/profile", label: t('navigation.profile'), icon: User },
+                      { to: "/settings", label: t('navigation.settings'), icon: Settings },
                     ].map(({ to, label, icon: Icon }) => (
                       <li key={to}>
                         <SheetClose asChild>
@@ -134,15 +138,52 @@ export function Header() {
             </SheetContent>
           </Sheet>
         </div>
+        )}
 
         <div className="flex-1 max-w-xl">
-          <label className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              className="w-full h-9 rounded-2xl border bg-secondary/50 px-9 text-sm outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Ara"
-            />
-          </label>
+          <div className="relative group">
+            <label className="relative w-full block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+              <input
+                className="w-full h-10 rounded-xl border border-border bg-background/50 backdrop-blur-sm px-10 text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary/50 hover:bg-background/80 placeholder:text-muted-foreground"
+                placeholder={t('common.search')}
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+                  <span className="text-xs">⌘</span>K
+                </kbd>
+              </div>
+            </label>
+            
+            {/* Search suggestions dropdown - appears on focus */}
+            <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-border rounded-xl shadow-lg opacity-0 invisible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200 z-50">
+              <div className="p-2">
+                <div className="text-xs font-medium text-muted-foreground px-2 py-1.5 mb-1">
+                  {t('common.recentSearches')}
+                </div>
+                <div className="space-y-1">
+                  <button className="w-full text-left px-2 py-2 text-sm rounded-lg hover:bg-secondary/50 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <Search className="h-3 w-3 text-muted-foreground" />
+                      <span>React Hooks</span>
+                    </div>
+                  </button>
+                  <button className="w-full text-left px-2 py-2 text-sm rounded-lg hover:bg-secondary/50 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <Search className="h-3 w-3 text-muted-foreground" />
+                      <span>TypeScript</span>
+                    </div>
+                  </button>
+                  <button className="w-full text-left px-2 py-2 text-sm rounded-lg hover:bg-secondary/50 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <Search className="h-3 w-3 text-muted-foreground" />
+                      <span>Design Patterns</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         {/* Right side buttons - sağ tarafa dayalı */}
         <div className="flex items-center gap-2 ml-auto">
@@ -155,6 +196,7 @@ export function Header() {
               >
                 <Bookmark className="h-6 w-6" />
               </button>
+              <LanguageSwitcher />
               <TokenWallet />
               <NotificationsPopover />
               <HoverCard openDelay={0}>
@@ -171,7 +213,7 @@ export function Header() {
                         <AvatarDisplay name={userName} size="md" />
                       </div>
                       <div className="font-semibold text-foreground">{userName}</div>
-                      <div className="text-sm text-muted-foreground">Başlangıç Planı</div>
+                      <div className="text-sm text-muted-foreground">{t('profile.starterPlan')}</div>
                     </div>
                     
                     <Separator className="mb-4" />
@@ -180,34 +222,31 @@ export function Header() {
                     <div className="space-y-1 mb-4">
                       <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer" onClick={() => navigate('/profile')}>
                         <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">Profil</span>
+                        <span className="text-sm">{t('navigation.profile')}</span>
                       </div>
                       <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer" onClick={() => navigate('/settings')}>
                         <Settings className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">Ayarlar</span>
+                        <span className="text-sm">{t('navigation.settings')}</span>
                       </div>
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
-                        <Gift className="h-4 w-4 text-red-500" />
-                        <span className="text-sm">Arkadaşlarını davet et, ödül kazan</span>
+                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer" onClick={() => navigate('/bookmarks')}>
+                        <Bookmark className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{t('profile.savedItems')}</span>
                       </div>
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
-                        <Building2 className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">Ekipler için SpaceYouth</span>
+                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer" onClick={() => navigate('/buy-coins')}>
+                        <Coins className="h-4 w-4 text-amber-500" />
+                        <span className="text-sm">{t('profile.buyCoins')}</span>
                       </div>
                     </div>
                     
                     <Separator className="mb-4" />
                     
-                    {/* Alt Bölüm - Ek Seçenekler ve Çıkış */}
+                    {/* Alt Bölüm - Çıkış */}
                     <div className="space-y-1">
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer">
-                        <span className="text-sm">Yardım Merkezi</span>
-                      </div>
                       <div 
                         className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-destructive/10 text-destructive cursor-pointer transition-colors"
                         onClick={handleLogout}
                       >
-                        <span className="text-sm font-medium">Çıkış Yap</span>
+                        <span className="text-sm font-medium">{t('profile.logout')}</span>
                       </div>
                     </div>
                   </div>
@@ -216,17 +255,18 @@ export function Header() {
             </>
           ) : (
             <div className="flex items-center gap-2">
+              <LanguageSwitcher />
               <button 
                 onClick={() => navigate('/login')}
                 className="px-4 py-2 rounded-full text-sm font-medium hover:bg-secondary transition-colors"
               >
-                Giriş Yap
+                {t('auth.login')}
               </button>
               <button 
                 onClick={() => navigate('/register')}
                 className="px-4 py-2 rounded-full text-sm font-semibold bg-primary text-primary-foreground hover:brightness-110 transition-all shadow"
               >
-                Kayıt Ol
+                {t('auth.register')}
               </button>
             </div>
           )}

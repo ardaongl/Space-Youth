@@ -4,11 +4,13 @@ import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Upload, X, Image as ImageIcon, Video, Calendar, MapPin, Users2 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 type EventType = "workshop" | "hackathon";
 
 export default function AddEvent() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [eventType, setEventType] = useState<EventType>("workshop");
   const [eventName, setEventName] = useState("");
   const [eventDescription, setEventDescription] = useState("");
@@ -100,21 +102,21 @@ export default function AddEvent() {
           onClick={() => navigate('/workshops')}
         >
           <ArrowLeft className="h-4 w-4" />
-          Geri Dön
+          {t('common.back')}
         </Button>
 
         <div className="max-w-4xl mx-auto">
           <div className="bg-card rounded-lg border shadow-sm p-8">
             <div className="mb-6">
-              <h1 className="text-3xl font-bold">Yeni Etkinlik Ekle</h1>
-              <p className="text-muted-foreground mt-2">Adım 1/2: Etkinlik Bilgileri</p>
+              <h1 className="text-3xl font-bold">{t('events.addNewEvent')}</h1>
+              <p className="text-muted-foreground mt-2">{t('events.step1Info')}</p>
             </div>
 
             <div className="space-y-6">
               {/* Event Type Selection */}
               <div>
                 <label className="block text-sm font-semibold mb-3">
-                  Etkinlik Tipi <span className="text-red-500">*</span>
+                  {t('events.eventType')} <span className="text-red-500">*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-4">
                   <button
@@ -127,9 +129,9 @@ export default function AddEvent() {
                     }`}
                   >
                     <div className="text-2xl mb-2">🎯</div>
-                    <div className="font-semibold">Workshop</div>
+                    <div className="font-semibold">{t('workshops.workshop')}</div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      Uygulamalı öğrenme ve beceri geliştirme
+                      {t('workshops.workshopSubtitle')}
                     </div>
                   </button>
                   
@@ -143,9 +145,9 @@ export default function AddEvent() {
                     }`}
                   >
                     <div className="text-2xl mb-2">💻</div>
-                    <div className="font-semibold">Hackathon</div>
+                    <div className="font-semibold">{t('workshops.hackathon')}</div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      Yoğun kodlama maratonu ve yarışma
+                      {t('workshops.hackathonSubtitle')}
                     </div>
                   </button>
                 </div>
@@ -154,13 +156,13 @@ export default function AddEvent() {
               {/* Event Name */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  {eventType === "workshop" ? "Workshop" : "Hackathon"} Adı <span className="text-red-500">*</span>
+                  {eventType === "workshop" ? t('workshops.workshop') : t('workshops.hackathon')} {t('events.eventName')} <span className="text-red-500">*</span>
                 </label>
                 <Input
                   type="text"
                   value={eventName}
                   onChange={(e) => setEventName(e.target.value)}
-                  placeholder={eventType === "workshop" ? "Örn: UX Research Fundamentals" : "Örn: AI Hackathon 2024"}
+                  placeholder={eventType === "workshop" ? t('events.workshopTitlePlaceholder') : t('events.hackathonTitlePlaceholder')}
                   className="w-full"
                 />
               </div>
@@ -168,12 +170,12 @@ export default function AddEvent() {
               {/* Event Description */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Etkinlik Açıklaması <span className="text-red-500">*</span>
+                  {t('events.eventDescription')} <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={eventDescription}
                   onChange={(e) => setEventDescription(e.target.value)}
-                  placeholder="Etkinliğiniz hakkında detaylı bilgi verin..."
+                  placeholder={t('events.enterEventDescription')}
                   rows={6}
                   className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 />
@@ -182,13 +184,13 @@ export default function AddEvent() {
               {/* Organizer Name */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Organizatör Adı <span className="text-red-500">*</span>
+                  {t('events.organizerName')} <span className="text-red-500">*</span>
                 </label>
                 <Input
                   type="text"
                   value={organizerName}
                   onChange={(e) => setOrganizerName(e.target.value)}
-                  placeholder="Örn: Tech Community"
+                  placeholder={t('events.enterOrganizerName')}
                   className="w-full"
                 />
               </div>
@@ -197,7 +199,7 @@ export default function AddEvent() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold mb-2">
-                    Etkinlik Tarihi <span className="text-red-500">*</span>
+                    {t('events.eventDate')} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -212,7 +214,7 @@ export default function AddEvent() {
 
                 <div>
                   <label className="block text-sm font-semibold mb-2">
-                    Konum <span className="text-red-500">*</span>
+                    {t('events.location')} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -220,7 +222,7 @@ export default function AddEvent() {
                       type="text"
                       value={eventLocation}
                       onChange={(e) => setEventLocation(e.target.value)}
-                      placeholder="Örn: TechHub Istanbul veya Online - Zoom"
+                      placeholder={t('events.enterLocation')}
                       className="pl-10"
                     />
                   </div>
@@ -228,7 +230,7 @@ export default function AddEvent() {
 
                 <div>
                   <label className="block text-sm font-semibold mb-2">
-                    Maksimum Katılımcı <span className="text-red-500">*</span>
+                    {t('events.maxParticipants')} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Users2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -236,7 +238,7 @@ export default function AddEvent() {
                       type="number"
                       value={maxParticipants}
                       onChange={(e) => setMaxParticipants(e.target.value)}
-                      placeholder="Örn: 50"
+                      placeholder={t('events.enterMaxParticipants')}
                       min="1"
                       className="pl-10"
                     />
@@ -245,13 +247,13 @@ export default function AddEvent() {
 
                 <div>
                   <label className="block text-sm font-semibold mb-2">
-                    Katılım Ücreti (Coins)
+                    {t('events.participationFee')}
                   </label>
                   <Input
                     type="number"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
-                    placeholder="Örn: 150 (ücretsiz için 0)"
+                    placeholder={t('events.pricePlaceholder')}
                     min="0"
                     className="w-full"
                   />
@@ -261,7 +263,7 @@ export default function AddEvent() {
               {/* Achievements */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Etkinlik Sonunda Kazanılacaklar
+                  {t('events.achievements')}
                 </label>
                 <div className="space-y-3">
                   {achievements.map((achievement, index) => (
@@ -270,7 +272,7 @@ export default function AddEvent() {
                         type="text"
                         value={achievement}
                         onChange={(e) => handleAchievementChange(index, e.target.value)}
-                        placeholder={`Kazanım ${index + 1}`}
+                        placeholder={t('events.achievement', { number: index + 1 })}
                         className="flex-1"
                       />
                       {achievements.length > 1 && (
@@ -290,7 +292,7 @@ export default function AddEvent() {
                     onClick={handleAddAchievement}
                     className="w-full"
                   >
-                    + Kazanım Ekle
+                    + {t('events.addAchievement')}
                   </Button>
                 </div>
               </div>
@@ -298,7 +300,7 @@ export default function AddEvent() {
               {/* File Upload - Photo and Video side by side */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Medya Ekle
+                  {t('events.addFiles')}
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Photo Upload */}
@@ -317,9 +319,9 @@ export default function AddEvent() {
                         className="cursor-pointer flex flex-col items-center gap-2"
                       >
                         <ImageIcon className="h-10 w-10 text-muted-foreground" />
-                        <p className="text-sm font-medium">Fotoğraf Yükle</p>
+                        <p className="text-sm font-medium">{t('events.uploadPhotos')}</p>
                         <p className="text-xs text-muted-foreground">
-                          JPG, PNG formatlarında yükleyebilirsiniz
+                          {t('events.photoFormats')}
                         </p>
                       </label>
                     </div>
@@ -363,9 +365,9 @@ export default function AddEvent() {
                         className="cursor-pointer flex flex-col items-center gap-2"
                       >
                         <Video className="h-10 w-10 text-muted-foreground" />
-                        <p className="text-sm font-medium">Video Yükle</p>
+                        <p className="text-sm font-medium">{t('events.uploadVideos')}</p>
                         <p className="text-xs text-muted-foreground">
-                          MP4, MOV formatlarında yükleyebilirsiniz
+                          {t('events.videoFormats')}
                         </p>
                       </label>
                     </div>
@@ -402,14 +404,14 @@ export default function AddEvent() {
                   variant="outline"
                   onClick={() => navigate('/workshops')}
                 >
-                  İptal
+                  {t('common.cancel')}
                 </Button>
                 <Button
                   onClick={handleContinue}
                   disabled={!isValid}
                   size="lg"
                 >
-                  Devam Et
+                  {t('common.continue')}
                 </Button>
               </div>
             </div>
