@@ -24,8 +24,6 @@ export class UserAPI {
                     validateStatus: s => s < 500
                 },
             );
-            console.log(response);
-            
             return response;
         } catch (error) {
             console.log(error);

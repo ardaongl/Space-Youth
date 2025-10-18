@@ -73,24 +73,29 @@ export default function Login() {
 
 
   useEffect(() => {
-    try {
-      const response:any = apis.user.get_user();
-      if(auth_token != ""){
-        const user = {
-          id: response.data.id,
-          name: response.data.name,
-          email: response.data.email,
-          role: response.data.role
+    async function fetchUser() {
+      try {
+        const response:any = await apis.user.get_user();
+        console.log("user : ", response);
+        if(auth_token != ""){
+          const user = {
+            id: response.data.id,
+            name: response.data.name,
+            email: response.data.email,
+            role: response.data.role
+          }
+       
+          dispatch(setUser(user));
+          setTimeout(() => {
+            navigate("/dashboard");
+          }, 1000);
         }
-
-        dispatch(setUser(user));
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 1000);
+      } catch (error) {
+        
       }
-    } catch (error) {
-      
     }
+
+    fetchUser();
   }, [auth_token])
 
   useEffect(() => {
