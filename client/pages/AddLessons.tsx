@@ -4,6 +4,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Plus, Upload, X, FileText, Calendar, Clock } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Lesson {
   id: string;
@@ -16,6 +17,7 @@ interface Lesson {
 
 export default function AddLessons() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [currentLesson, setCurrentLesson] = useState<Lesson>({
     id: crypto.randomUUID(),
@@ -142,32 +144,32 @@ export default function AddLessons() {
           onClick={() => navigate('/courses/add')}
         >
           <ArrowLeft className="h-4 w-4" />
-          Geri Dön
+          {t('common.back')}
         </Button>
 
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Yeni Kurs Ekle</h1>
-          <p className="text-muted-foreground mt-2">Adım 2/2: Ders Oluşturma</p>
+          <h1 className="text-3xl font-bold">{t('courses.addCourse')}</h1>
+          <p className="text-muted-foreground mt-2">{t('courses.step2Info')}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-6">
           {/* Left Side - Lesson Form */}
           <div className="bg-card rounded-lg border shadow-sm p-6">
             <h2 className="text-xl font-semibold mb-6">
-              {isEditing ? "Dersi Düzenle" : "Yeni Ders Ekle"}
+              {isEditing ? t('lessons.editLesson') : t('lessons.addNewLesson')}
             </h2>
 
             <div className="space-y-6">
               {/* Lesson Title */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Ders Başlığı <span className="text-red-500">*</span>
+                  {t('lessons.lessonTitle')} <span className="text-red-500">*</span>
                 </label>
                 <Input
                   type="text"
                   value={currentLesson.title}
                   onChange={(e) => setCurrentLesson({ ...currentLesson, title: e.target.value })}
-                  placeholder="Örn: HTML Temelleri"
+                  placeholder={t('lessons.enterLessonTitle')}
                   className="w-full"
                 />
               </div>
@@ -175,12 +177,12 @@ export default function AddLessons() {
               {/* Lesson Description */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Dersin Konusu/Açıklaması <span className="text-red-500">*</span>
+                  {t('lessons.lessonDescription')} <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={currentLesson.description}
                   onChange={(e) => setCurrentLesson({ ...currentLesson, description: e.target.value })}
-                  placeholder="Ders içeriği hakkında detaylı bilgi verin..."
+                  placeholder={t('lessons.enterLessonDescription')}
                   rows={4}
                   className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 />
@@ -190,7 +192,7 @@ export default function AddLessons() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold mb-2">
-                    Dersin Süresi
+                    {t('lessons.lessonDuration')}
                   </label>
                   <div className="relative">
                     <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -198,7 +200,7 @@ export default function AddLessons() {
                       type="text"
                       value={currentLesson.duration}
                       onChange={(e) => setCurrentLesson({ ...currentLesson, duration: e.target.value })}
-                      placeholder="Örn: 45 dakika"
+                      placeholder={t('lessons.enterLessonDuration')}
                       className="pl-10"
                     />
                   </div>
@@ -206,7 +208,7 @@ export default function AddLessons() {
 
                 <div>
                   <label className="block text-sm font-semibold mb-2">
-                    Dersin Tarihi
+                    {t('lessons.lessonDate')}
                   </label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -223,7 +225,7 @@ export default function AddLessons() {
               {/* File Upload */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Derse Eklenecek Dosyalar
+                  {t('lessons.addFiles')}
                 </label>
                 <div className="border-2 border-dashed rounded-lg p-6 text-center">
                   <input
@@ -238,9 +240,9 @@ export default function AddLessons() {
                     className="cursor-pointer flex flex-col items-center gap-2"
                   >
                     <Upload className="h-10 w-10 text-muted-foreground" />
-                    <p className="text-sm font-medium">Dosya Yükle</p>
+                    <p className="text-sm font-medium">{t('lessons.uploadFiles')}</p>
                     <p className="text-xs text-muted-foreground">
-                      PDF, DOC, PPT ve diğer dosyaları yükleyebilirsiniz
+                      {t('lessons.fileFormats')}
                     </p>
                   </label>
                 </div>
@@ -281,7 +283,7 @@ export default function AddLessons() {
                 className="w-full"
                 size="lg"
               >
-                {isEditing ? "Dersi Güncelle" : "Ders Ekle"}
+                {isEditing ? t('lessons.updateLesson') : t('lessons.addLesson')}
               </Button>
             </div>
           </div>
@@ -290,16 +292,16 @@ export default function AddLessons() {
           <div className="space-y-4">
             <div className="bg-card rounded-lg border shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Oluşturulan Dersler</h3>
+                <h3 className="text-lg font-semibold">{t('lessons.createdLessons')}</h3>
                 <span className="text-sm text-muted-foreground">
-                  {lessons.length} ders
+                  {lessons.length} {t('lessons.lessons')}
                 </span>
               </div>
 
               {lessons.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <p className="text-sm">Henüz ders eklenmedi</p>
-                  <p className="text-xs mt-1">Soldaki formu kullanarak ders ekleyin</p>
+                  <p className="text-sm">{t('lessons.noLessons')}</p>
+                  <p className="text-xs mt-1">{t('lessons.addFirstLesson')}</p>
                 </div>
               ) : (
                 <div className="space-y-3 max-h-[600px] overflow-y-auto">
@@ -332,7 +334,7 @@ export default function AddLessons() {
                             {lesson.files.length > 0 && (
                               <span className="flex items-center gap-1">
                                 <FileText className="h-3 w-3" />
-                                {lesson.files.length} dosya
+                                {lesson.files.length} {t('lessons.files')}
                               </span>
                             )}
                           </div>
@@ -345,7 +347,7 @@ export default function AddLessons() {
                           onClick={() => handleEditLesson(index)}
                           className="flex-1"
                         >
-                          Düzenle
+                          {t('common.edit')}
                         </Button>
                         <Button
                           variant="destructive"
@@ -353,7 +355,7 @@ export default function AddLessons() {
                           onClick={() => handleDeleteLesson(index)}
                           className="flex-1"
                         >
-                          Sil
+                          {t('common.delete')}
                         </Button>
                       </div>
                     </div>
@@ -371,8 +373,8 @@ export default function AddLessons() {
                   : "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
               }`}>
                 {zoomConnected 
-                  ? "📹 Dersler için otomatik Zoom linkleri oluşturulacaktır" 
-                  : "⚠️ Zoom bağlanmadan link oluşturulamaz. Lütfen önce profilinizden Zoom hesabınızı bağlayın."}
+                  ? t('lessons.zoomConnected') 
+                  : t('lessons.zoomNotConnected')}
               </div>
               
               <Button
@@ -381,7 +383,7 @@ export default function AddLessons() {
                 className="w-full"
                 size="lg"
               >
-                Tüm Dersleri Kaydet
+                {t('lessons.saveAllLessons')}
               </Button>
             </div>
           </div>

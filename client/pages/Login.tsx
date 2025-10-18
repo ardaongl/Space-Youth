@@ -8,11 +8,13 @@ import { Rocket, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { authService } from "@/services/authService";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { refetchUser } = useAuth();
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -32,8 +34,8 @@ export default function Login() {
     
     if (!formData.email || !formData.password) {
       toast({
-        title: "Hata",
-        description: "Lütfen tüm alanları doldurun.",
+        title: t('auth.error'),
+        description: t('auth.fillAllFields'),
         variant: "destructive",
       });
       return;
@@ -58,8 +60,8 @@ export default function Login() {
         authService.setToken("dev-token-" + user.role);
         
         toast({
-          title: "Başarılı!",
-          description: `${user.name} olarak giriş yapıldı. Yönlendiriliyorsunuz...`,
+          title: t('auth.success'),
+          description: t('auth.loginSuccess', { name: user.name }),
         });
 
         // Refetch user data (will use mock data)
@@ -72,16 +74,16 @@ export default function Login() {
         }, 1000);
       } else {
         toast({
-          title: "Giriş Başarısız",
-          description: "E-posta veya şifre hatalı.",
+          title: t('auth.loginFailed'),
+          description: t('auth.invalidCredentials'),
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error("Login error:", error);
       toast({
-        title: "Hata",
-        description: "Giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.",
+        title: t('auth.error'),
+        description: t('auth.loginError'),
         variant: "destructive",
       });
     } finally {
@@ -102,7 +104,7 @@ export default function Login() {
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Explore'a Dön
+{t('auth.backToExplore')}
         </Link>
 
         <Card className="p-8 shadow-xl">
@@ -111,21 +113,21 @@ export default function Login() {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary to-purple-600 mb-4">
               <Rocket className="h-8 w-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold mb-2">Tekrar Hoş Geldin!</h1>
+            <h1 className="text-2xl font-bold mb-2">{t('auth.welcomeBack')}</h1>
             <p className="text-muted-foreground">
-              Öğrenme yolculuğuna devam etmek için giriş yap
+              {t('auth.loginDescription')}
             </p>
           </div>
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email">E-posta</Label>
+              <Label htmlFor="email">{t('auth.email')}</Label>
               <Input
                 id="email"
                 name="email"
                 type="email"
-                placeholder="ornek@email.com"
+                placeholder={t('auth.emailPlaceholder')}
                 value={formData.email}
                 onChange={handleChange}
                 disabled={isLoading}
@@ -136,12 +138,12 @@ export default function Login() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Şifre</Label>
+                <Label htmlFor="password">{t('auth.password')}</Label>
                 <Link 
                   to="/forgot-password" 
                   className="text-sm text-primary hover:underline"
                 >
-                  Şifremi Unuttum
+{t('auth.forgotPassword')}
                 </Link>
               </div>
               <div className="relative">
@@ -149,7 +151,7 @@ export default function Login() {
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
+                  placeholder={t('auth.passwordPlaceholder')}
                   value={formData.password}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -175,7 +177,7 @@ export default function Login() {
               className="w-full h-11 text-base font-semibold"
               disabled={isLoading}
             >
-              {isLoading ? "Giriş Yapılıyor..." : "Giriş Yap"}
+{isLoading ? t('auth.loggingIn') : t('auth.login')}
             </Button>
           </form>
 
@@ -186,7 +188,7 @@ export default function Login() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-card px-2 text-muted-foreground">
-                veya
+{t('auth.or')}
               </span>
             </div>
           </div>
@@ -217,40 +219,40 @@ export default function Login() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Google ile Devam Et
+{t('auth.continueWithGoogle')}
             </Button>
           </div>
 
           {/* Register Link */}
           <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">Henüz hesabın yok mu? </span>
+            <span className="text-muted-foreground">{t('auth.noAccount')} </span>
             <Link 
               to="/register" 
               className="text-primary font-semibold hover:underline"
             >
-              Kayıt Ol
+              {t('auth.register')}
             </Link>
           </div>
         </Card>
 
         {/* Test Accounts Note */}
         <div className="mt-4 p-4 rounded-lg bg-blue-50 text-blue-900 text-sm border border-blue-200">
-          <div className="font-bold mb-2">🔧 Test Hesapları:</div>
+          <div className="font-bold mb-2">🔧 {t('auth.testAccounts')}:</div>
           <div className="space-y-1 text-xs">
             <div className="flex items-center gap-2">
-              <span className="font-semibold">Öğrenci:</span>
+              <span className="font-semibold">{t('auth.student')}:</span>
               <code className="bg-blue-100 px-2 py-0.5 rounded">student@test.com</code>
               <span>/</span>
               <code className="bg-blue-100 px-2 py-0.5 rounded">123456</code>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold">Öğretmen:</span>
+              <span className="font-semibold">{t('auth.teacher')}:</span>
               <code className="bg-blue-100 px-2 py-0.5 rounded">teacher@test.com</code>
               <span>/</span>
               <code className="bg-blue-100 px-2 py-0.5 rounded">123456</code>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold">Admin:</span>
+              <span className="font-semibold">{t('auth.admin')}:</span>
               <code className="bg-blue-100 px-2 py-0.5 rounded">admin@test.com</code>
               <span>/</span>
               <code className="bg-blue-100 px-2 py-0.5 rounded">123456</code>

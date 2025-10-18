@@ -7,8 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/context/LanguageContext";
 
-type SortOption = "recent" | "title" | "oldest";
+type SortOption = "recent" | "title" | "oldest" | "rating";
 
 function ContentCard({ 
   item, 
@@ -19,14 +20,15 @@ function ContentCard({
   onRemoveBookmark?: (id: string) => void;
   showProgress?: boolean;
 }) {
+  const { t } = useLanguage();
   const progress = showProgress && 'progress' in item ? item.progress : undefined;
   
   const getTypeLabel = (type: ContentType) => {
     switch (type) {
-      case "course": return "Kurs";
-      case "workshop": return "Workshop";
-      case "hackathon": return "Hackathon";
-      case "tutorial": return "Ders Videosu";
+      case "course": return t('courses.title');
+      case "workshop": return t('navigation.workshops');
+      case "hackathon": return t('bookmarks.hackathon');
+      case "tutorial": return t('navigation.tutorials');
       default: return type;
     }
   };
@@ -101,7 +103,7 @@ function ContentCard({
         {progress !== undefined && (
           <div className="mt-4">
             <div className="flex items-center justify-between text-sm mb-1">
-              <span className="text-muted-foreground">İlerleme</span>
+              <span className="text-muted-foreground">{t('bookmarks.progress')}</span>
               <span className="font-semibold">{progress}%</span>
             </div>
             <div className="h-2 bg-secondary rounded-full overflow-hidden">
@@ -118,7 +120,7 @@ function ContentCard({
             to={`${getRoutePrefix(item.type)}/${item.slug}`} 
             className="flex-1 text-center rounded-full border px-4 py-2 text-sm font-medium hover:bg-secondary transition"
           >
-            Detayları Gör
+{t('bookmarks.viewDetails')}
           </Link>
         </div>
       </div>
@@ -147,6 +149,7 @@ function EmptyState({
 }
 
 export default function Bookmarks() {
+  const { t } = useLanguage();
   const { bookmarkedItems, enrolledItems, removeBookmark } = useBookmarks();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<ContentType | "all">("all");
@@ -221,9 +224,9 @@ export default function Bookmarks() {
       <div className="py-6">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Öğrenim İçeriğim</h1>
+          <h1 className="text-3xl font-bold">{t('bookmarks.title')}</h1>
           <p className="text-muted-foreground mt-1">
-            Kayıt olduğunuz ve kaydettiğiniz tüm içerikler
+            {t('bookmarks.subtitle')}
           </p>
         </div>
 
@@ -233,7 +236,7 @@ export default function Bookmarks() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Kurslarımda ara..."
+              placeholder={t('bookmarks.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full h-12 rounded-full border bg-background pl-12 pr-12 text-sm outline-none focus:ring-2 focus:ring-ring"
@@ -259,10 +262,10 @@ export default function Bookmarks() {
             )}
           >
             <SlidersHorizontal className="h-4 w-4" />
-            Filtreleme
+            {t('common.filter')}
             {hasActiveFilters && (
               <span className="ml-1 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-xs">
-                Aktif
+                {t('common.active')}
               </span>
             )}
           </button>
@@ -271,10 +274,10 @@ export default function Bookmarks() {
         {showFilters && (
           <div className="mb-6 p-6 rounded-2xl border bg-card">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold">Filtreleme Kriterleri</h3>
+              <h3 className="font-semibold">{t('bookmarks.filterCriteria')}</h3>
               {hasActiveFilters && (
                 <Button variant="ghost" size="sm" onClick={resetFilters}>
-                  Sıfırla
+                  {t('common.reset')}
                 </Button>
               )}
             </div>
@@ -282,48 +285,48 @@ export default function Bookmarks() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Sort By */}
               <div>
-                <label className="text-sm font-medium mb-2 block">Şuna göre sırala</label>
+                <label className="text-sm font-medium mb-2 block">{t('bookmarks.sortBy')}</label>
                 <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sıralama seç" />
+                    <SelectValue placeholder={t('bookmarks.selectSorting')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="recent">Yakın Zamanda Erişilen</SelectItem>
-                    <SelectItem value="oldest">En Eski</SelectItem>
-                    <SelectItem value="title">Başlık (A-Z)</SelectItem>
+                    <SelectItem value="recent">{t('bookmarks.recentlyAccessed')}</SelectItem>
+                    <SelectItem value="oldest">{t('bookmarks.oldest')}</SelectItem>
+                    <SelectItem value="title">{t('bookmarks.titleAZ')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Category */}
               <div>
-                <label className="text-sm font-medium mb-2 block">Kategoriler</label>
+                <label className="text-sm font-medium mb-2 block">{t('bookmarks.categories')}</label>
                 <Select value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as ContentType | "all")}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Kategori seç" />
+                    <SelectValue placeholder={t('bookmarks.selectCategory')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Tüm Kategoriler</SelectItem>
-                    <SelectItem value="course">Kurslar</SelectItem>
-                    <SelectItem value="workshop">Workshop</SelectItem>
-                    <SelectItem value="hackathon">Hackathon</SelectItem>
-                    <SelectItem value="tutorial">Ders Videoları</SelectItem>
+                    <SelectItem value="all">{t('bookmarks.allCategories')}</SelectItem>
+                    <SelectItem value="course">{t('bookmarks.courses')}</SelectItem>
+                    <SelectItem value="workshop">{t('bookmarks.workshop')}</SelectItem>
+                    <SelectItem value="hackathon">{t('bookmarks.hackathon')}</SelectItem>
+                    <SelectItem value="tutorial">{t('bookmarks.tutorialVideos')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Level */}
               <div>
-                <label className="text-sm font-medium mb-2 block">Seviye</label>
+                <label className="text-sm font-medium mb-2 block">{t('bookmarks.level')}</label>
                 <Select value={selectedLevel} onValueChange={setSelectedLevel}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Seviye seç" />
+                    <SelectValue placeholder={t('bookmarks.selectLevel')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Tüm Seviyeler</SelectItem>
-                    <SelectItem value="Beginner">Başlangıç</SelectItem>
-                    <SelectItem value="Intermediate">Orta</SelectItem>
-                    <SelectItem value="Advanced">İleri</SelectItem>
+                    <SelectItem value="all">{t('bookmarks.allLevels')}</SelectItem>
+                    <SelectItem value="Beginner">{t('courses.beginner')}</SelectItem>
+                    <SelectItem value="Intermediate">{t('courses.intermediate')}</SelectItem>
+                    <SelectItem value="Advanced">{t('courses.advanced')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -335,13 +338,13 @@ export default function Bookmarks() {
         <Tabs defaultValue="enrolled" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="enrolled" className="gap-2">
-              Tüm Eğitimler
+              {t('bookmarks.allTrainings')}
               <span className="rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-semibold">
                 {filteredEnrolledItems.length}
               </span>
             </TabsTrigger>
             <TabsTrigger value="bookmarked" className="gap-2">
-              Kaydedilenler
+              {t('bookmarks.saved')}
               <span className="rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-semibold">
                 {filteredBookmarkedItems.length}
               </span>
@@ -354,14 +357,14 @@ export default function Bookmarks() {
               enrolledItems.length === 0 ? (
                 <EmptyState
                   icon={Trophy}
-                  title="Henüz hiçbir eğitime kayıt olmadınız"
-                  description="İlgi alanınıza uygun kurslar, workshoplar ve hackathonlara katılarak öğrenmeye başlayın!"
+                  title={t('bookmarks.noEnrollments')}
+                  description={t('bookmarks.noEnrollmentsDescription')}
                 />
               ) : (
                 <EmptyState
                   icon={Search}
-                  title="Sonuç bulunamadı"
-                  description="Filtreleme kriterlerinize uygun içerik bulunamadı. Lütfen filtrelerinizi değiştirin."
+                  title={t('bookmarks.noResults')}
+                  description={t('bookmarks.noResultsDescription')}
                 />
               )
             ) : (
@@ -379,14 +382,14 @@ export default function Bookmarks() {
               bookmarkedItems.length === 0 ? (
                 <EmptyState
                   icon={Bookmark}
-                  title="Henüz hiçbir içerik kaydetmediniz"
-                  description="İlginizi çeken kursları kaydedin ve daha sonra kolayca erişin!"
+                  title={t('bookmarks.noBookmarks')}
+                  description={t('bookmarks.noBookmarksDescription')}
                 />
               ) : (
                 <EmptyState
                   icon={Search}
-                  title="Sonuç bulunamadı"
-                  description="Filtreleme kriterlerinize uygun içerik bulunamadı. Lütfen filtrelerinizi değiştirin."
+                  title={t('bookmarks.noResults')}
+                  description={t('bookmarks.noResultsDescription')}
                 />
               )
             ) : (

@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { canSeeAddCourse } from "@/utils/roles";
 import { useBookmarks, BookmarkedContent } from "@/context/BookmarksContext";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/context/LanguageContext";
 
 type EventType = "workshop" | "hackathon";
 
@@ -40,6 +41,7 @@ function EventCard({
 }) {
   const { addBookmark, removeBookmark, isBookmarked } = useBookmarks();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const bookmarked = isBookmarked(id);
 
   const handleBookmark = (e: React.MouseEvent) => {
@@ -49,8 +51,8 @@ function EventCard({
     if (bookmarked) {
       removeBookmark(id);
       toast({
-        title: "Kayıt kaldırıldı",
-        description: `${title} kayıtlılardan çıkarıldı.`,
+        title: t('bookmarks.removedFromBookmarks'),
+        description: `${title} ${t('bookmarks.removedFromBookmarks')}.`,
       });
     } else {
       const bookmarkItem: BookmarkedContent = {
@@ -67,13 +69,13 @@ function EventCard({
         participants,
         maxParticipants,
         description: eventType === "workshop" 
-          ? "Uygulamalı çalışmalar ve interaktif oturumlarla becerilerinizi geliştirin." 
-          : "Ekip çalışması ve problem çözme odaklı yoğun bir deneyim."
+          ? t('workshops.workshopDescription')
+          : t('workshops.hackathonDescription')
       };
       addBookmark(bookmarkItem);
       toast({
-        title: "Kaydedildi",
-        description: `${title} kayıtlılara eklendi.`,
+        title: t('bookmarks.addedToBookmarks'),
+        description: `${title} ${t('bookmarks.addedToBookmarks')}.`,
       });
     }
   };
@@ -90,12 +92,12 @@ function EventCard({
             ? "bg-blue-100 text-blue-800 border-blue-200" 
             : "bg-purple-100 text-purple-800 border-purple-200"
         }`}>
-          {eventType === "workshop" ? "Workshop" : "Hackathon"}
+          {eventType === "workshop" ? t('workshops.workshop') : t('workshops.hackathon')}
         </span>
         
         {popular && (
           <span className="absolute left-5 top-12 z-10 rounded-full bg-amber-100 text-amber-800 text-[11px] font-semibold px-2 py-0.5 border border-amber-200">
-            Popüler
+            {t('courses.popular')}
           </span>
         )}
         
@@ -117,15 +119,15 @@ function EventCard({
       
       <div className="p-5">
         <div className="text-[11px] font-semibold tracking-widest text-muted-foreground">
-          {eventType.toUpperCase()}
+          {eventType === "workshop" ? t('workshops.workshop').toUpperCase() : t('workshops.hackathon').toUpperCase()}
         </div>
         <div className="mt-1 text-lg font-semibold leading-snug group-hover:underline">{title}</div>
         <div className="mt-1 text-sm text-muted-foreground">{author}</div>
         
         <p className="mt-3 text-sm text-muted-foreground line-clamp-2">
           {eventType === "workshop" 
-            ? "Uygulamalı çalışmalar ve interaktif oturumlarla becerilerinizi geliştirin." 
-            : "Ekip çalışması ve problem çözme odaklı yoğun bir deneyim."}
+            ? t('workshops.workshopDescription')
+            : t('workshops.hackathonDescription')}
         </p>
         
         <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
@@ -135,7 +137,7 @@ function EventCard({
           {date && (
             <span className="inline-flex items-center gap-1">
               <Calendar className="h-4 w-4 text-primary" /> 
-              {new Date(date).toLocaleDateString("tr-TR", { month: "short", day: "numeric" })}
+              {new Date(date).toLocaleDateString(t('common.locale') === 'tr' ? "tr-TR" : "en-US", { month: "short", day: "numeric" })}
             </span>
           )}
         </div>
@@ -143,7 +145,7 @@ function EventCard({
         {participants !== undefined && maxParticipants !== undefined && (
           <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
             <Users2 className="h-3.5 w-3.5" />
-            <span>{participants}/{maxParticipants} katılımcı</span>
+            <span>{participants}/{maxParticipants} {t('workshops.participants')}</span>
           </div>
         )}
       </div>
@@ -153,6 +155,7 @@ function EventCard({
 
 export default function Workshops() {
   const { auth } = useAuth();
+  const { t } = useLanguage();
   const role = auth.user?.role ?? null;
   const [events, setEvents] = useState<any[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -275,9 +278,9 @@ export default function Workshops() {
         {/* Header Section */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">Workshop & Hackathon</h1>
+            <h1 className="text-3xl font-bold text-gray-800">{t('navigation.workshops')}</h1>
             <p className="text-muted-foreground mt-1">
-              Uygulamalı etkinliklerle becerilerinizi geliştirin ve networking yapın
+              {t('workshops.subtitle')}
             </p>
           </div>
           
@@ -289,7 +292,7 @@ export default function Workshops() {
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Etkinlik Ekle
+              {t('workshops.addEvent')}
             </Link>
           )}
         </div>
@@ -300,7 +303,7 @@ export default function Workshops() {
             <div className="flex-1 relative">
               <input
                 type="text"
-                placeholder="Etkinliklerde arayın..."
+                placeholder={t('workshops.searchEvents')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -329,7 +332,7 @@ export default function Workshops() {
               }`}
             >
               <SlidersHorizontal className="h-5 w-5" />
-              <span className="font-medium">Filtrele</span>
+              <span className="font-medium">{t('common.filter')}</span>
             </button>
           </div>
 
@@ -341,10 +344,10 @@ export default function Workshops() {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
-                <option value="newest">En Yeniye Göre Sırala</option>
-                <option value="oldest">En Eskiye Göre Sırala</option>
-                <option value="a-z">A-Z Sırala</option>
-                <option value="z-a">Z-A Sırala</option>
+                <option value="newest">{t('workshops.sortByNewest')}</option>
+                <option value="oldest">{t('workshops.sortByOldest')}</option>
+                <option value="a-z">{t('workshops.sortByAZ')}</option>
+                <option value="z-a">{t('workshops.sortByZA')}</option>
               </select>
 
               <select 
@@ -352,9 +355,9 @@ export default function Workshops() {
                 onChange={(e) => setFilterType(e.target.value as "all" | EventType)}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
-                <option value="all">Tümü</option>
-                <option value="workshop">Workshop</option>
-                <option value="hackathon">Hackathon</option>
+                <option value="all">{t('workshops.allTypes')}</option>
+                <option value="workshop">{t('workshops.workshop')}</option>
+                <option value="hackathon">{t('workshops.hackathon')}</option>
               </select>
             </div>
           )}
@@ -363,12 +366,12 @@ export default function Workshops() {
         {/* Filter Summary */}
         {filterType !== "all" && (
           <div className="mt-4 flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Filtreleme:</span>
+            <span className="text-sm text-muted-foreground">{t('workshops.filtering')}:</span>
             <button
               onClick={() => setFilterType("all")}
               className="inline-flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium hover:bg-purple-200 transition"
             >
-              {filterType === "workshop" ? "Workshop" : "Hackathon"}
+              {filterType === "workshop" ? t('workshops.workshop') : t('workshops.hackathon')}
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -400,7 +403,7 @@ export default function Workshops() {
           ) : (
             <div className="col-span-full text-center py-12">
               <p className="text-muted-foreground">
-                {searchQuery ? "Arama kriterlerine uygun etkinlik bulunamadı." : "Henüz etkinlik bulunmuyor."}
+                {searchQuery ? t('workshops.noEventsFound') : t('workshops.noEventsYet')}
               </p>
             </div>
           )}

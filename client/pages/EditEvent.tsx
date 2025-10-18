@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Coins, Calendar, MapPin, Users2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { isAdmin } from "@/utils/roles";
+import { useLanguage } from "@/context/LanguageContext";
 
 type EventType = "workshop" | "hackathon";
 
@@ -13,6 +14,7 @@ export default function EditEvent() {
   const navigate = useNavigate();
   const { slug } = useParams();
   const { auth } = useAuth();
+  const { t } = useLanguage();
   
   const [eventType, setEventType] = useState<EventType>("workshop");
   const [eventName, setEventName] = useState("");
@@ -58,9 +60,9 @@ export default function EditEvent() {
       <AppLayout>
         <div className="container mx-auto py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Yetkisiz Erişim</h1>
-            <p className="text-muted-foreground mb-4">Bu sayfaya erişim yetkiniz bulunmamaktadır.</p>
-            <Button onClick={() => navigate('/workshops')}>Etkinliklere Dön</Button>
+            <h1 className="text-2xl font-bold mb-4">{t('common.unauthorizedAccess')}</h1>
+            <p className="text-muted-foreground mb-4">{t('common.noAccessRights')}</p>
+            <Button onClick={() => navigate('/workshops')}>{t('common.backToEvents')}</Button>
           </div>
         </div>
       </AppLayout>
@@ -95,7 +97,7 @@ export default function EditEvent() {
     maxParticipants !== "" &&
     (!isPaid || price.trim() !== "");
 
-  const eventTypeLabel = eventType === "workshop" ? "Workshop" : "Hackathon";
+  const eventTypeLabel = eventType === "workshop" ? t('events.workshop') : t('events.hackathon');
 
   return (
     <AppLayout>
@@ -107,7 +109,7 @@ export default function EditEvent() {
           onClick={() => navigate('/workshops')}
         >
           <ArrowLeft className="h-4 w-4" />
-          Geri Dön
+{t('common.back')}
         </Button>
 
         <div className="max-w-4xl mx-auto">
@@ -119,12 +121,12 @@ export default function EditEvent() {
                     ? "bg-blue-100 text-blue-800 border-blue-200" 
                     : "bg-purple-100 text-purple-800 border-purple-200"
                 }`}>
-                  {eventType === "workshop" ? "🎯 Workshop" : "💻 Hackathon"}
+{eventType === "workshop" ? "🎯 Workshop" : "💻 Hackathon"}
                 </span>
               </div>
-              <h1 className="text-3xl font-bold">{eventTypeLabel} Düzenle (Admin)</h1>
+              <h1 className="text-3xl font-bold">{eventTypeLabel} {t('common.edit')} ({t('common.admin')})</h1>
               <p className="text-muted-foreground mt-2">
-                Etkinlik bilgilerini ve fiyatlandırmayı düzenleyin
+                {t('events.editEventInfo')}
               </p>
             </div>
 
@@ -132,13 +134,13 @@ export default function EditEvent() {
               {/* Event Name */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  {eventTypeLabel} Adı <span className="text-red-500">*</span>
+                  {t('events.eventName')} <span className="text-red-500">*</span>
                 </label>
                 <Input
                   type="text"
                   value={eventName}
                   onChange={(e) => setEventName(e.target.value)}
-                  placeholder="Etkinlik adını girin"
+                  placeholder={t('events.enterEventName')}
                   className="w-full"
                 />
               </div>
@@ -146,12 +148,12 @@ export default function EditEvent() {
               {/* Event Description */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Etkinlik Açıklaması <span className="text-red-500">*</span>
+                  {t('events.eventDescription')} <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={eventDescription}
                   onChange={(e) => setEventDescription(e.target.value)}
-                  placeholder="Etkinlik açıklamasını girin"
+                  placeholder={t('events.enterEventDescription')}
                   rows={6}
                   className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 />
@@ -160,13 +162,13 @@ export default function EditEvent() {
               {/* Organizer Name */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Organizatör Adı <span className="text-red-500">*</span>
+                  {t('events.organizerName')} <span className="text-red-500">*</span>
                 </label>
                 <Input
                   type="text"
                   value={organizerName}
                   onChange={(e) => setOrganizerName(e.target.value)}
-                  placeholder="Organizatör adını girin"
+                  placeholder={t('events.enterOrganizerName')}
                   className="w-full"
                 />
               </div>
@@ -175,7 +177,7 @@ export default function EditEvent() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold mb-2">
-                    Etkinlik Tarihi <span className="text-red-500">*</span>
+                    {t('events.eventDate')} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -190,7 +192,7 @@ export default function EditEvent() {
 
                 <div>
                   <label className="block text-sm font-semibold mb-2">
-                    Konum <span className="text-red-500">*</span>
+                    {t('events.location')} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -198,7 +200,7 @@ export default function EditEvent() {
                       type="text"
                       value={eventLocation}
                       onChange={(e) => setEventLocation(e.target.value)}
-                      placeholder="Konum girin"
+                      placeholder={t('events.enterLocation')}
                       className="pl-10"
                     />
                   </div>
@@ -206,7 +208,7 @@ export default function EditEvent() {
 
                 <div>
                   <label className="block text-sm font-semibold mb-2">
-                    Maksimum Katılımcı <span className="text-red-500">*</span>
+                    {t('events.maxParticipants')} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Users2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -214,7 +216,7 @@ export default function EditEvent() {
                       type="number"
                       value={maxParticipants}
                       onChange={(e) => setMaxParticipants(e.target.value)}
-                      placeholder="Maksimum katılımcı sayısı"
+                      placeholder={t('events.enterMaxParticipants')}
                       min="1"
                       className="pl-10"
                     />
@@ -224,7 +226,7 @@ export default function EditEvent() {
 
               {/* Pricing Section */}
               <div className="border-t pt-6">
-                <h2 className="text-xl font-semibold mb-4">Fiyatlandırma</h2>
+                <h2 className="text-xl font-semibold mb-4">{t('events.pricing')}</h2>
                 
                 {/* Price Type */}
                 <div className="space-y-3 mb-4">
@@ -237,9 +239,9 @@ export default function EditEvent() {
                       className="w-4 h-4"
                     />
                     <div className="flex-1">
-                      <p className="font-medium">Ücretli Etkinlik</p>
+                      <p className="font-medium">{t('events.paidEvent')}</p>
                       <p className="text-sm text-muted-foreground">
-                        Katılımcılar bu etkinliğe katılmak için coin ödemesi yapacak
+                        {t('events.paidEventDescription')}
                       </p>
                     </div>
                   </label>
@@ -253,9 +255,9 @@ export default function EditEvent() {
                       className="w-4 h-4"
                     />
                     <div className="flex-1">
-                      <p className="font-medium">Ücretsiz Etkinlik</p>
+                      <p className="font-medium">{t('events.freeEvent')}</p>
                       <p className="text-sm text-muted-foreground">
-                        Tüm katılımcılar bu etkinliğe ücretsiz katılabilir
+                        {t('events.freeEventDescription')}
                       </p>
                     </div>
                   </label>
@@ -265,7 +267,7 @@ export default function EditEvent() {
                 {isPaid && (
                   <div>
                     <label className="block text-sm font-semibold mb-2">
-                      Katılım Ücreti (Coin) <span className="text-red-500">*</span>
+                      {t('events.participationFee')} <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <Coins className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-yellow-600" />
@@ -274,12 +276,12 @@ export default function EditEvent() {
                         min="0"
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
-                        placeholder="Örn: 150"
+                        placeholder={t('events.pricePlaceholder')}
                         className="pl-10"
                       />
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
-                      Katılımcıların etkinliğe katılmak için ödemesi gereken coin miktarı
+{t('events.priceDescription')}
                     </p>
                   </div>
                 )}
@@ -287,7 +289,7 @@ export default function EditEvent() {
 
               {/* Preview */}
               <div className="border-t pt-6">
-                <h3 className="text-sm font-semibold mb-3">Önizleme</h3>
+                <h3 className="text-sm font-semibold mb-3">{t('common.preview')}</h3>
                 <div className="bg-muted/50 rounded-lg p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
@@ -297,15 +299,15 @@ export default function EditEvent() {
                             ? "bg-blue-100 text-blue-800" 
                             : "bg-purple-100 text-purple-800"
                         }`}>
-                          {eventType === "workshop" ? "Workshop" : "Hackathon"}
+{eventType === "workshop" ? t('events.workshop') : t('events.hackathon')}
                         </span>
                       </div>
-                      <h4 className="font-semibold text-lg">{eventName || "Etkinlik Adı"}</h4>
+                      <h4 className="font-semibold text-lg">{eventName || t('events.eventName')}</h4>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {organizerName || "Organizatör"}
+                        {organizerName || t('events.organizer')}
                       </p>
                       <p className="text-sm text-muted-foreground mt-2">
-                        {eventDescription || "Etkinlik açıklaması"}
+                        {eventDescription || t('events.eventDescription')}
                       </p>
                       <div className="mt-3 flex flex-wrap gap-3 text-sm text-muted-foreground">
                         {eventDate && (
@@ -323,7 +325,7 @@ export default function EditEvent() {
                         {maxParticipants && (
                           <span className="flex items-center gap-1">
                             <Users2 className="h-4 w-4" />
-                            {maxParticipants} kişi
+{t('events.participantCount', { count: maxParticipants })}
                           </span>
                         )}
                       </div>
@@ -337,7 +339,7 @@ export default function EditEvent() {
                           </span>
                         </div>
                       ) : (
-                        <span className="text-lg font-bold text-green-600">Ücretsiz</span>
+                        <span className="text-lg font-bold text-green-600">{t('common.free')}</span>
                       )}
                     </div>
                   </div>
@@ -350,14 +352,14 @@ export default function EditEvent() {
                   variant="outline"
                   onClick={() => navigate('/workshops')}
                 >
-                  İptal
+{t('common.cancel')}
                 </Button>
                 <Button
                   onClick={handleSave}
                   disabled={!isValid}
                   size="lg"
                 >
-                  Değişiklikleri Kaydet
+{t('common.saveChanges')}
                 </Button>
               </div>
             </div>

@@ -7,11 +7,13 @@ import { useAuth } from "@/context/AuthContext";
 import { isAdmin } from "@/utils/roles";
 import { useBookmarks, BookmarkedContent, EnrolledContent } from "@/context/BookmarksContext";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function CourseDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { auth } = useAuth();
+  const { t } = useLanguage();
   const adminUser = isAdmin(auth.user?.role);
   const { addBookmark, removeBookmark, isBookmarked, addEnrollment, isEnrolled } = useBookmarks();
   const { toast } = useToast();
@@ -48,8 +50,8 @@ export default function CourseDetail() {
     if (bookmarked) {
       removeBookmark(courseData.id);
       toast({
-        title: "Kayıt kaldırıldı",
-        description: `${courseData.title} kayıtlılardan çıkarıldı.`,
+        title: t('bookmarks.removedFromBookmarks'),
+        description: `${courseData.title} ${t('bookmarks.removedFromBookmarks')}.`,
       });
     } else {
       const bookmarkItem: BookmarkedContent = {
@@ -66,8 +68,8 @@ export default function CourseDetail() {
       };
       addBookmark(bookmarkItem);
       toast({
-        title: "Kaydedildi",
-        description: `${courseData.title} kayıtlılara eklendi.`,
+        title: t('bookmarks.addedToBookmarks'),
+        description: `${courseData.title} ${t('bookmarks.addedToBookmarks')}.`,
       });
     }
   };
@@ -75,8 +77,8 @@ export default function CourseDetail() {
   const handleEnroll = () => {
     if (enrolled) {
       toast({
-        title: "Zaten kayıtlısınız",
-        description: "Bu kursa zaten kayıt oldunuz.",
+        title: t('courses.alreadyEnrolled'),
+        description: t('courses.alreadyEnrolledDescription'),
       });
       return;
     }
@@ -97,8 +99,8 @@ export default function CourseDetail() {
     };
     addEnrollment(enrollmentItem);
     toast({
-      title: "Kursa kayıt oldunuz!",
-      description: `${courseData.title} kursuna başarıyla kayıt oldunuz.`,
+      title: t('courses.enrolledSuccessfully'),
+      description: t('courses.enrolledSuccessfullyDescription', { title: courseData.title }),
     });
   };
 
@@ -112,7 +114,7 @@ export default function CourseDetail() {
           onClick={() => navigate('/courses')}
         >
           <ArrowLeft className="h-4 w-4" />
-          Geri Dön
+          {t('common.back')}
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-8">
@@ -131,7 +133,7 @@ export default function CourseDetail() {
                       className="gap-2"
                       onClick={() => navigate(`/courses/${slug}/edit`)}
                     >
-                      Düzenle
+                      {t('common.edit')}
                     </Button>
                   )}
                   <Button 
@@ -155,11 +157,11 @@ export default function CourseDetail() {
                     disabled={enrolled}
                   >
                     {enrolled ? (
-                      "Kayıtlı"
+                      t('courseDetail.enrolled')
                     ) : (
                       <>
                         <Coins className="h-5 w-5" />
-                        {courseData.price} coin ile kayıt ol
+                        {courseData.price} {t('courseDetail.enrollWithCoins')}
                       </>
                     )}
                   </Button>
@@ -168,7 +170,7 @@ export default function CourseDetail() {
 
               {/* Description */}
               <div className="mt-8">
-                <h2 className="text-2xl font-semibold mb-4">Açıklama</h2>
+                <h2 className="text-2xl font-semibold mb-4">{t('courseDetail.description')}</h2>
                 <p className="text-muted-foreground leading-7">
                   {courseData.description}
                 </p>
@@ -176,7 +178,7 @@ export default function CourseDetail() {
 
               {/* Details Section */}
               <div className="mt-8">
-                <h2 className="text-2xl font-semibold mb-4">Detaylar</h2>
+                <h2 className="text-2xl font-semibold mb-4">{t('courseDetail.details')}</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div 
                     className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted transition-colors group"
@@ -184,7 +186,7 @@ export default function CourseDetail() {
                   >
                     <BookOpen className="h-5 w-5 text-primary flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-medium">Öğretmen</p>
+                      <p className="text-sm font-medium">{t('courseDetail.teacher')}</p>
                       <p className="text-sm text-muted-foreground group-hover:text-primary transition-colors">{courseData.teacherName}</p>
                     </div>
                   </div>
@@ -192,7 +194,7 @@ export default function CourseDetail() {
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <Clock className="h-5 w-5 text-primary flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-medium">Süre</p>
+                      <p className="text-sm font-medium">{t('courseDetail.duration')}</p>
                       <p className="text-sm text-muted-foreground">{courseData.duration}</p>
                     </div>
                   </div>
@@ -200,9 +202,9 @@ export default function CourseDetail() {
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-medium">Sertifika</p>
+                      <p className="text-sm font-medium">{t('courseDetail.certificate')}</p>
                       <p className="text-sm text-muted-foreground">
-                        {courseData.certification ? "Sertifikalı" : "Sertifikasız"}
+                        {courseData.certification ? t('courseDetail.certified') : t('courseDetail.nonCertified')}
                       </p>
                     </div>
                   </div>
@@ -210,9 +212,9 @@ export default function CourseDetail() {
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <ListChecks className="h-5 w-5 text-primary flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-medium">İçerik</p>
+                      <p className="text-sm font-medium">{t('courseDetail.content')}</p>
                       <p className="text-sm text-muted-foreground">
-                        {courseData.lessonsCount} ders, {courseData.examsCount} sınav
+                        {courseData.lessonsCount} {t('courseDetail.lessons')}, {courseData.examsCount} {t('courseDetail.exams')}
                       </p>
                     </div>
                   </div>
@@ -221,19 +223,19 @@ export default function CourseDetail() {
 
               {/* Skills Section */}
               <div className="mt-8">
-                <h2 className="text-2xl font-semibold mb-4">Bu kursta kazanacağınız beceriler:</h2>
+                <h2 className="text-2xl font-semibold mb-4">{t('courseDetail.skillsYouWillGain')}</h2>
                 <ul className="space-y-3">
                   <li className="flex items-start gap-3">
                     <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
-                    <p className="leading-7"><span className="font-semibold">Başarılı tasarım atölyeleri planlama ve yürütme</span> — Tasarım atölyesi çağrısının ne zaman yapılacağını, hedeflerin nasıl belirleneceğini ve doğru çıktıları üretmek için doğru süreçleri ve aktiviteleri nasıl planlayacağınızı öğrenin.</p>
+                    <p className="leading-7"><span className="font-semibold">{t('courseDetail.skills.designWorkshops')}</span></p>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
-                    <p className="leading-7"><span className="font-semibold">Beyin fırtınası ve karar verme aktiviteleri keşfetme</span> — Yaratıcı fikir üretimini teşvik eden ve tasarım kararlarında fikir birliği oluşturmanın yollarını öğrenin.</p>
+                    <p className="leading-7"><span className="font-semibold">{t('courseDetail.skills.brainstorming')}</span></p>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
-                    <p className="leading-7"><span className="font-semibold">Uzaktan atölyeler yürütme ve harika sunumlar oluşturma</span> — Başarılı bir uzaktan atölye yürütmek için ihtiyacınız olan tüm sanal araçları ve teknikleri öğrenin.</p>
+                    <p className="leading-7"><span className="font-semibold">{t('courseDetail.skills.remoteWorkshops')}</span></p>
                   </li>
                 </ul>
               </div>

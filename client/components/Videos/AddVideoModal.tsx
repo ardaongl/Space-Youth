@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreateVideoRequest } from "@shared/api";
 import { Loader2, Link, Upload, Video, Image, FileVideo, X } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface AddVideoModalProps {
   open: boolean;
@@ -21,6 +22,7 @@ interface AddVideoModalProps {
 }
 
 export function AddVideoModal({ open, onOpenChange, onVideoAdded }: AddVideoModalProps) {
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [videoType, setVideoType] = useState<"url" | "file">("url");
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -42,7 +44,7 @@ export function AddVideoModal({ open, onOpenChange, onVideoAdded }: AddVideoModa
       if (videoType === "file") {
         // Handle file upload
         if (!videoFile) {
-          alert("Lütfen bir video dosyası seçin");
+          alert(t('tutorials.pleaseSelectVideo'));
           setIsLoading(false);
           return;
         }
@@ -62,7 +64,7 @@ export function AddVideoModal({ open, onOpenChange, onVideoAdded }: AddVideoModa
         });
 
         if (!response.ok) {
-          throw new Error("Video yüklenirken bir hata oluştu");
+          throw new Error(t('tutorials.videoUploadError'));
         }
       } else {
         // Handle URL
@@ -80,7 +82,7 @@ export function AddVideoModal({ open, onOpenChange, onVideoAdded }: AddVideoModa
         });
 
         if (!response.ok) {
-          throw new Error("Video eklenirken bir hata oluştu");
+          throw new Error(t('tutorials.videoAddError'));
         }
       }
 
@@ -100,7 +102,7 @@ export function AddVideoModal({ open, onOpenChange, onVideoAdded }: AddVideoModa
       onVideoAdded?.();
     } catch (error) {
       console.error("Video ekleme hatası:", error);
-      alert("Video eklenirken bir hata oluştu. Lütfen tekrar deneyin.");
+      alert(t('tutorials.videoAddErrorRetry'));
     } finally {
       setIsLoading(false);
     }
@@ -117,18 +119,18 @@ export function AddVideoModal({ open, onOpenChange, onVideoAdded }: AddVideoModa
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Yeni Video Ekle</DialogTitle>
+          <DialogTitle>{t('tutorials.addNewVideo')}</DialogTitle>
           <DialogDescription>
-            Öğrencilerinizle paylaşmak için yeni bir ders videosu ekleyin.
+            {t('tutorials.addVideoDescription')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Video Başlığı *</Label>
+            <Label htmlFor="title">{t('tutorials.videoTitle')} *</Label>
             <Input
               id="title"
-              placeholder="Örn: Python'a Giriş - Değişkenler"
+              placeholder={t('tutorials.videoTitlePlaceholder')}
               value={formData.title}
               onChange={(e) => handleChange("title", e.target.value)}
               required
@@ -136,10 +138,10 @@ export function AddVideoModal({ open, onOpenChange, onVideoAdded }: AddVideoModa
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Açıklama *</Label>
+            <Label htmlFor="description">{t('tutorials.videoDescription')} *</Label>
             <Textarea
               id="description"
-              placeholder="Video hakkında kısa bir açıklama yazın..."
+              placeholder={t('tutorials.videoDescriptionPlaceholder')}
               value={formData.description}
               onChange={(e) => handleChange("description", e.target.value)}
               rows={4}
@@ -154,37 +156,37 @@ export function AddVideoModal({ open, onOpenChange, onVideoAdded }: AddVideoModa
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground"
               >
                 <Link className="h-4 w-4" />
-                Video URL
+                {t('tutorials.videoUrl')}
               </TabsTrigger>
               <TabsTrigger 
                 value="file" 
                 className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground"
               >
                 <Upload className="h-4 w-4" />
-                Dosya Yükle
+                {t('tutorials.uploadFile')}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="url" className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label htmlFor="videoUrl">Video URL *</Label>
+                <Label htmlFor="videoUrl">{t('tutorials.videoUrl')} *</Label>
                 <Input
                   id="videoUrl"
                   type="url"
-                  placeholder="https://www.youtube.com/watch?v=..."
+                  placeholder={t('tutorials.videoUrlPlaceholder')}
                   value={formData.videoUrl}
                   onChange={(e) => handleChange("videoUrl", e.target.value)}
                   required={videoType === "url"}
                 />
                 <p className="text-xs text-muted-foreground">
-                  YouTube video linki veya direkt video URL'si girin
+                  {t('tutorials.videoUrlHelp')}
                 </p>
               </div>
             </TabsContent>
 
             <TabsContent value="file" className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label htmlFor="videoFile">Video Dosyası *</Label>
+                <Label htmlFor="videoFile">{t('tutorials.selectVideoFile')} *</Label>
                 <div className="relative">
                   <label
                     htmlFor="videoFile"
@@ -201,9 +203,9 @@ export function AddVideoModal({ open, onOpenChange, onVideoAdded }: AddVideoModa
                     ) : (
                       <div className="flex flex-col items-center justify-center gap-2">
                         <Video className="h-10 w-10 text-muted-foreground" />
-                        <p className="text-sm font-medium">Video Dosyası Seçin</p>
+                        <p className="text-sm font-medium">{t('tutorials.selectVideoFile')}</p>
                         <p className="text-xs text-muted-foreground">
-                          MP4, AVI, MOV veya diğer video formatları
+                          {t('tutorials.videoFileFormats')}
                         </p>
                       </div>
                     )}
@@ -236,7 +238,7 @@ export function AddVideoModal({ open, onOpenChange, onVideoAdded }: AddVideoModa
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="thumbnailFile">Kapak Görseli (Opsiyonel)</Label>
+                <Label htmlFor="thumbnailFile">{t('tutorials.thumbnailImage')}</Label>
                 <div className="relative">
                   <label
                     htmlFor="thumbnailFile"
@@ -253,9 +255,9 @@ export function AddVideoModal({ open, onOpenChange, onVideoAdded }: AddVideoModa
                     ) : (
                       <div className="flex flex-col items-center justify-center gap-2">
                         <Image className="h-8 w-8 text-muted-foreground" />
-                        <p className="text-sm font-medium">Kapak Görseli Seçin</p>
+                        <p className="text-sm font-medium">{t('tutorials.selectThumbnailImage')}</p>
                         <p className="text-xs text-muted-foreground">
-                          JPG, PNG veya diğer görsel formatları
+                          {t('tutorials.thumbnailFormats')}
                         </p>
                       </div>
                     )}
@@ -295,16 +297,16 @@ export function AddVideoModal({ open, onOpenChange, onVideoAdded }: AddVideoModa
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              İptal
+              {t('tutorials.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {videoType === "file" ? "Yükleniyor..." : "Ekleniyor..."}
+                  {videoType === "file" ? t('tutorials.uploading') : t('tutorials.adding')}
                 </>
               ) : (
-                "Video Ekle"
+                t('tutorials.addVideo')
               )}
             </Button>
           </div>

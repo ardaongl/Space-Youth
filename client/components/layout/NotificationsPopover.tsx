@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/context/LanguageContext";
 
 // Mock bildirim verisi - gerçek uygulamada API'den gelecek
 const notifications = [
@@ -19,6 +20,7 @@ const notifications = [
 ];
 
 export function NotificationsPopover() {
+  const { t } = useLanguage();
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
@@ -26,7 +28,7 @@ export function NotificationsPopover() {
       <HoverCardTrigger asChild>
         <button 
           className="relative px-3 py-2 rounded-full hover:bg-secondary transition-colors"
-          aria-label="Bildirimler"
+          aria-label={t('notifications.title')}
         >
           <Bell className="h-6 w-6" />
           {unreadCount > 0 && (
@@ -40,7 +42,7 @@ export function NotificationsPopover() {
         <div className="flex flex-col">
           {/* Başlık */}
           <div className="flex items-center justify-between p-4 pb-3">
-            <h3 className="text-lg font-semibold">Bildirimler</h3>
+            <h3 className="text-lg font-semibold">{t('notifications.title')}</h3>
           </div>
           
           <Separator />
@@ -50,7 +52,7 @@ export function NotificationsPopover() {
             {notifications.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <Bell className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>Henüz bildiriminiz yok</p>
+                <p>{t('notifications.noNotifications')}</p>
               </div>
             ) : (
               <div className="py-2">

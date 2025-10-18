@@ -2,6 +2,7 @@ import React from "react";
 import { Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface TaskCardProps {
   title: string;
@@ -23,6 +24,24 @@ export function TaskCard({
   icon,
   href,
 }: TaskCardProps) {
+  const { t } = useLanguage();
+  
+  const getLevelTranslation = (level: string) => {
+    switch (level) {
+      case "Beginner": return t('tasks.beginner');
+      case "Intermediate": return t('tasks.intermediate');
+      case "Advanced": return t('tasks.advanced');
+      default: return level;
+    }
+  };
+
+  const getTypeTranslation = (type: string) => {
+    switch (type) {
+      case "BRIEF": return t('tasks.brief');
+      default: return type;
+    }
+  };
+
   return (
     <Link
       to={href}
@@ -37,7 +56,7 @@ export function TaskCard({
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium text-muted-foreground">
-              {type}
+              {getTypeTranslation(type)}
             </span>
           </div>
           <h3 className="font-semibold leading-none tracking-tight">{title}</h3>
@@ -51,7 +70,7 @@ export function TaskCard({
             <span>{duration}</span>
           </div>
           <span>•</span>
-          <span>{level}</span>
+          <span>{getLevelTranslation(level)}</span>
         </div>
       </div>
     </Link>
