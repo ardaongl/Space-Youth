@@ -1,4 +1,4 @@
-import { api } from "./api";
+import { api } from "./index";
 import { User } from "@/store/slices/userSlice";
 
 export const authService = {

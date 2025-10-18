@@ -8,7 +8,7 @@ import { Rocket, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { authService } from "@/services/authService";
 import { useAuth } from "@/context/AuthContext";
-import { apis } from "@/services";
+import { api } from "@/services";
 import { email } from "zod/v4";
 import { useDispatch } from "react-redux";
 import { setUser, setUserToken } from "@/store/slices/userSlice";
@@ -24,11 +24,6 @@ export default function Login() {
     email: "",
     password: "",
   });
-  const dispatch = useDispatch();
-
-  const auth_token = useAppSelector(state => state.user.token)
-  const user = useAppSelector(state => state.user.user);
-
   const dispatch = useDispatch();
 
   const auth_token = useAppSelector(state => state.user.token)
@@ -55,7 +50,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await apis.user.login(formData.email, formData.password)
+      const response = await api.user.login(formData.email, formData.password)
       console.log(response);
       if(response.status != 200){
         toast({
@@ -79,7 +74,7 @@ export default function Login() {
 
   useEffect(() => {
     try {
-      const response:any = apis.user.get_user();
+      const response:any = api.user.get_user();
       if(auth_token != ""){
         const user = {
           id: response.data.id,
@@ -101,7 +96,7 @@ export default function Login() {
   useEffect(() => {
     try {
       if(user.role == "student"){
-        const response  = apis.student.get_student();
+        const response  = api.student.get_student();
         console.log(response);
         
       }
