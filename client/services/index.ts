@@ -1,8 +1,7 @@
 import { CommonAPI } from "./modules/common";
 import { CourseAPI } from "./modules/course";
 import { UserAPI } from "./modules/user";
-import { StudentAPI } from "./modules/student.js";
-
+import { StudentAPI } from "./modules/student";
 export class API {
   user: UserAPI;
   course: CourseAPI;
@@ -13,7 +12,7 @@ export class API {
     this.user = new UserAPI();
     this.course = new CourseAPI();
     this.common = new CommonAPI();
-    this.student = new StudentAPI();
+    this.student = new StudentAPI()
   }
 }
 

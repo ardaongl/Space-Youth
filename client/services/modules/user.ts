@@ -17,7 +17,7 @@ export class UserAPI {
 
     get_user = async ()  => {
         try {
-            const response = await axiosInstance.get(
+            const response = await api.get(
                 '/api/user',
                 {
                     requiresAuth: true,

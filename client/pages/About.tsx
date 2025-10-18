@@ -21,9 +21,9 @@ export default function About() {
       //const response = await login("dev.berat55@gmail.com", "123456");
       const response = await api.user.login("dev.berat55@gmail.com", "123456");
       console.log(response);
-      const get_user_response = await api.user.get_user();
+      const get_user_response = await apis.user.get_user();
       console.log("get_user_response: ", get_user_response);
-
+      
       dispatch(setUserToken(response.data.auth_token));
     } catch (error) {
       console.log(error);
@@ -44,7 +44,7 @@ export default function About() {
       console.log("📅 Response timestamp:", new Date().toISOString());
       console.log("💬 API Message:", res);
       setResponse({message: res.description});
-
+      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Bilinmeyen hata oluştu";
       console.error("❌ Error fetching data from Space Youth API:", errorMessage);
