@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,7 +11,8 @@ import { useAuth } from "@/context/AuthContext";
 import { apis } from "@/services";
 import { email } from "zod/v4";
 import { useDispatch } from "react-redux";
-import { setUserToken } from "@/store/slices/userSlice";
+import { setUser, setUserToken } from "@/store/slices/userSlice";
+import { useAppSelector } from "@/store";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -23,8 +24,10 @@ export default function Login() {
     email: "",
     password: "",
   });
-
   const dispatch = useDispatch();
+
+  const auth_token = useAppSelector(state => state.user.token)
+  const user = useAppSelector(state => state.user.user);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -44,50 +47,18 @@ export default function Login() {
       });
       return;
     }
-
     setIsLoading(true);
 
     try {
-      
       const response = await apis.user.login(formData.email, formData.password)
       console.log(response);
-      if(response.status == 200){
-        dispatch(setUserToken(response.data.auth_token))
-      }
-      const mockUsers = [
-        { email: "student@test.com", password: "123456", name: "Ahmet Öğrenci", role: "student" },
-        { email: "teacher@test.com", password: "123456", name: "Ayşe Öğretmen", role: "teacher" },
-        { email: "admin@test.com", password: "123456", name: "Admin User", role: "admin" },
-      ];
-
-      const user = mockUsers.find(
-        u => u.email === formData.email && u.password === formData.password
-      );
-
-      if (user) {
-        // Save mock token
-        authService.setToken("dev-token-" + user.role);
-        
+      if(response.status != 200){
         toast({
           title: "Başarılı!",
-          description: `${user.name} olarak giriş yapıldı. Yönlendiriliyorsunuz...`,
-        });
-
-        // Refetch user data (will use mock data)
-        await refetchUser();
-
-        // Redirect to dashboard after successful login
-        // Onboarding modal will be shown automatically if not completed
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 1000);
-      } else {
-        toast({
-          title: "Giriş Başarısız",
-          description: "E-posta veya şifre hatalı.",
-          variant: "destructive",
+          description: `Giriş başarısız`,
         });
       }
+      dispatch(setUserToken(response.data.auth_token))
     } catch (error) {
       console.error("Login error:", error);
       toast({
@@ -99,6 +70,40 @@ export default function Login() {
       setIsLoading(false);
     }
   };
+
+
+  useEffect(() => {
+    try {
+      const response:any = apis.user.get_user();
+      if(auth_token != ""){
+        const user = {
+          id: response.data.id,
+          name: response.data.name,
+          email: response.data.email,
+          role: response.data.role
+        }
+
+        dispatch(setUser(user));
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 1000);
+      }
+    } catch (error) {
+      
+    }
+  }, [auth_token])
+
+  useEffect(() => {
+    try {
+      if(user.role == "student"){
+        const response  = apis.student.get_student();
+        console.log(response);
+        
+      }
+    } catch (error) {
+      
+    }
+  }, [user])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-purple-500/5 to-pink-500/10 flex items-center justify-center p-4">
