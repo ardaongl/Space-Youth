@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Coins } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { isAdmin } from "@/utils/roles";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function EditCourse() {
   const navigate = useNavigate();
   const { slug } = useParams();
   const { auth } = useAuth();
+  const { t } = useLanguage();
   
   const [courseName, setCourseName] = useState("");
   const [courseDescription, setCourseDescription] = useState("");
@@ -32,9 +34,9 @@ export default function EditCourse() {
       <AppLayout>
         <div className="container mx-auto py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Yetkisiz Erişim</h1>
-            <p className="text-muted-foreground mb-4">Bu sayfaya erişim yetkiniz bulunmamaktadır.</p>
-            <Button onClick={() => navigate('/courses')}>Kurslara Dön</Button>
+            <h1 className="text-2xl font-bold mb-4">{t('common.unauthorizedAccess')}</h1>
+            <p className="text-muted-foreground mb-4">{t('common.noAccessRights')}</p>
+            <Button onClick={() => navigate('/courses')}>{t('courses.backToCourses')}</Button>
           </div>
         </div>
       </AppLayout>
@@ -67,15 +69,15 @@ export default function EditCourse() {
           onClick={() => navigate('/courses')}
         >
           <ArrowLeft className="h-4 w-4" />
-          Geri Dön
+{t('common.back')}
         </Button>
 
         <div className="max-w-4xl mx-auto">
           <div className="bg-card rounded-lg border shadow-sm p-8">
             <div className="mb-6">
-              <h1 className="text-3xl font-bold">Kurs Düzenle (Admin)</h1>
+              <h1 className="text-3xl font-bold">{t('courses.editCourse')} ({t('common.admin')})</h1>
               <p className="text-muted-foreground mt-2">
-                Kurs bilgilerini ve fiyatlandırmayı düzenleyin
+                {t('courses.editCourseInfo')}
               </p>
             </div>
 
@@ -83,13 +85,13 @@ export default function EditCourse() {
               {/* Course Name */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Kursun Adı <span className="text-red-500">*</span>
+                  {t('courses.courseName')} <span className="text-red-500">*</span>
                 </label>
                 <Input
                   type="text"
                   value={courseName}
                   onChange={(e) => setCourseName(e.target.value)}
-                  placeholder="Kurs adını girin"
+                  placeholder={t('courses.enterCourseName')}
                   className="w-full"
                 />
               </div>
@@ -97,12 +99,12 @@ export default function EditCourse() {
               {/* Course Description */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Kursun Açıklaması <span className="text-red-500">*</span>
+                  {t('courses.courseDescription')} <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={courseDescription}
                   onChange={(e) => setCourseDescription(e.target.value)}
-                  placeholder="Kurs açıklamasını girin"
+                  placeholder={t('courses.enterCourseDescription')}
                   rows={6}
                   className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 />
@@ -110,7 +112,7 @@ export default function EditCourse() {
 
               {/* Pricing Section */}
               <div className="border-t pt-6">
-                <h2 className="text-xl font-semibold mb-4">Fiyatlandırma</h2>
+                <h2 className="text-xl font-semibold mb-4">{t('courses.pricing')}</h2>
                 
                 {/* Price Type */}
                 <div className="space-y-3 mb-4">
@@ -123,9 +125,9 @@ export default function EditCourse() {
                       className="w-4 h-4"
                     />
                     <div className="flex-1">
-                      <p className="font-medium">Ücretli Kurs</p>
+                      <p className="font-medium">{t('courses.paidCourse')}</p>
                       <p className="text-sm text-muted-foreground">
-                        Öğrenciler bu kursa erişmek için coin ödemesi yapacak
+                        {t('courses.paidCourseDescription')}
                       </p>
                     </div>
                   </label>
@@ -139,9 +141,9 @@ export default function EditCourse() {
                       className="w-4 h-4"
                     />
                     <div className="flex-1">
-                      <p className="font-medium">Ücretsiz Kurs</p>
+                      <p className="font-medium">{t('courses.freeCourse')}</p>
                       <p className="text-sm text-muted-foreground">
-                        Tüm öğrenciler bu kursa ücretsiz erişebilir
+                        {t('courses.freeCourseDescription')}
                       </p>
                     </div>
                   </label>
@@ -151,7 +153,7 @@ export default function EditCourse() {
                 {isPaid && (
                   <div>
                     <label className="block text-sm font-semibold mb-2">
-                      Kurs Ücreti (Coin) <span className="text-red-500">*</span>
+                      {t('courses.courseFee')} <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <Coins className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-yellow-600" />
@@ -160,12 +162,12 @@ export default function EditCourse() {
                         min="0"
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
-                        placeholder="Örn: 250"
+                        placeholder={t('courses.pricePlaceholder')}
                         className="pl-10"
                       />
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
-                      Öğrencilerin kursa erişmek için ödemesi gereken coin miktarı
+{t('courses.priceDescription')}
                     </p>
                   </div>
                 )}
@@ -173,13 +175,13 @@ export default function EditCourse() {
 
               {/* Preview */}
               <div className="border-t pt-6">
-                <h3 className="text-sm font-semibold mb-3">Önizleme</h3>
+                <h3 className="text-sm font-semibold mb-3">{t('common.preview')}</h3>
                 <div className="bg-muted/50 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-semibold">{courseName || "Kurs Adı"}</h4>
+                      <h4 className="font-semibold">{courseName || t('courses.courseName')}</h4>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {courseDescription || "Kurs açıklaması"}
+                        {courseDescription || t('courses.courseDescription')}
                       </p>
                     </div>
                     <div className="text-right">
@@ -191,7 +193,7 @@ export default function EditCourse() {
                           </span>
                         </div>
                       ) : (
-                        <span className="text-lg font-bold text-green-600">Ücretsiz</span>
+                        <span className="text-lg font-bold text-green-600">{t('common.free')}</span>
                       )}
                     </div>
                   </div>
@@ -204,14 +206,14 @@ export default function EditCourse() {
                   variant="outline"
                   onClick={() => navigate('/courses')}
                 >
-                  İptal
+{t('common.cancel')}
                 </Button>
                 <Button
                   onClick={handleSave}
                   disabled={!isValid}
                   size="lg"
                 >
-                  Değişiklikleri Kaydet
+{t('common.saveChanges')}
                 </Button>
               </div>
             </div>

@@ -6,10 +6,12 @@ import { Clock, Coins, Calendar, CheckCircle2, ArrowLeft } from "lucide-react";
 import { useTasks } from "@/context/TasksContext";
 import { useTaskSubmissions } from "@/context/TaskSubmissionsContext";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function TaskDetail() {
   const navigate = useNavigate();
   const { taskId } = useParams();
+  const { t } = useLanguage();
   const { tasks, updateTaskStatus } = useTasks();
   const { addSubmission } = useTaskSubmissions();
   
@@ -20,8 +22,8 @@ export default function TaskDetail() {
       <AppLayout>
         <div className="container mx-auto py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Task not found</h1>
-            <Button onClick={() => navigate('/tasks')}>Back to Tasks</Button>
+            <h1 className="text-2xl font-bold mb-4">{t('tasks.taskNotFound')}</h1>
+            <Button onClick={() => navigate('/tasks')}>{t('tasks.backToTasks')}</Button>
           </div>
         </div>
       </AppLayout>

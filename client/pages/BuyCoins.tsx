@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useLanguage } from "@/context/LanguageContext";
 
 // Coin paketleri
 const coinPackages = [
@@ -84,6 +85,7 @@ const paymentMethods = [
 ];
 
 export default function BuyCoins() {
+  const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
@@ -174,10 +176,10 @@ export default function BuyCoins() {
                         currentStep >= step ? "text-amber-500" : "text-gray-500"
                       )}
                     >
-                      {step === 1 && "ADIM: COIN SEÇ"}
-                      {step === 2 && "ADIM: ÖDEME YÖNTEMİNİ SEÇ"}
-                      {step === 3 && "ADIM: ÖDEME BİLGİLERİ"}
-                      {step === 4 && "ADIM: TAMAMLANDI"}
+                      {step === 1 && t('coins.step1')}
+                      {step === 2 && t('coins.step2')}
+                      {step === 3 && t('coins.step3')}
+                      {step === 4 && t('coins.step4')}
                     </p>
                   </div>
 
@@ -200,11 +202,10 @@ export default function BuyCoins() {
             <div className="space-y-6">
               <div className="text-center mb-8">
                 <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                  Coin Paketini Seç
+                  {t('coins.selectPackage')}
                 </h1>
                 <p className="text-gray-600">
-                  İhtiyacınıza uygun coin paketini seçin ve eğitim içeriklerine
-                  erişim sağlayın
+                  {t('coins.selectPackageDescription')}
                 </p>
               </div>
 
@@ -222,7 +223,7 @@ export default function BuyCoins() {
                   >
                     {pack.popular && (
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-white px-4 py-1 rounded-full text-xs font-bold uppercase">
-                        Popüler
+{t('coins.popular')}
                       </div>
                     )}
 
@@ -238,11 +239,11 @@ export default function BuyCoins() {
                           <span className="text-2xl font-bold text-gray-900">
                             {pack.amount}
                           </span>
-                          <span className="text-amber-500 font-bold">COIN</span>
+                          <span className="text-amber-500 font-bold">{t('coins.coin')}</span>
                         </div>  
                         {pack.bonus > 0 && (
                           <p className="text-xs text-gray-500 mt-1">
-                            {pack.amount - pack.bonus} COIN + {pack.bonus} bonus
+                            {pack.amount - pack.bonus} {t('coins.coin')} + {pack.bonus} {t('coins.bonus')}
                           </p>
                         )}
                       </div>
@@ -265,7 +266,7 @@ export default function BuyCoins() {
                   disabled={!selectedPackage}
                   className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-12"
                 >
-                  Devam Et
+{t('common.continue')}
                 </Button>
               </div>
             </div>
@@ -276,10 +277,10 @@ export default function BuyCoins() {
             <div className="space-y-6 max-w-2xl mx-auto">
               <div className="text-center mb-8">
                 <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                  Ödeme Yöntemi Seç
+                  {t('coins.paymentMethod')}
                 </h1>
                 <p className="text-gray-600">
-                  Güvenli ödeme yöntemlerinden birini seçin
+                  {t('coins.paymentMethodDescription')}
                 </p>
               </div>
 
@@ -293,12 +294,12 @@ export default function BuyCoins() {
                       </div>
                       <div>
                         <p className="text-gray-900 font-bold text-xl">
-                          {selectedPack.amount} COIN
+                          {selectedPack.amount} {t('coins.coin')}
                         </p>
                         {selectedPack.bonus > 0 && (
                           <p className="text-gray-500 text-sm">
-                            {selectedPack.amount - selectedPack.bonus} COIN +{" "}
-                            {selectedPack.bonus} bonus
+                            {selectedPack.amount - selectedPack.bonus} {t('coins.coin')} +{" "}
+                            {selectedPack.bonus} {t('coins.bonus')}
                           </p>
                         )}
                       </div>
@@ -347,7 +348,7 @@ export default function BuyCoins() {
                   variant="outline"
                   className="border-gray-300 text-gray-700 hover:bg-gray-50 px-12"
                 >
-                  Geri
+{t('common.back')}
                 </Button>
                 <Button
                   size="lg"
@@ -355,7 +356,7 @@ export default function BuyCoins() {
                   disabled={!selectedPayment}
                   className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-12"
                 >
-                  Ödemeyi Tamamla
+{t('coins.completePayment')}
                 </Button>
               </div>
             </div>
@@ -366,10 +367,10 @@ export default function BuyCoins() {
             <div className="space-y-6 max-w-2xl mx-auto">
               <div className="text-center mb-8">
                 <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                  Kart Bilgilerinizi Girin
+                  {t('coins.enterCardDetails')}
                 </h1>
                 <p className="text-gray-600">
-                  Ödemenizi güvenli bir şekilde tamamlayın
+                  {t('coins.completePaymentSecurely')}
                 </p>
               </div>
 
@@ -383,18 +384,18 @@ export default function BuyCoins() {
                       </div>
                       <div>
                         <p className="text-gray-900 font-bold text-xl">
-                          {selectedPack.amount} COIN
+                          {selectedPack.amount} {t('coins.coin')}
                         </p>
                         {selectedPack.bonus > 0 && (
                           <p className="text-gray-600 text-sm">
-                            {selectedPack.amount - selectedPack.bonus} COIN +{" "}
-                            {selectedPack.bonus} bonus
+                            {selectedPack.amount - selectedPack.bonus} {t('coins.coin')} +{" "}
+                            {selectedPack.bonus} {t('coins.bonus')}
                           </p>
                         )}
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-gray-500 text-sm">Toplam</p>
+                      <p className="text-gray-500 text-sm">{t('coins.total')}</p>
                       <p className="text-amber-600 font-bold text-3xl">
                         ₺{selectedPack.price}
                       </p>
@@ -410,7 +411,7 @@ export default function BuyCoins() {
                 {/* Kart Sahibi Adı */}
                 <div className="space-y-2">
                   <Label htmlFor="cardName" className="text-gray-700 font-medium">
-                    Kart Sahibinin Adı
+                    {t('coins.cardName')}
                   </Label>
                   <Input
                     id="cardName"
@@ -424,7 +425,7 @@ export default function BuyCoins() {
                 {/* Kart Numarası */}
                 <div className="space-y-2">
                   <Label htmlFor="cardNumber" className="text-gray-700 font-medium">
-                    Kart Numarası
+                    {t('coins.cardNumber')}
                   </Label>
                   <div className="relative">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1">
@@ -446,7 +447,7 @@ export default function BuyCoins() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="expiry" className="text-gray-700 font-medium">
-                      Son Kullanma Tarihi
+                      {t('coins.expiryDate')}
                     </Label>
                     <Input
                       id="expiry"
@@ -459,7 +460,7 @@ export default function BuyCoins() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="cvc" className="text-gray-700 font-medium">
-                      Güvenlik Kodu
+                      {t('coins.cvc')}
                     </Label>
                     <Input
                       id="cvc"
@@ -484,7 +485,7 @@ export default function BuyCoins() {
                     htmlFor="remember"
                     className="text-sm text-gray-600 cursor-pointer"
                   >
-                    Kart bilgilerini hatırla
+{t('coins.rememberCard')}
                   </label>
                 </div>
               </div>
@@ -496,7 +497,7 @@ export default function BuyCoins() {
                   variant="outline"
                   className="border-gray-300 text-gray-700 hover:bg-gray-50 px-12"
                 >
-                  Geri
+{t('common.back')}
                 </Button>
                 <Button
                   size="lg"
@@ -504,7 +505,7 @@ export default function BuyCoins() {
                   disabled={!cardName || !cardNumber || !expiry || !cvc}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-12"
                 >
-                  Şimdi Öde
+{t('coins.payNow')}
                 </Button>
               </div>
             </div>
@@ -519,18 +520,18 @@ export default function BuyCoins() {
                 </div>
 
                 <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                  Sipariş Tamamlandı!
+                  {t('coins.orderCompleted')}
                 </h1>
                 <p className="text-gray-600 text-lg mb-8">
-                  Coin'leriniz hesabınıza başarıyla eklendi
+                  {t('coins.coinsAddedSuccessfully')}
                 </p>
 
                 {selectedPack && (
                   <div className="bg-amber-50 rounded-lg p-6 mb-8 border border-amber-200">
                     <p className="text-amber-600 font-bold text-3xl mb-2">
-                      +{selectedPack.amount} COIN
+                      +{selectedPack.amount} {t('coins.coin')}
                     </p>
-                    <p className="text-gray-600">hesabınıza eklendi</p>
+                    <p className="text-gray-600">{t('coins.addedToAccount')}</p>
                   </div>
                 )}
 
@@ -540,7 +541,7 @@ export default function BuyCoins() {
                     onClick={() => (window.location.href = "/")}
                     className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-12 w-full"
                   >
-                    Ana Sayfaya Dön
+{t('coins.backToHome')}
                   </Button>
                   <Button
                     size="lg"
@@ -548,7 +549,7 @@ export default function BuyCoins() {
                     variant="outline"
                     className="border-gray-300 text-gray-700 hover:bg-gray-50 px-12 w-full"
                   >
-                    Kurslara Git
+{t('coins.goToCourses')}
                   </Button>
                 </div>
               </div>

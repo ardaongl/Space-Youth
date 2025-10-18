@@ -8,9 +8,11 @@ import { AddVideoModal } from "@/components/Videos/AddVideoModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Loader2, Search } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function Tutorials() {
   const { auth } = useAuth();
+  const { t } = useLanguage();
   const [videos, setVideos] = useState<Video[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -23,12 +25,12 @@ export default function Tutorials() {
     try {
       const response = await fetch("/api/videos");
       if (!response.ok) {
-        throw new Error("Videolar yüklenemedi");
+        throw new Error(t('tutorials.videosLoadError'));
       }
       const data: VideoListResponse = await response.json();
       setVideos(data.videos);
     } catch (error) {
-      console.error("Video yükleme hatası:", error);
+      console.error(t('tutorials.videoLoadError'), error);
     } finally {
       setIsLoading(false);
     }
@@ -45,13 +47,13 @@ export default function Tutorials() {
       });
 
       if (!response.ok) {
-        throw new Error("Video silinemedi");
+        throw new Error(t('tutorials.videoDeleteError'));
       }
 
       setVideos((prev) => prev.filter((v) => v.id !== videoId));
     } catch (error) {
-      console.error("Video silme hatası:", error);
-      alert("Video silinirken bir hata oluştu.");
+      console.error(t('tutorials.videoDeleteError'), error);
+      alert(t('tutorials.videoDeleteAlert'));
     }
   };
 
@@ -73,9 +75,9 @@ export default function Tutorials() {
       <div className="py-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Ders Videoları</h1>
+            <h1 className="text-2xl font-bold">{t('tutorials.title')}</h1>
             <p className="text-muted-foreground mt-1">
-              Öğretmenlerimizden adım adım pratik rehberlerle öğrenin.
+              {t('tutorials.subtitle')}
             </p>
           </div>
           {canAddVideo && (
@@ -84,7 +86,7 @@ export default function Tutorials() {
               className="inline-flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
-              Video Ekle
+              {t('tutorials.addVideo')}
             </Button>
           )}
         </div>
@@ -93,7 +95,7 @@ export default function Tutorials() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Video ara..."
+            placeholder={t('tutorials.searchVideos')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 h-11"
@@ -108,8 +110,8 @@ export default function Tutorials() {
           <div className="mt-8 text-center py-12">
             <p className="text-muted-foreground">
               {searchQuery.trim() 
-                ? `"${searchQuery}" için sonuç bulunamadı.` 
-                : "Henüz video eklenmemiş."}
+                ? t('tutorials.noResultsFound', { query: searchQuery })
+                : t('tutorials.noVideosYet')}
             </p>
             {canAddVideo && !searchQuery.trim() && (
               <Button
@@ -117,7 +119,7 @@ export default function Tutorials() {
                 variant="outline"
                 className="mt-4"
               >
-                İlk Videoyu Ekle
+                {t('tutorials.addFirstVideo')}
               </Button>
             )}
           </div>

@@ -51,6 +51,7 @@ import { TaskSubmissionsProvider } from "./context/TaskSubmissionsContext";
 import { TasksProvider } from "./context/TasksContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { BookmarksProvider } from "./context/BookmarksContext";
+import { LanguageProvider } from "./context/LanguageContext";
 
 // Components
 import TestWizard, { OnboardingData } from "@/components/onboarding/TestWizard";
@@ -166,25 +167,27 @@ const App = () => {
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <TokensProvider>
-            <BookmarksProvider>
-              <DraftsProvider>
-                <TaskSubmissionsProvider>
-                  <TasksProvider>
-                    <TooltipProvider>
-                      <Toaster />
-                      <Sonner />
-                      <BrowserRouter>
-                        <AppContent />
-                      </BrowserRouter>
-                    </TooltipProvider>
-                  </TasksProvider>
-                </TaskSubmissionsProvider>
-              </DraftsProvider>
-            </BookmarksProvider>
-          </TokensProvider>
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <TokensProvider>
+              <BookmarksProvider>
+                <DraftsProvider>
+                  <TaskSubmissionsProvider>
+                    <TasksProvider>
+                      <TooltipProvider>
+                        <Toaster />
+                        <Sonner />
+                        <BrowserRouter>
+                          <AppContent />
+                        </BrowserRouter>
+                      </TooltipProvider>
+                    </TasksProvider>
+                  </TaskSubmissionsProvider>
+                </DraftsProvider>
+              </BookmarksProvider>
+            </TokensProvider>
+          </AuthProvider>
+        </LanguageProvider>
       </QueryClientProvider>
     </Provider>
   );

@@ -2,10 +2,11 @@ import AppLayout from "@/components/layout/AppLayout";
 import { Link } from "react-router-dom";
 import { Clock, Trophy, Bookmark, BookmarkCheck, SlidersHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
-import { api } from "@/services/api";
+import { api } from "@/services";
 import AddCourseButton from "@/components/Courses/AddCourseButton";
 import { useBookmarks, BookmarkedContent } from "@/context/BookmarksContext";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/context/LanguageContext";
 
 function CourseCard({
   id,
@@ -30,6 +31,7 @@ function CourseCard({
 }) {
   const { addBookmark, removeBookmark, isBookmarked } = useBookmarks();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const bookmarked = isBookmarked(id);
 
   const handleBookmark = (e: React.MouseEvent) => {
@@ -39,8 +41,8 @@ function CourseCard({
     if (bookmarked) {
       removeBookmark(id);
       toast({
-        title: "Kayıt kaldırıldı",
-        description: `${title} kayıtlılardan çıkarıldı.`,
+        title: t('success.deleted'),
+        description: t('bookmarks.removedFromBookmarks', { title }),
       });
     } else {
       const bookmarkItem: BookmarkedContent = {
@@ -57,8 +59,8 @@ function CourseCard({
       };
       addBookmark(bookmarkItem);
       toast({
-        title: "Kaydedildi",
-        description: `${title} kayıtlılara eklendi.`,
+        title: t('success.saved'),
+        description: t('bookmarks.addedToBookmarks', { title }),
       });
     }
   };
@@ -71,7 +73,7 @@ function CourseCard({
       <div className="relative p-5 pb-0">
         {popular && (
           <span className="absolute left-5 top-5 z-10 rounded-full bg-amber-100 text-amber-800 text-[11px] font-semibold px-2 py-0.5 border border-amber-200">
-            Popüler
+            {t('courses.popular')}
           </span>
         )}
         <button 
@@ -89,11 +91,11 @@ function CourseCard({
         </div>
       </div>
       <div className="p-5">
-        <div className="text-[11px] font-semibold tracking-widest text-muted-foreground">KURS</div>
+        <div className="text-[11px] font-semibold tracking-widest text-muted-foreground">{t('courses.courseType')}</div>
         <div className="mt-1 text-lg font-semibold leading-snug group-hover:underline">{title}</div>
         <div className="mt-1 text-sm text-muted-foreground">{author}</div>
         <p className="mt-3 text-sm text-muted-foreground line-clamp-2">
-          Etkili atölye çalışmaları planlama ve yönetme temellerini öğrenin. Kolaylaştırma, işbirliği ve istenen sonuçları elde etme becerilerinizi geliştirin.
+          {t('courses.sampleDescription')}
         </p>
         <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
           <span className="inline-flex items-center gap-1"><Clock className="h-4 w-4 text-primary" /> {time}</span>
@@ -105,7 +107,7 @@ function CourseCard({
 }
 
 export default function Courses() {
-
+  const { t } = useLanguage();
   const [courses, setCourses] = useState([])
   const [showFilters, setShowFilters] = useState(false)
 
@@ -119,7 +121,7 @@ export default function Courses() {
           author: "Colin Michael Pace",
           level: "Advanced",
           rating: "4.6 (4,061)",
-          time: "4h",
+          time: `4${t('common.hours')}`,
           popular: true
         },
         {
@@ -128,7 +130,7 @@ export default function Courses() {
           author: "Gene Kamenez",
           level: "Beginner",
           rating: "4.8 (3,834)",
-          time: "6h",
+          time: `6${t('common.hours')}`,
           popular: false
         },
         {
@@ -137,7 +139,7 @@ export default function Courses() {
           author: "Oliver West",
           level: "Intermediate",
           rating: "4.7 (2,102)",
-          time: "5h",
+          time: `5${t('common.hours')}`,
           popular: false
         }
       ];
@@ -150,7 +152,7 @@ export default function Courses() {
 
   useEffect(() => {
     handleGetCourses();
-  }, [])
+  }, [t])
 
   return (
     // courses.map ile yapılmalı
@@ -158,7 +160,7 @@ export default function Courses() {
       <div className="py-6">
         {/* Header Section */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">Kurslar</h1>
+          <h1 className="text-3xl font-bold text-gray-800">{t('courses.title')}</h1>
           <AddCourseButton />
         </div>
 
@@ -168,7 +170,7 @@ export default function Courses() {
             <div className="flex-1 relative">
               <input
                 type="text"
-                placeholder="Kurslarınızda arayın..."
+                placeholder={t('common.search')}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
               <svg
@@ -195,7 +197,7 @@ export default function Courses() {
               }`}
             >
               <SlidersHorizontal className="h-5 w-5" />
-              <span className="font-medium">Filtrele</span>
+              <span className="font-medium">{t('common.filter')}</span>
             </button>
           </div>
 
@@ -229,7 +231,7 @@ export default function Courses() {
             author="Colin Michael Pace"
             level="Advanced"
             rating="4.6 (4,061)"
-            time="4h"
+            time={`4${t('common.hours')}`}
             popular
           />
           <CourseCard
@@ -240,7 +242,7 @@ export default function Courses() {
             author="Gene Kamenez"
             level="Beginner"
             rating="4.8 (3,834)"
-            time="6h"
+            time={`6${t('common.hours')}`}
           />
           <CourseCard
             id="course-3"
@@ -250,7 +252,7 @@ export default function Courses() {
             author="Oliver West"
             level="Intermediate"
             rating="4.7 (2,102)"
-            time="5h"
+            time={`5${t('common.hours')}`}
           />
         </div>
       </div>

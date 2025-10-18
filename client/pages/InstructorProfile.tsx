@@ -4,10 +4,12 @@ import { Card } from "@/components/ui/card";
 import AppLayout from "@/components/layout/AppLayout";
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useLanguage } from "@/context/LanguageContext";
 
 export function InstructorProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   // Mock instructor data - in real app, fetch from API based on id
   const instructor = {
@@ -146,7 +148,7 @@ export function InstructorProfile() {
 
         {/* About Section */}
         <Card className="p-8 mb-8">
-          <h2 className="text-2xl font-semibold mb-4">Hakkımda</h2>
+          <h2 className="text-2xl font-semibold mb-4">{t('instructor.about')}</h2>
           <div className="text-muted-foreground leading-1">
             {instructor.about}
           </div>
@@ -155,7 +157,7 @@ export function InstructorProfile() {
         {/* Courses Section */}
         <Card className="p-8">
           <h2 className="text-2xl font-semibold mb-6">
-            Kurslarım ({instructor.totalCourses})
+            {t('instructor.myCourses')} ({instructor.totalCourses})
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

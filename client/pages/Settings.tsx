@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { setLanguage } from "@/store/slices/languageSlice";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +50,9 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function Settings() {
   const { auth, logout } = useAuth();
+  const { t } = useLanguage();
+  const dispatch = useAppDispatch();
+  const { currentLanguage } = useAppSelector((state) => state.language);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -83,7 +89,6 @@ export default function Settings() {
 
   // Appearance settings
   const [theme, setTheme] = useState("system");
-  const [language, setLanguage] = useState("tr");
 
   // Payment settings
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
@@ -137,30 +142,30 @@ export default function Settings() {
 
   const handleSaveProfile = () => {
     toast({
-      title: "Profil Güncellendi",
-      description: "Profil bilgileriniz başarıyla güncellendi.",
+      title: t('settings.profileUpdated'),
+      description: t('settings.profileUpdatedDescription'),
     });
   };
 
   const handleSaveNotifications = () => {
     toast({
-      title: "Bildirim Ayarları Kaydedildi",
-      description: "Bildirim tercihleriniz başarıyla güncellendi.",
+      title: t('settings.notificationsSaved'),
+      description: t('settings.notificationsSavedDescription'),
     });
   };
 
   const handleChangePassword = () => {
     if (newPassword !== confirmPassword) {
       toast({
-        title: "Hata",
-        description: "Yeni şifreler eşleşmiyor.",
+        title: t('auth.error'),
+        description: t('auth.passwordMismatch'),
         variant: "destructive",
       });
       return;
     }
     toast({
-      title: "Şifre Değiştirildi",
-      description: "Şifreniz başarıyla değiştirildi.",
+      title: t('settings.passwordChanged'),
+      description: t('settings.passwordChangedDescription'),
     });
     setCurrentPassword("");
     setNewPassword("");
@@ -169,23 +174,23 @@ export default function Settings() {
 
   const handleSavePrivacy = () => {
     toast({
-      title: "Gizlilik Ayarları Kaydedildi",
-      description: "Gizlilik tercihleriniz başarıyla güncellendi.",
+      title: t('settings.privacySaved'),
+      description: t('settings.privacySavedDescription'),
     });
   };
 
   const handleSaveAppearance = () => {
     toast({
-      title: "Görünüm Ayarları Kaydedildi",
-      description: "Görünüm tercihleriniz başarıyla güncellendi.",
+      title: t('success.saved'),
+      description: t('success.saved'),
     });
   };
 
   const handleDeleteAccount = () => {
-    if (confirm("Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.")) {
+    if (confirm(t('settings.deleteAccountConfirm'))) {
       toast({
-        title: "Hesap Silindi",
-        description: "Hesabınız başarıyla silindi.",
+        title: t('settings.accountDeleted'),
+        description: t('settings.accountDeletedDescription'),
         variant: "destructive",
       });
       logout();
@@ -193,11 +198,11 @@ export default function Settings() {
   };
 
   const handleRemoveCard = (cardId: string) => {
-    if (confirm("Bu ödeme yöntemini silmek istediğinizden emin misiniz?")) {
+    if (confirm(t('settings.removeCardConfirm'))) {
       setSavedCards(savedCards.filter(card => card.id !== cardId));
       toast({
-        title: "Kart Silindi",
-        description: "Ödeme yöntemi başarıyla kaldırıldı.",
+        title: t('settings.cardRemoved'),
+        description: t('settings.cardRemovedDescription'),
       });
     }
   };
@@ -206,9 +211,9 @@ export default function Settings() {
     <AppLayout>
       <div className="container mx-auto py-8 px-4 max-w-7xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Ayarlar</h1>
+          <h1 className="text-3xl font-bold mb-2">{t('settings.title')}</h1>
           <p className="text-muted-foreground">
-            Hesap ayarlarınızı ve tercihlerinizi yönetin
+            {t('settings.subtitle')}
           </p>
         </div>
 
@@ -216,31 +221,31 @@ export default function Settings() {
           <TabsList className="grid w-full grid-cols-2 lg:grid-cols-7 gap-2">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="h-4 w-4" />
-              <span className="hidden sm:inline">Profil</span>
+              <span className="hidden sm:inline">{t('settings.profile')}</span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex items-center gap-2">
               <Bell className="h-4 w-4" />
-              <span className="hidden sm:inline">Bildirimler</span>
+              <span className="hidden sm:inline">{t('settings.notifications')}</span>
             </TabsTrigger>
             <TabsTrigger value="security" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
-              <span className="hidden sm:inline">Güvenlik</span>
+              <span className="hidden sm:inline">{t('settings.security')}</span>
             </TabsTrigger>
             <TabsTrigger value="privacy" className="flex items-center gap-2">
               <Eye className="h-4 w-4" />
-              <span className="hidden sm:inline">Gizlilik</span>
+              <span className="hidden sm:inline">{t('settings.privacy')}</span>
             </TabsTrigger>
             <TabsTrigger value="appearance" className="flex items-center gap-2">
               <Palette className="h-4 w-4" />
-              <span className="hidden sm:inline">Görünüm</span>
+              <span className="hidden sm:inline">{t('settings.appearance')}</span>
             </TabsTrigger>
             <TabsTrigger value="payment" className="flex items-center gap-2">
               <CreditCard className="h-4 w-4" />
-              <span className="hidden sm:inline">Ödeme</span>
+              <span className="hidden sm:inline">{t('settings.payment')}</span>
             </TabsTrigger>
             <TabsTrigger value="account" className="flex items-center gap-2">
               <Trash2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Hesap</span>
+              <span className="hidden sm:inline">{t('settings.account')}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -248,9 +253,9 @@ export default function Settings() {
           <TabsContent value="profile" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Profil Bilgileri</CardTitle>
+                <CardTitle>{t('settings.profileInformation')}</CardTitle>
                 <CardDescription>
-                  Profilinizi görüntüleyin ve düzenleyin
+                  {t('settings.profileDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -275,7 +280,7 @@ export default function Settings() {
                     <h3 className="font-semibold">{auth.user?.name}</h3>
                     <p className="text-sm text-muted-foreground">{auth.user?.role}</p>
                     <Button variant="outline" size="sm" className="mt-2">
-                      Fotoğraf Değiştir
+                      {t('settings.changePhoto')}
                     </Button>
                   </div>
                 </div>
@@ -285,17 +290,17 @@ export default function Settings() {
                 {/* Form Fields */}
                 <div className="grid gap-6">
                   <div className="grid gap-2">
-                    <Label htmlFor="fullName">Ad Soyad</Label>
+                    <Label htmlFor="fullName">{t('settings.fullName')}</Label>
                     <Input
                       id="fullName"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Ad Soyad"
+                      placeholder={t('settings.fullName')}
                     />
                   </div>
 
                   <div className="grid gap-2">
-                    <Label htmlFor="email">E-posta</Label>
+                    <Label htmlFor="email">{t('settings.email')}</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -303,7 +308,7 @@ export default function Settings() {
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="ornek@email.com"
+                        placeholder={t('settings.emailPlaceholder')}
                         className="pl-10"
                       />
                     </div>
@@ -312,7 +317,7 @@ export default function Settings() {
 
                 <Separator />
 
-                <Button onClick={handleSaveProfile}>Değişiklikleri Kaydet</Button>
+                <Button onClick={handleSaveProfile}>{t('settings.saveChanges')}</Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -321,9 +326,9 @@ export default function Settings() {
           <TabsContent value="notifications" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Bildirim Tercihleri</CardTitle>
+                <CardTitle>{t('settings.notificationPreferences')}</CardTitle>
                 <CardDescription>
-                  Nasıl bildirim almak istediğinizi seçin
+                  {t('settings.notificationDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -331,10 +336,10 @@ export default function Settings() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="email-notif" className="text-base">
-                        E-posta Bildirimleri
+                        {t('settings.emailNotifications')}
                       </Label>
                       <p className="text-sm text-muted-foreground">
-                        E-posta ile bildirim alın
+                        {t('settings.emailNotificationsDescription')}
                       </p>
                     </div>
                     <Switch
@@ -349,10 +354,10 @@ export default function Settings() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="push-notif" className="text-base">
-                        Anlık Bildirimler
+                        {t('settings.pushNotifications')}
                       </Label>
                       <p className="text-sm text-muted-foreground">
-                        Tarayıcı üzerinden bildirim alın
+                        {t('settings.pushNotificationsDescription')}
                       </p>
                     </div>
                     <Switch
@@ -367,10 +372,10 @@ export default function Settings() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="task-notif" className="text-base">
-                        Görev Bildirimleri
+                        {t('settings.taskNotifications')}
                       </Label>
                       <p className="text-sm text-muted-foreground">
-                        Yeni görevler ve güncellemeler hakkında bildirim alın
+                        {t('settings.taskNotificationsDescription')}
                       </p>
                     </div>
                     <Switch
@@ -385,10 +390,10 @@ export default function Settings() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="workshop-notif" className="text-base">
-                        Kurs Bildirimleri
+                        {t('settings.workshopNotifications')}
                       </Label>
                       <p className="text-sm text-muted-foreground">
-                        Yeni kurslar hakkında bildirim alın
+                        {t('settings.workshopNotificationsDescription')}
                       </p>
                     </div>
                     <Switch
@@ -401,7 +406,7 @@ export default function Settings() {
 
                 <Separator />
 
-                <Button onClick={handleSaveNotifications}>Değişiklikleri Kaydet</Button>
+                <Button onClick={handleSaveNotifications}>{t('settings.saveChanges')}</Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -410,15 +415,15 @@ export default function Settings() {
           <TabsContent value="security" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Şifre Değiştir</CardTitle>
+                <CardTitle>{t('settings.changePassword')}</CardTitle>
                 <CardDescription>
-                  Güvenliğiniz için güçlü bir şifre kullanın
+                  {t('settings.changePasswordDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="current-password">Mevcut Şifre</Label>
+                    <Label htmlFor="current-password">{t('settings.currentPassword')}</Label>
                     <Input
                       id="current-password"
                       type="password"
@@ -428,7 +433,7 @@ export default function Settings() {
                   </div>
 
                   <div className="grid gap-2">
-                    <Label htmlFor="new-password">Yeni Şifre</Label>
+                    <Label htmlFor="new-password">{t('settings.newPassword')}</Label>
                     <Input
                       id="new-password"
                       type="password"
@@ -438,7 +443,7 @@ export default function Settings() {
                   </div>
 
                   <div className="grid gap-2">
-                    <Label htmlFor="confirm-password">Yeni Şifre (Tekrar)</Label>
+                    <Label htmlFor="confirm-password">{t('settings.confirmPassword')}</Label>
                     <Input
                       id="confirm-password"
                       type="password"
@@ -448,25 +453,25 @@ export default function Settings() {
                   </div>
                 </div>
 
-                <Button onClick={handleChangePassword}>Şifreyi Değiştir</Button>
+                <Button onClick={handleChangePassword}>{t('settings.changePasswordButton')}</Button>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>İki Faktörlü Kimlik Doğrulama</CardTitle>
+                <CardTitle>{t('settings.twoFactorAuth')}</CardTitle>
                 <CardDescription>
-                  Hesabınıza ekstra bir güvenlik katmanı ekleyin
+                  {t('settings.twoFactorAuthDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="2fa" className="text-base">
-                      İki Faktörlü Doğrulama
+                      {t('settings.twoFactorAuth')}
                     </Label>
                     <p className="text-sm text-muted-foreground">
-                      Giriş yaparken telefonunuzdan onay alın
+                      {t('settings.twoFactorAuthDescription')}
                     </p>
                   </div>
                   <Switch
@@ -483,9 +488,9 @@ export default function Settings() {
           <TabsContent value="privacy" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Gizlilik Ayarları</CardTitle>
+                <CardTitle>{t('settings.privacySettings')}</CardTitle>
                 <CardDescription>
-                  Profilinizin ve bilgilerinizin görünürlüğünü kontrol edin
+                  {t('settings.privacySettingsDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -496,10 +501,10 @@ export default function Settings() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="show-email" className="text-base">
-                        E-posta Göster
+                        {t('settings.showEmail')}
                       </Label>
                       <p className="text-sm text-muted-foreground">
-                        E-posta adresinizi profilinizde göster
+                        {t('settings.showEmailDescription')}
                       </p>
                     </div>
                     <Switch
@@ -514,10 +519,10 @@ export default function Settings() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="show-progress" className="text-base">
-                        İlerleme Göster
+                        {t('settings.showProgress')}
                       </Label>
                       <p className="text-sm text-muted-foreground">
-                        Kurs ve görev ilerlemenizi diğer kullanıcılara göster
+                        {t('settings.showProgressDescription')}
                       </p>
                     </div>
                     <Switch
@@ -530,7 +535,7 @@ export default function Settings() {
 
                 <Separator />
 
-                <Button onClick={handleSavePrivacy}>Değişiklikleri Kaydet</Button>
+                <Button onClick={handleSavePrivacy}>{t('settings.saveChanges')}</Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -539,36 +544,36 @@ export default function Settings() {
           <TabsContent value="appearance" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Görünüm</CardTitle>
+                <CardTitle>{t('settings.appearance')}</CardTitle>
                 <CardDescription>
-                  Uygulamanın görünümünü ve hissini özelleştirin
+                  {t('settings.appearanceDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid gap-6">
                   <div className="grid gap-2">
-                    <Label htmlFor="theme">Tema</Label>
+                    <Label htmlFor="theme">{t('settings.theme')}</Label>
                     <Select value={theme} onValueChange={setTheme}>
                       <SelectTrigger id="theme">
-                        <SelectValue placeholder="Tema seçin" />
+                        <SelectValue placeholder={t('settings.selectTheme')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="light">Açık</SelectItem>
-                        <SelectItem value="dark">Koyu</SelectItem>
-                        <SelectItem value="system">Sistem</SelectItem>
+                        <SelectItem value="light">{t('settings.light')}</SelectItem>
+                        <SelectItem value="dark">{t('settings.dark')}</SelectItem>
+                        <SelectItem value="system">{t('settings.system')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="grid gap-2">
-                    <Label htmlFor="language">Dil</Label>
-                    <Select value={language} onValueChange={setLanguage}>
+                    <Label htmlFor="language">{t('settings.language')}</Label>
+                    <Select value={currentLanguage} onValueChange={(value) => dispatch(setLanguage(value as 'tr' | 'en'))}>
                       <SelectTrigger id="language">
-                        <SelectValue placeholder="Dil seçin" />
+                        <SelectValue placeholder={t('settings.language')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="tr">Türkçe</SelectItem>
-                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="tr">{t('courses.turkish')}</SelectItem>
+                        <SelectItem value="en">{t('courses.english')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -576,7 +581,7 @@ export default function Settings() {
 
                 <Separator />
 
-                <Button onClick={handleSaveAppearance}>Değişiklikleri Kaydet</Button>
+                <Button onClick={handleSaveAppearance}>{t('settings.saveChanges')}</Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -588,9 +593,9 @@ export default function Settings() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Ödeme Yöntemleri</CardTitle>
+                    <CardTitle>{t('settings.paymentMethods')}</CardTitle>
                     <CardDescription>
-                      Ödeme yöntemlerinizi yönetin
+                      {t('settings.paymentMethodsDescription')}
                     </CardDescription>
                   </div>
                   <Button 
@@ -598,7 +603,7 @@ export default function Settings() {
                     onClick={() => navigate('/buy-coins')}
                   >
                     <Plus className="mr-2 h-4 w-4" />
-                    Yeni Ekle
+                    {t('settings.addNew')}
                   </Button>
                 </div>
               </CardHeader>
@@ -640,13 +645,13 @@ export default function Settings() {
                               <button 
                                 onClick={() => handleRemoveCard(card.id)}
                                 className="text-gray-400 hover:text-red-600 transition-colors"
-                                title="Sil"
+                                title={t('common.delete')}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
                               <button 
                                 className="text-gray-400 hover:text-blue-600 transition-colors"
-                                title="Düzenle"
+                                title={t('common.edit')}
                               >
                                 <Edit className="h-4 w-4" />
                               </button>
@@ -667,20 +672,20 @@ export default function Settings() {
                             {card.type === "bank" && (
                               <>
                                 <div>
-                                  <span className="text-gray-500">Hesap:</span> {card.accountHolder}
+                                  <span className="text-gray-500">{t('settings.account')}:</span> {card.accountHolder}
                                 </div>
                                 <div>
-                                  <span className="text-gray-500">Numara:</span> {card.number}
+                                  <span className="text-gray-500">{t('settings.number')}:</span> {card.number}
                                 </div>
                               </>
                             )}
                             {(card.type === "mastercard" || card.type === "visa") && (
                               <>
                                 <div>
-                                  <span className="text-gray-500">Son Kullanma:</span> {card.expiry}
+                                  <span className="text-gray-500">{t('settings.expiry')}:</span> {card.expiry}
                                 </div>
                                 <div>
-                                  <span className="text-gray-500">Numara:</span> {card.number}
+                                  <span className="text-gray-500">{t('settings.number')}:</span> {card.number}
                                 </div>
                               </>
                             )}
@@ -737,13 +742,13 @@ export default function Settings() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Ödeme Geçmişi</CardTitle>
+                    <CardTitle>{t('settings.paymentHistory')}</CardTitle>
                     <CardDescription>
-                      Geçmiş ödemelerinizi görüntüleyin
+                      {t('settings.paymentHistoryDescription')}
                     </CardDescription>
                   </div>
                   <Button variant="ghost" size="sm" className="text-blue-600">
-                    Tümünü Gör
+                    {t('common.viewAll')}
                   </Button>
                 </div>
               </CardHeader>
@@ -755,13 +760,13 @@ export default function Settings() {
                         <th className="pb-3 font-medium">
                           <input type="checkbox" className="rounded" />
                         </th>
-                        <th className="pb-3 font-medium">Fatura</th>
-                        <th className="pb-3 font-medium">Alıcı</th>
-                        <th className="pb-3 font-medium">Durum</th>
-                        <th className="pb-3 font-medium">Ödeme Tarihi</th>
-                        <th className="pb-3 font-medium">Tutar</th>
-                        <th className="pb-3 font-medium">Ödeme Nedeni</th>
-                        <th className="pb-3 font-medium">İşlemler</th>
+                        <th className="pb-3 font-medium">{t('settings.invoice')}</th>
+                        <th className="pb-3 font-medium">{t('settings.recipient')}</th>
+                        <th className="pb-3 font-medium">{t('settings.status')}</th>
+                        <th className="pb-3 font-medium">{t('settings.paymentDate')}</th>
+                        <th className="pb-3 font-medium">{t('settings.amount')}</th>
+                        <th className="pb-3 font-medium">{t('settings.paymentReason')}</th>
+                        <th className="pb-3 font-medium">{t('settings.actions')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -814,17 +819,16 @@ export default function Settings() {
           <TabsContent value="account" className="space-y-6">
             <Card className="border-destructive">
               <CardHeader>
-                <CardTitle className="text-destructive">Uyarı!</CardTitle>
+                <CardTitle className="text-destructive">{t('settings.warning')}</CardTitle>
                 <CardDescription>
-                  Bu işlemler geri alınamaz. Dikkatli olun.
+                  {t('settings.warningDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <h3 className="font-semibold mb-2">Hesabı Sil</h3>
+                  <h3 className="font-semibold mb-2">{t('settings.deleteAccount')}</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Hesabınızı sildiğinizde, tüm verileriniz kalıcı olarak silinecektir.
-                    Bu işlem geri alınamaz.
+                    {t('settings.deleteAccountDescription')}
                   </p>
                   <Button
                     variant="destructive"
@@ -832,7 +836,7 @@ export default function Settings() {
                     className="w-full sm:w-auto"
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    Hesabı Sil
+                    {t('settings.deleteAccount')}
                   </Button>
                 </div>
               </CardContent>
