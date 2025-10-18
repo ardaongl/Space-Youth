@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -8,19 +9,27 @@ import { Rocket, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { authService } from "@/services/authService";
 import { useAuth } from "@/context/AuthContext";
-import { useLanguage } from "@/context/LanguageContext";
+import { api } from "@/services";
+import { email } from "zod/v4";
+import { useDispatch } from "react-redux";
+import { setUser, setUserToken } from "@/store/slices/userSlice";
+import { useAppSelector } from "@/store";
 
 export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { refetchUser } = useAuth();
-  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+
+  const dispatch = useDispatch();
+
+  const auth_token = useAppSelector(state => state.user.token)
+  const user = useAppSelector(state => state.user.user);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -31,11 +40,11 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.email || !formData.password) {
       toast({
-        title: t('auth.error'),
-        description: t('auth.fillAllFields'),
+        title: "Hata",
+        description: "Lütfen tüm alanları doldurun.",
         variant: "destructive",
       });
       return;
@@ -44,52 +53,61 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      // Mock credentials - Always use mock data
-      const mockUsers = [
-        { email: "student@test.com", password: "123456", name: "Ahmet Öğrenci", role: "student" },
-        { email: "teacher@test.com", password: "123456", name: "Ayşe Öğretmen", role: "teacher" },
-        { email: "admin@test.com", password: "123456", name: "Admin User", role: "admin" },
-      ];
 
-      const user = mockUsers.find(
-        u => u.email === formData.email && u.password === formData.password
-      );
-
-      if (user) {
-        // Save mock token
-        authService.setToken("dev-token-" + user.role);
-        
+      const response = await api.user.login(formData.email, formData.password)
+      console.log(response);
+      if(response.status != 200){
         toast({
-          title: t('auth.success'),
-          description: t('auth.loginSuccess', { name: user.name }),
-        });
-
-        // Refetch user data (will use mock data)
-        await refetchUser();
-
-        // Redirect to dashboard after successful login
-        // Onboarding modal will be shown automatically if not completed
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 1000);
-      } else {
-        toast({
-          title: t('auth.loginFailed'),
-          description: t('auth.invalidCredentials'),
-          variant: "destructive",
+          title: "Başarılı!",
+          description: `Giriş başarısız`,
         });
       }
+      dispatch(setUserToken(response.data.auth_token))
     } catch (error) {
       console.error("Login error:", error);
       toast({
-        title: t('auth.error'),
-        description: t('auth.loginError'),
+        title: "Hata",
+        description: "Giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   };
+
+
+  useEffect(() => {
+    try {
+      const response:any = api.user.get_user();
+      if(auth_token != ""){
+        const user = {
+          id: response.data.id,
+          name: response.data.name,
+          email: response.data.email,
+          role: response.data.role
+        }
+
+        dispatch(setUser(user));
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 1000);
+      }
+    } catch (error) {
+      
+    }
+  }, [auth_token])
+
+  useEffect(() => {
+    try {
+      if(user.role == "student"){
+        const response  = api.student.get_student();
+        console.log(response);
+        
+      }
+    } catch (error) {
+      
+    }
+  }, [user])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-purple-500/5 to-pink-500/10 flex items-center justify-center p-4">
@@ -104,7 +122,7 @@ export default function Login() {
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-{t('auth.backToExplore')}
+          Explore'a Dön
         </Link>
 
         <Card className="p-8 shadow-xl">
@@ -113,21 +131,21 @@ export default function Login() {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary to-purple-600 mb-4">
               <Rocket className="h-8 w-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold mb-2">{t('auth.welcomeBack')}</h1>
+            <h1 className="text-2xl font-bold mb-2">Tekrar Hoş Geldin!</h1>
             <p className="text-muted-foreground">
-              {t('auth.loginDescription')}
+              Öğrenme yolculuğuna devam etmek için giriş yap
             </p>
           </div>
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email">{t('auth.email')}</Label>
+              <Label htmlFor="email">E-posta</Label>
               <Input
                 id="email"
                 name="email"
                 type="email"
-                placeholder={t('auth.emailPlaceholder')}
+                placeholder="ornek@email.com"
                 value={formData.email}
                 onChange={handleChange}
                 disabled={isLoading}
@@ -138,12 +156,12 @@ export default function Login() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">{t('auth.password')}</Label>
+                <Label htmlFor="password">Şifre</Label>
                 <Link 
                   to="/forgot-password" 
                   className="text-sm text-primary hover:underline"
                 >
-{t('auth.forgotPassword')}
+                  Şifremi Unuttum
                 </Link>
               </div>
               <div className="relative">
@@ -151,7 +169,7 @@ export default function Login() {
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder={t('auth.passwordPlaceholder')}
+                  placeholder="••••••••"
                   value={formData.password}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -177,7 +195,7 @@ export default function Login() {
               className="w-full h-11 text-base font-semibold"
               disabled={isLoading}
             >
-{isLoading ? t('auth.loggingIn') : t('auth.login')}
+              {isLoading ? "Giriş Yapılıyor..." : "Giriş Yap"}
             </Button>
           </form>
 
@@ -188,7 +206,7 @@ export default function Login() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-card px-2 text-muted-foreground">
-{t('auth.or')}
+                veya
               </span>
             </div>
           </div>
@@ -219,40 +237,40 @@ export default function Login() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-{t('auth.continueWithGoogle')}
+              Google ile Devam Et
             </Button>
           </div>
 
           {/* Register Link */}
           <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">{t('auth.noAccount')} </span>
+            <span className="text-muted-foreground">Henüz hesabın yok mu? </span>
             <Link 
               to="/register" 
               className="text-primary font-semibold hover:underline"
             >
-              {t('auth.register')}
+              Kayıt Ol
             </Link>
           </div>
         </Card>
 
         {/* Test Accounts Note */}
         <div className="mt-4 p-4 rounded-lg bg-blue-50 text-blue-900 text-sm border border-blue-200">
-          <div className="font-bold mb-2">🔧 {t('auth.testAccounts')}:</div>
+          <div className="font-bold mb-2">🔧 Test Hesapları:</div>
           <div className="space-y-1 text-xs">
             <div className="flex items-center gap-2">
-              <span className="font-semibold">{t('auth.student')}:</span>
+              <span className="font-semibold">Öğrenci:</span>
               <code className="bg-blue-100 px-2 py-0.5 rounded">student@test.com</code>
               <span>/</span>
               <code className="bg-blue-100 px-2 py-0.5 rounded">123456</code>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold">{t('auth.teacher')}:</span>
+              <span className="font-semibold">Öğretmen:</span>
               <code className="bg-blue-100 px-2 py-0.5 rounded">teacher@test.com</code>
               <span>/</span>
               <code className="bg-blue-100 px-2 py-0.5 rounded">123456</code>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold">{t('auth.admin')}:</span>
+              <span className="font-semibold">Admin:</span>
               <code className="bg-blue-100 px-2 py-0.5 rounded">admin@test.com</code>
               <span>/</span>
               <code className="bg-blue-100 px-2 py-0.5 rounded">123456</code>
@@ -263,4 +281,3 @@ export default function Login() {
     </div>
   );
 }
-
