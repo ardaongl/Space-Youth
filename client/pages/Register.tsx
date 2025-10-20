@@ -10,6 +10,9 @@ import { authService } from "@/services/authService";
 import { useAuth } from "@/context/AuthContext";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLanguage } from "@/context/LanguageContext";
+import { apis } from "@/services";
+import RoleSwitcher from "@/components/dev/RoleSwitcher";
+import { Switch } from "@/components/ui/switch";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -20,8 +23,19 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
+  type RegisterFormData = {
+    firstname: string;
+    lastname: string;
+    role: "student" | "teacher" | "admin" | string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+  };
+
+  const [formData, setFormData] = useState<RegisterFormData>({
+    firstname: "",
+    lastname: "",
+    role: "student",
     email: "",
     password: "",
     confirmPassword: "",
@@ -35,7 +49,7 @@ export default function Register() {
   };
 
   const validateForm = () => {
-    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
+    if (!formData.firstname || !formData.lastname || !formData.email || !formData.password || !formData.confirmPassword) {
       toast({
         title: t('auth.error'),
         description: t('auth.fillAllFields'),
@@ -44,7 +58,7 @@ export default function Register() {
       return false;
     }
 
-    if (formData.name.length < 3) {
+    if (formData.firstname.length < 2) {
       toast({
         title: t('auth.error'),
         description: t('auth.nameMinLength'),
@@ -102,21 +116,21 @@ export default function Register() {
 
     try {
       // Backend register API call
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
+      const response = await apis.user.register(
+        formData.firstname,
+        formData.lastname,
+        formData.role,
+        formData.email,
+        formData.password
+      );
 
-      const data = await response.json();
+      if (!response) {
+        throw new Error("No response from server");
+      }
 
-      if (response.ok && data.token) {
+      const data = response.data as { token?: string; message?: string };
+
+      if (response.status >= 200 && response.status < 300 && data?.token) {
         // Save token
         authService.setToken(data.token);
         
@@ -135,7 +149,7 @@ export default function Register() {
       } else {
         toast({
           title: "Kayıt Başarısız",
-          description: data.message || "Kayıt sırasında bir hata oluştu.",
+          description: data?.message || "Kayıt sırasında bir hata oluştu.",
           variant: "destructive",
         });
       }
@@ -200,17 +214,51 @@ export default function Register() {
           {/* Register Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="name">{t('auth.fullName')}</Label>
+              <Label htmlFor="name">{t('auth.firstName')}</Label>
               <Input
-                id="name"
-                name="name"
+                id="firstname"
+                name="firstname"
                 type="text"
-                placeholder={t('auth.fullNamePlaceholder')}
-                value={formData.name}
+                placeholder={t('auth.firstNamePlaceholder')}
+                value={formData.firstname}
                 onChange={handleChange}
                 disabled={isLoading}
                 className="h-11"
-                autoComplete="name"
+                autoComplete="firstname"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="name">{t('auth.lastName')}</Label>
+              <Input
+                id="lastname"
+                name="lastname"
+                type="text"
+                placeholder={t('auth.lastNamePlaceholder')}
+                value={formData.lastname}
+                onChange={handleChange}
+                disabled={isLoading}
+                className="h-11"
+                autoComplete="lastname"
+              />
+            </div>
+            
+
+            {/* Role Toggle: Student (off) / Teacher (on) */}
+            <div className="flex items-center justify-between rounded-md border px-3 py-3">
+              <div className="space-y-0.5">
+                <Label htmlFor="roleSwitch" className="text-sm font-medium">
+                  Öğretmen olarak kaydol
+                </Label>
+                <p className="text-xs text-muted-foreground">Kapalı: Öğrenci, Açık: Öğretmen</p>
+              </div>
+              <Switch
+                id="roleSwitch"
+                checked={formData.role === "teacher"}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, role: checked ? "teacher" : "student" })
+                }
+                disabled={isLoading}
               />
             </div>
 

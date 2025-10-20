@@ -1,7 +1,20 @@
 import { api } from "../api";
 
 export class UserAPI {
-    
+
+    register = async (firstname:string, lastname:string , role:string ,email:string, password: string) => {
+        try {
+            const response = await api.post(
+                '/user/register',
+                {first_name: firstname,last_name: lastname, language: "tr", role: role ,email: email, password: password},
+                {validateStatus: s => s < 500},
+            );
+            return response;
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     login = async (email:string, password: string) => {
         try {
             const response = await api.post(
