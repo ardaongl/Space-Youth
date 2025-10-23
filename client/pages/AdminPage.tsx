@@ -4,6 +4,24 @@ import axios from "axios";
 
 const baseUrl = import.meta.env.VITE_BASE_URL;
 
+// LocalStorage anahtarları + güvenli JSON parse
+const LS_KEYS = {
+  TASKS: "admin_tasks",
+  PERSONALITIES: "admin_personalities",
+  CHARACTERS: "admin_characters",
+} as const;
+
+function safeParse<T>(raw: string | null, fallback: T): T {
+  if (!raw) return fallback;
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(fallback) && !Array.isArray(parsed)) return fallback;
+    return parsed as T;
+  } catch {
+    return fallback;
+  }
+}
+
 interface Student {
   id: number;
   first_name: string;
@@ -26,20 +44,69 @@ interface Task {
   description: string;
 }
 
+interface Personality {
+  id: number;
+  name: string;
+  type: string;
+  description: string;
+}
+
+interface Character {
+  id: number;
+  name: string;
+  details: string;
+  image_url: string;
+  personality: string;
+}
+
+/** Drawer (yarım ekran) için edit state */
+type EditEntity = "task" | "personality" | "character";
+type EditData = Task | Personality | Character;
+interface EditState {
+  entity: EditEntity;
+  data: EditData;
+}
+
 const AdminPage: React.FC = () => {
-  const [selectedTab, setSelectedTab] = useState<"students" | "answers" | "tasks">("students");
+  const [selectedTab, setSelectedTab] = useState<
+    "students" | "answers" | "tasks" | "personalities" | "characters"
+  >("students");
+
   const [students, setStudents] = useState<Student[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [personalities, setPersonalities] = useState<Personality[]>([]);
+  const [characters, setCharacters] = useState<Character[]>([]);
   const [search, setSearch] = useState<string>("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Drawer state
+  const [editState, setEditState] = useState<EditState | null>(null);
+
   const token = localStorage.getItem("token");
 
+  // İlk yüklemede LS'den oku
+  useEffect(() => {
+    setTasks((prev) => (prev.length ? prev : safeParse<Task[]>(localStorage.getItem(LS_KEYS.TASKS), [])));
+    setPersonalities((prev) => (prev.length ? prev : safeParse<Personality[]>(localStorage.getItem(LS_KEYS.PERSONALITIES), [])));
+    setCharacters((prev) => (prev.length ? prev : safeParse<Character[]>(localStorage.getItem(LS_KEYS.CHARACTERS), [])));
+  }, []);
+
+  // Değiştikçe LS'ye yaz
+  useEffect(() => {
+    localStorage.setItem(LS_KEYS.TASKS, JSON.stringify(tasks));
+  }, [tasks]);
+  useEffect(() => {
+    localStorage.setItem(LS_KEYS.PERSONALITIES, JSON.stringify(personalities));
+  }, [personalities]);
+  useEffect(() => {
+    localStorage.setItem(LS_KEYS.CHARACTERS, JSON.stringify(characters));
+  }, [characters]);
+
   const fetchStudents = async () => {
-    if (!token) return; 
+    if (!token) return;
     setLoading(true);
     setError(null);
 
@@ -52,7 +119,10 @@ const AdminPage: React.FC = () => {
       setStudents(studentsData || []);
     } catch (err: any) {
       console.error(err);
-      setError(err.response?.data?.error?.message || "Öğrenciler getirilirken bir hata oluştu.");
+      setError(
+        err.response?.data?.error?.message ||
+          "Öğrenciler getirilirken bir hata oluştu."
+      );
       setStudents([]);
     } finally {
       setLoading(false);
@@ -60,7 +130,7 @@ const AdminPage: React.FC = () => {
   };
 
   const fetchAnswers = async () => {
-    if (!token) return; 
+    if (!token) return;
     setLoading(true);
     setError(null);
 
@@ -71,7 +141,10 @@ const AdminPage: React.FC = () => {
       setAnswers(res.data || []);
     } catch (err: any) {
       console.error(err);
-      setError(err.response?.data?.error?.message || "Öğrenci cevapları getirilirken bir hata oluştu.");
+      setError(
+        err.response?.data?.error?.message ||
+          "Öğrenci cevapları getirilirken bir hata oluştu."
+      );
       setAnswers([]);
     } finally {
       setLoading(false);
@@ -99,12 +172,186 @@ const AdminPage: React.FC = () => {
       description: { value: string };
     };
     const newTask: Task = {
-      id: tasks.length + 1,
+      id: tasks.length ? Math.max(...tasks.map((t) => t.id)) + 1 : 1,
       title: target.title.value,
       description: target.description.value,
     };
     setTasks([...tasks, newTask]);
     e.currentTarget.reset();
+  };
+
+  const handleAddPersonality = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const target = e.target as typeof e.target & {
+      name: { value: string };
+      type: { value: string };
+      description: { value: string };
+    };
+    const newPersonality: Personality = {
+      id: personalities.length ? Math.max(...personalities.map((p) => p.id)) + 1 : 1,
+      name: target.name.value,
+      type: target.type.value,
+      description: target.description.value,
+    };
+    setPersonalities([...personalities, newPersonality]);
+    e.currentTarget.reset();
+  };
+
+  const handleAddCharacter = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const target = e.target as typeof e.target & {
+      name: { value: string };
+      details: { value: string };
+      image_url: { value: string };
+      personality: { value: string };
+    };
+
+    const newCharacter: Character = {
+      id: characters.length ? Math.max(...characters.map((c) => c.id)) + 1 : 1,
+      name: target.name.value,
+      details: target.details.value,
+      image_url: target.image_url.value,
+      personality: target.personality.value,
+    };
+
+    setCharacters([...characters, newCharacter]);
+    e.currentTarget.reset();
+  };
+
+  /** Drawer aç */
+  const openEdit = (entity: EditEntity, data: EditData) => {
+    // Derin kopya (formda controlled input için)
+    setEditState({ entity, data: JSON.parse(JSON.stringify(data)) });
+    // body scroll kilidi (opsiyonel)
+    document.body.style.overflow = "hidden";
+  };
+
+  /** Drawer kapat */
+  const closeEdit = () => {
+    setEditState(null);
+    document.body.style.overflow = "";
+  };
+
+  /** Drawer içi form alanı güncelleme (controlled) */
+  const onEditChange = (field: string, value: string) => {
+    if (!editState) return;
+    setEditState({
+      ...editState,
+      data: { ...(editState.data as any), [field]: value } as EditData,
+    });
+  };
+
+  /** Kaydet */
+  const saveEdit = () => {
+    if (!editState) return;
+
+    if (editState.entity === "task") {
+      const item = editState.data as Task;
+      setTasks((prev) => prev.map((t) => (t.id === item.id ? item : t)));
+    }
+    if (editState.entity === "personality") {
+      const item = editState.data as Personality;
+      setPersonalities((prev) => prev.map((p) => (p.id === item.id ? item : p)));
+    }
+    if (editState.entity === "character") {
+      const item = editState.data as Character;
+      setCharacters((prev) => prev.map((c) => (c.id === item.id ? item : c)));
+    }
+    closeEdit();
+  };
+
+  // Drawer form alanlarını entity'ye göre render et
+  const renderDrawerForm = () => {
+    if (!editState) return null;
+
+    if (editState.entity === "task") {
+      const d = editState.data as Task;
+      return (
+        <>
+          <h3>Görev Düzenle</h3>
+          <label>Başlık</label>
+          <input
+            value={d.title}
+            onChange={(e) => onEditChange("title", e.target.value)}
+            placeholder="Görev başlığı"
+          />
+          <label>Açıklama</label>
+          <textarea
+            value={d.description}
+            onChange={(e) => onEditChange("description", e.target.value)}
+            placeholder="Görev açıklaması"
+            rows={4}
+          />
+        </>
+      );
+    }
+
+    if (editState.entity === "personality") {
+      const d = editState.data as Personality;
+      return (
+        <>
+          <h3>Kişilik Tipi Düzenle</h3>
+          <label>Ad</label>
+          <input
+            value={d.name}
+            onChange={(e) => onEditChange("name", e.target.value)}
+            placeholder="Ad"
+          />
+          <label>Tip</label>
+          <input
+            value={d.type}
+            onChange={(e) => onEditChange("type", e.target.value)}
+            placeholder="Tip (INTJ-A / INTJ-T)"
+          />
+          <label>Açıklama</label>
+          <textarea
+            value={d.description}
+            onChange={(e) => onEditChange("description", e.target.value)}
+            placeholder="Açıklama"
+            rows={5}
+          />
+        </>
+      );
+    }
+
+    // character
+    const d = editState.data as Character;
+    return (
+      <>
+        <h3>Karakter Düzenle</h3>
+        <label>Ad</label>
+        <input
+          value={d.name}
+          onChange={(e) => onEditChange("name", e.target.value)}
+          placeholder="Karakter adı"
+        />
+        <label>Kişilik Tipi</label>
+        <input
+          value={d.personality}
+          onChange={(e) => onEditChange("personality", e.target.value)}
+          placeholder="Kişilik tipi"
+          list="personalityList"
+        />
+        <datalist id="personalityList">
+          {personalities.map((p) => (
+            <option key={p.id} value={p.name} />
+          ))}
+        </datalist>
+        <label>Detaylar</label>
+        <textarea
+          value={d.details}
+          onChange={(e) => onEditChange("details", e.target.value)}
+          placeholder="Detaylar"
+          rows={5}
+        />
+        <label>Görsel URL (opsiyonel)</label>
+        <input
+          value={d.image_url}
+          onChange={(e) => onEditChange("image_url", e.target.value)}
+          placeholder="https://..."
+        />
+      </>
+    );
   };
 
   return (
@@ -130,6 +377,18 @@ const AdminPage: React.FC = () => {
           >
             Görevler
           </li>
+          <li
+            className={selectedTab === "personalities" ? "active" : ""}
+            onClick={() => setSelectedTab("personalities")}
+          >
+            Kişilik Tipleri
+          </li>
+          <li
+            className={selectedTab === "characters" ? "active" : ""}
+            onClick={() => setSelectedTab("characters")}
+          >
+            Karakterler
+          </li>
         </ul>
       </div>
 
@@ -137,7 +396,9 @@ const AdminPage: React.FC = () => {
         {/* Öğrenciler */}
         {selectedTab === "students" && (
           <>
-            <h3 style={{ fontWeight: 'bold', color: '#2c3e50' }}>Öğrenci Listesi</h3>
+            <h3 style={{ fontWeight: "bold", color: "#2c3e50" }}>
+              Öğrenci Listesi
+            </h3>
             {!token ? (
               <p style={{ color: "red" }}>Lütfen giriş yapınız.</p>
             ) : loading ? (
@@ -189,7 +450,9 @@ const AdminPage: React.FC = () => {
         {/* Cevaplar */}
         {selectedTab === "answers" && (
           <>
-            <h3 style={{ fontWeight: 'bold', color: '#2c3e50' }}>Öğrenci Cevapları</h3>
+            <h3 style={{ fontWeight: "bold", color: "#2c3e50" }}>
+              Öğrenci Cevapları
+            </h3>
             {!token ? (
               <p style={{ color: "red" }}>Lütfen giriş yapınız.</p>
             ) : loading ? (
@@ -224,7 +487,7 @@ const AdminPage: React.FC = () => {
         {/* Görevler */}
         {selectedTab === "tasks" && (
           <div>
-            <h3 style={{ fontWeight: 'bold', color: '#2c3e50' }}>Görevler</h3>
+            <h3 style={{ fontWeight: "bold", color: "#2c3e50" }}>Görevler</h3>
             <form onSubmit={handleAddTask}>
               <input name="title" placeholder="Görev başlığı" required />
               <input name="description" placeholder="Görev açıklaması" required />
@@ -251,25 +514,15 @@ const AdminPage: React.FC = () => {
                       <td>{task.description}</td>
                       <td>
                         <button
-                          onClick={() => {
-                            const newTitle = prompt("Yeni başlık:", task.title);
-                            const newDesc = prompt("Yeni açıklama:", task.description);
-                            if (newTitle && newDesc) {
-                              setTasks(
-                                tasks.map((t) =>
-                                  t.id === task.id
-                                    ? { ...t, title: newTitle, description: newDesc }
-                                    : t
-                                )
-                              );
-                            }
-                          }}
+                          onClick={() => openEdit("task", task)}
                           className="edit-btn"
                         >
                           Düzenle
                         </button>
                         <button
-                          onClick={() => setTasks(tasks.filter((t) => t.id !== task.id))}
+                          onClick={() =>
+                            setTasks(tasks.filter((t) => t.id !== task.id))
+                          }
                           className="delete-btn"
                         >
                           Sil
@@ -282,9 +535,158 @@ const AdminPage: React.FC = () => {
             )}
           </div>
         )}
+
+        {/* Kişilik Tipleri — Kart Grid */}
+        {selectedTab === "personalities" && (
+          <div className="personality-section">
+            <h3 style={{ fontWeight: "bold", color: "#2c3e50" }}>
+              Kişilik Tipleri
+            </h3>
+            <form onSubmit={handleAddPersonality}>
+              <input name="name" placeholder="Ad" required />
+              <input
+                name="type"
+                placeholder="Tip (örnek: INTJ-A / INTJ-T)"
+                required
+              />
+              <input name="description" placeholder="Açıklama" required />
+              <button type="submit">Ekle</button>
+            </form>
+
+            {personalities.length === 0 ? (
+              <p>Kişilik tipi bulunmamaktadır.</p>
+            ) : (
+              <div className="personality-cards">
+                {personalities.map((p) => (
+                  <div key={p.id} className="personality-card">
+                    <div>
+                      <h4>{p.name}</h4>
+                      <span>{p.type}</span>
+                      <p>{p.description}</p>
+                    </div>
+
+                    <div className="card-actions">
+                      <button
+                        className="edit-btn"
+                        onClick={() => openEdit("personality", p)}
+                      >
+                        Düzenle
+                      </button>
+                      <button
+                        className="delete-btn"
+                        onClick={() =>
+                          setPersonalities(
+                            personalities.filter((x) => x.id !== p.id)
+                          )
+                        }
+                      >
+                        Sil
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Karakterler — Kart Grid */}
+        {selectedTab === "characters" && (
+          <div className="character-section">
+            <h3 style={{ fontWeight: "bold", color: "#2c3e50" }}>Karakterler</h3>
+
+            <form onSubmit={handleAddCharacter}>
+              <input name="name" placeholder="Karakter Adı" required />
+              <input name="details" placeholder="Detaylar" required />
+              <input name="image_url" placeholder="Görsel URL (opsiyonel)" />
+              <select name="personality" required>
+                <option value="">Kişilik Tipi Seçin</option>
+                {personalities.map((p) => (
+                  <option key={p.id} value={p.name}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              <button type="submit">Ekle</button>
+            </form>
+
+            {characters.length === 0 ? (
+              <p>Karakter bulunmamaktadır.</p>
+            ) : (
+              <div className="character-cards">
+                {characters.map((c) => (
+                  <div key={c.id} className="character-card">
+                    <div className="character-head">
+                      {/* Görseli şimdilik opsiyonel tutuyoruz */}
+                      {c.image_url ? (
+                        <img
+                          src={c.image_url}
+                          alt={c.name}
+                          className="character-thumb"
+                        />
+                      ) : (
+                        <div className="character-thumb placeholder">No Image</div>
+                      )}
+                      <div className="character-meta">
+                        <h4>{c.name}</h4>
+                        <span className="personality-badge">{c.personality}</span>
+                      </div>
+                    </div>
+
+                    <p className="character-details">{c.details}</p>
+
+                    <div className="card-actions">
+                      <button
+                        className="edit-btn"
+                        onClick={() => openEdit("character", c)}
+                      >
+                        Düzenle
+                      </button>
+                      <button
+                        className="delete-btn"
+                        onClick={() =>
+                          setCharacters(characters.filter((x) => x.id !== c.id))
+                        }
+                      >
+                        Sil
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* ===== Drawer (yarım ekran düzenleme) ===== */}
+      <div
+        className={`drawer-overlay ${editState ? "open" : ""}`}
+        onClick={closeEdit}
+        aria-hidden={!editState}
+      />
+      <aside className={`drawer ${editState ? "open" : ""}`} aria-hidden={!editState}>
+        <div className="drawer-header">
+          <button className="drawer-close" onClick={closeEdit} aria-label="Kapat">
+            ✕
+          </button>
+        </div>
+
+        <div className="drawer-body">
+          {renderDrawerForm()}
+        </div>
+
+        <div className="drawer-footer">
+          <button className="delete-btn ghost" onClick={closeEdit}>
+            Vazgeç
+          </button>
+          <button className="save-btn" onClick={saveEdit}>
+            Güncelle
+          </button>
+        </div>
+      </aside>
     </div>
   );
 };
 
-export default AdminPage;   
+export default AdminPage;
