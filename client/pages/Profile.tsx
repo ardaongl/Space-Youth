@@ -1,6 +1,7 @@
-import { Edit, Video, Info } from "lucide-react";
+import { Edit, Video, Info, Users, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import AppLayout from "@/components/layout/AppLayout";
 import React from "react";
 import {
@@ -11,6 +12,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useLanguage } from "@/context/LanguageContext";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { isTeacher, isStudent } from "@/utils/roles";
 
 type OnboardingData = {
   phase1: any;
@@ -63,11 +66,14 @@ function useOnboardingScores() {
 export function Profile() {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { auth } = useAuth();
   const scores = useOnboardingScores();
   const [onboarding, setOnboarding] = React.useState<OnboardingData | null>(null);
   const [zoomConnected, setZoomConnected] = React.useState<boolean>(() => {
     try { return localStorage.getItem("zoom.connected") === "true"; } catch { return false; }
   });
+
+  const isTeacherUser = isTeacher(auth.user?.role);
   React.useEffect(() => {
     try {
       const raw = localStorage.getItem("onboarding.data");
@@ -82,6 +88,166 @@ export function Profile() {
     tr: "Yenilikçi Vizyoner",
     color: "bg-amber-500",
   };
+
+  // Mock instructor data for teachers
+  const instructorData = {
+    name: "Dr. Ahmet Yılmaz",
+    title: "Senior Software Engineer & Instructor",
+    avatar: "/placeholder.svg",
+    totalCourses: 12,
+    about: "10+ yıllık yazılım geliştirme deneyimi ile modern web teknolojileri konusunda uzman. React, Node.js, TypeScript ve cloud teknolojileri alanında 5000+ öğrenciye eğitim verdim.\n\nPratik projeler ve gerçek dünya deneyimleri ile öğrencilerin kariyerlerinde başarılı olmalarını sağlıyorum. Her kursumda en güncel teknolojileri ve en iyi pratikleri paylaşıyorum.",
+    courses: [
+      {
+        id: 1,
+        title: "React ile Modern Web Geliştirme",
+        thumbnail: "/image.png",
+        level: "Başlangıç",
+        students: 1250,
+        rating: "4.8"
+      },
+      {
+        id: 2,
+        title: "Node.js ve Express.js Masterclass",
+        thumbnail: "/image.png",
+        level: "Orta",
+        students: 980,
+        rating: "4.7"
+      },
+      {
+        id: 3,
+        title: "TypeScript ile Güvenli Kodlama",
+        thumbnail: "/image.png",
+        level: "Orta",
+        students: 750,
+        rating: "4.9"
+      },
+      {
+        id: 4,
+        title: "AWS Cloud Fundamentals",
+        thumbnail: "/image.png",
+        level: "Başlangıç",
+        students: 650,
+        rating: "4.6"
+      },
+      {
+        id: 5,
+        title: "MongoDB ve NoSQL Veritabanları",
+        thumbnail: "/image.png",
+        level: "Orta",
+        students: 420,
+        rating: "4.5"
+      },
+      {
+        id: 6,
+        title: "Docker ve Kubernetes",
+        thumbnail: "/image.png",
+        level: "İleri",
+        students: 380,
+        rating: "4.8"
+      }
+    ]
+  };
+
+  // If user is a teacher, show instructor profile
+  if (isTeacherUser) {
+    return (
+      <AppLayout>
+        <div className="container mx-auto py-8 max-w-7xl">
+          {/* Header Card - Similar to Udemy */}
+          <Card className="p-8 mb-8">
+            <div className="flex flex-col md:flex-row gap-8">
+              {/* Avatar */}
+              <div className="flex-shrink-0">
+                <div className="w-32 h-32 rounded-full overflow-hidden bg-muted border-4 border-background shadow-lg">
+                  <img 
+                    src={instructorData.avatar} 
+                    alt={instructorData.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+
+              {/* Info and Actions */}
+              <div className="flex-1 space-y-4">
+                <div>
+                  <h1 className="text-3xl font-bold mb-2">{instructorData.name}</h1>
+                  <p className="text-lg text-muted-foreground">{instructorData.title}</p>
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-3">
+                  <Button 
+                    onClick={() => navigate('/settings')}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <Edit className="h-4 w-4" />
+                    {t('profile.editProfile')}
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/courses/add')}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    {t('courses.addCourse')}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* About Section */}
+          <Card className="p-8 mb-8">
+            <h2 className="text-2xl font-semibold mb-4">{t('instructor.about')}</h2>
+            <div className="text-muted-foreground leading-relaxed whitespace-pre-line">
+              {instructorData.about}
+            </div>
+          </Card>
+
+          {/* Courses Section */}
+          <Card className="p-8">
+            <h2 className="text-2xl font-semibold mb-6">
+              {t('instructor.myCourses')} ({instructorData.totalCourses})
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {instructorData.courses.map((course) => (
+                <div 
+                  key={course.id}
+                  onClick={() => navigate(`/courses/${course.id}`)}
+                  className="cursor-pointer group"
+                >
+                  <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
+                    <div className="aspect-video relative overflow-hidden bg-muted">
+                      <img 
+                        src={course.thumbnail} 
+                        alt={course.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                        {course.title}
+                      </h3>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                        <Badge variant="secondary">{course.level}</Badge>
+                        <span className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {course.students.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  // Student profile (existing code)
   return (
     <AppLayout>
       <div className="min-h-screen bg-background">
@@ -373,8 +539,9 @@ export function Profile() {
 
           {/* Right Column - Sidebar */}
           <div className="space-y-6 lg:sticky lg:top-24 h-[calc(100vh-6rem)] overflow-auto min-w-0">
-            {/* Zoom Connection Section */}
-            <div className="bg-card border rounded-lg p-4">
+            {/* Zoom Connection Section - Only show for teachers and admins */}
+            {!isStudent(auth.user?.role) && (
+              <div className="bg-card border rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold flex items-center gap-2">
                   <Video className="h-4 w-4 text-primary" /> {t('profile.zoomIntegration')}
@@ -421,7 +588,8 @@ export function Profile() {
               <p className="text-xs text-muted-foreground mt-2">
                 {t('profile.zoomNote')}
               </p>
-            </div>
+              </div>
+            )}
             {/* Skill Graph Section */}
             <div className="bg-card border rounded-lg p-4">
                 <div className="h-56 lg:h-64">

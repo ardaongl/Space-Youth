@@ -50,6 +50,7 @@ import { DraftsProvider } from "./context/DraftsContext";
 import { TaskSubmissionsProvider } from "./context/TaskSubmissionsContext";
 import { TasksProvider } from "./context/TasksContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { StudentProvider, useStudent } from "./context/StudentContext";
 import { BookmarksProvider } from "./context/BookmarksContext";
 import { LanguageProvider } from "./context/LanguageContext";
 
@@ -60,31 +61,51 @@ import RoleSwitcher from "./components/dev/RoleSwitcher";
 // Store
 import { store } from "./store";
 
+// Services
+import { apis } from "./services";
+
 const queryClient = new QueryClient();
 
 
 const AppContent = () => {
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const { auth, refreshAuth } = useAuth();
+  const { studentData, isLoading: studentLoading } = useStudent();
   const navigate = useNavigate();
 
   useEffect(() => {
     // Check if user is logged in and onboarding status
     if (auth.user) {
-      const done = typeof window !== "undefined" && localStorage.getItem("onboarding.completed") === "true";
-      setOnboardingOpen(!done);
+      // Only show onboarding for students who are not approved
+      if (auth.user.role === "student") {
+        const done = typeof window !== "undefined" && localStorage.getItem("onboarding.completed") === "true";
+        // Show onboarding if not completed AND student is not approved
+        const shouldShowOnboarding = !done && studentData && !studentData.approved;
+        setOnboardingOpen(shouldShowOnboarding);
+      } else {
+        // Non-student users don't see onboarding
+        setOnboardingOpen(false);
+      }
     } else {
       setOnboardingOpen(false);
     }
-  }, [auth.user]);
+  }, [auth.user, studentData]);
 
-  const handleComplete = (data: OnboardingData) => {
+  const handleComplete = async (data: OnboardingData) => {
     try {
       localStorage.setItem("onboarding.data", JSON.stringify(data));
     } catch {}
     localStorage.setItem("onboarding.completed", "true");
     setOnboardingOpen(false);
-    // Refresh auth state to update onboarding status
+    
+    // Send onboarding data to backend
+    try {
+      await apis.student.set_student_answers(JSON.stringify(data));
+    } catch (error) {
+      console.error("Failed to save onboarding data:", error);
+    }
+    
+    // Refresh auth state and student data
     refreshAuth();
     // Redirect to home page (main platform) after completion
     navigate("/");
@@ -169,23 +190,25 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <LanguageProvider>
           <AuthProvider>
-            <TokensProvider>
-              <BookmarksProvider>
-                <DraftsProvider>
-                  <TaskSubmissionsProvider>
-                    <TasksProvider>
-                      <TooltipProvider>
-                        <Toaster />
-                        <Sonner />
-                        <BrowserRouter>
-                          <AppContent />
-                        </BrowserRouter>
-                      </TooltipProvider>
-                    </TasksProvider>
-                  </TaskSubmissionsProvider>
-                </DraftsProvider>
-              </BookmarksProvider>
-            </TokensProvider>
+            <StudentProvider>
+              <TokensProvider>
+                <BookmarksProvider>
+                  <DraftsProvider>
+                    <TaskSubmissionsProvider>
+                      <TasksProvider>
+                        <TooltipProvider>
+                          <Toaster />
+                          <Sonner />
+                          <BrowserRouter>
+                            <AppContent />
+                          </BrowserRouter>
+                        </TooltipProvider>
+                      </TasksProvider>
+                    </TaskSubmissionsProvider>
+                  </DraftsProvider>
+                </BookmarksProvider>
+              </TokensProvider>
+            </StudentProvider>
           </AuthProvider>
         </LanguageProvider>
       </QueryClientProvider>

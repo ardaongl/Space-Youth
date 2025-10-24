@@ -24,6 +24,7 @@ export default function Login() {
     email: "",
     password: "",
   });
+  const [showMockCredentials, setShowMockCredentials] = useState(false);
   const dispatch = useDispatch();
 
   const auth_token = useAppSelector(state => state.user.token)
@@ -59,6 +60,7 @@ export default function Login() {
         });
       }
       dispatch(setUserToken(response.data.auth_token))
+      authService.setToken(response.data.auth_token)
     } catch (error) {
       console.error("Login error:", error);
       toast({

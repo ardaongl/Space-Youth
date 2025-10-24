@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Upload, X, Image as ImageIcon, Video, Calendar, MapPin, Users2 } from "lucide-react";
+import { ArrowLeft, Upload, X, Image as ImageIcon, Video, Calendar, MapPin } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 type EventType = "workshop" | "hackathon";
@@ -17,7 +17,6 @@ export default function AddEvent() {
   const [organizerName, setOrganizerName] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [eventLocation, setEventLocation] = useState("");
-  const [maxParticipants, setMaxParticipants] = useState("");
   const [price, setPrice] = useState("");
   const [achievements, setAchievements] = useState<string[]>([""]);
   const [photos, setPhotos] = useState<File[]>([]);
@@ -67,7 +66,6 @@ export default function AddEvent() {
       organizer: organizerName,
       date: eventDate,
       location: eventLocation,
-      maxParticipants: parseInt(maxParticipants) || 0,
       price: parseInt(price) || 0,
       achievements: achievements.filter(a => a.trim() !== ""),
       photos,
@@ -89,8 +87,7 @@ export default function AddEvent() {
     eventDescription.trim() !== "" &&
     organizerName.trim() !== "" &&
     eventDate !== "" &&
-    eventLocation.trim() !== "" &&
-    maxParticipants !== "";
+    eventLocation.trim() !== "";
 
   return (
     <AppLayout>
@@ -228,22 +225,6 @@ export default function AddEvent() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    {t('events.maxParticipants')} <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Users2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="number"
-                      value={maxParticipants}
-                      onChange={(e) => setMaxParticipants(e.target.value)}
-                      placeholder={t('events.enterMaxParticipants')}
-                      min="1"
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
 
                 <div>
                   <label className="block text-sm font-semibold mb-2">

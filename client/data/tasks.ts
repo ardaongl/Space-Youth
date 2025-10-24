@@ -26,6 +26,7 @@ export interface Task {
   status: TaskStatus;
   deadline: string;
   image?: string;
+  completionCount?: number;
 }
 
 export const tasks: Task[] = [

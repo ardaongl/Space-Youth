@@ -1,10 +1,11 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { CheckCircle2, Clock, ShieldCheck, BookOpen, ListChecks, ArrowLeft, Bookmark, BookmarkCheck, Coins, Play } from "lucide-react";
+import { CheckCircle2, Clock, ShieldCheck, BookOpen, ListChecks, ArrowLeft, Bookmark, BookmarkCheck, Coins, Play, Users, Video, FileText, Download, ExternalLink, Copy } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { isAdmin } from "@/utils/roles";
+import { isAdmin, isTeacher } from "@/utils/roles";
 import { useBookmarks, BookmarkedContent, EnrolledContent } from "@/context/BookmarksContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/context/LanguageContext";
@@ -15,6 +16,9 @@ export default function CourseDetail() {
   const { auth } = useAuth();
   const { t } = useLanguage();
   const adminUser = isAdmin(auth.user?.role);
+  const teacherUser = isTeacher(auth.user?.role);
+  const canJoinCourse = !adminUser && !teacherUser;
+  const canViewParticipants = adminUser || teacherUser;
   const { addBookmark, removeBookmark, isBookmarked, addEnrollment, isEnrolled } = useBookmarks();
   const { toast } = useToast();
 
@@ -40,11 +44,34 @@ export default function CourseDetail() {
     teacherVideos: [
       { thumbnail: "/image.png", title: "Introduction to Workshop Facilitation" },
       { thumbnail: "/image.png", title: "Advanced Techniques" }
+    ],
+    participants: [
+      { id: 1, name: "Ahmet Yılmaz", email: "ahmet@example.com" },
+      { id: 2, name: "Ayşe Demir", email: "ayse@example.com" },
+      { id: 3, name: "Mehmet Kaya", email: "mehmet@example.com" },
+      { id: 4, name: "Fatma Özkan", email: "fatma@example.com" },
+      { id: 5, name: "Ali Çelik", email: "ali@example.com" },
+      { id: 6, name: "Zeynep Arslan", email: "zeynep@example.com" },
+      { id: 7, name: "Can Yıldız", email: "can@example.com" },
+      { id: 8, name: "Elif Korkmaz", email: "elif@example.com" }
     ]
   };
 
   const bookmarked = isBookmarked(courseData.id);
   const enrolled = isEnrolled(courseData.id);
+  
+  // Mock data for enrolled content
+  const enrolledContent = {
+    zoomLink: "https://zoom.us/j/123456789?pwd=abcdefghijklmnop",
+    zoomPassword: "123456",
+    courseMaterials: [
+      { id: 1, title: "Introduction to Workshop Facilitation", type: "video", duration: "15 min" },
+      { id: 2, title: "Advanced Techniques", type: "video", duration: "25 min" },
+      { id: 3, title: "Workshop Templates", type: "pdf", size: "2.3 MB" },
+      { id: 4, title: "Best Practices Guide", type: "pdf", size: "1.8 MB" },
+      { id: 5, title: "Interactive Exercises", type: "doc", size: "850 KB" }
+    ]
+  };
 
   const handleSave = () => {
     if (bookmarked) {
@@ -149,22 +176,24 @@ export default function CourseDetail() {
                     )}
                   </Button>
                   
-                  {/* Featured Enroll Button with Coin Display */}
-                  <Button 
-                    size="lg" 
-                    className="gap-2 px-8 py-3 text-lg font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105" 
-                    onClick={handleEnroll}
-                    disabled={enrolled}
-                  >
-                    {enrolled ? (
-                      t('courseDetail.enrolled')
-                    ) : (
-                      <>
-                        <Coins className="h-5 w-5" />
-                        {courseData.price} {t('courseDetail.enrollWithCoins')}
-                      </>
-                    )}
-                  </Button>
+                  {/* Featured Enroll Button with Coin Display - Only for students */}
+                  {canJoinCourse && (
+                    <Button 
+                      size="lg" 
+                      className="gap-2 px-8 py-3 text-lg font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105" 
+                      onClick={handleEnroll}
+                      disabled={enrolled}
+                    >
+                      {enrolled ? (
+                        t('courseDetail.enrolled')
+                      ) : (
+                        <>
+                          <Coins className="h-5 w-5" />
+                          {courseData.price} {t('courseDetail.enrollWithCoins')}
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
 
@@ -300,6 +329,129 @@ export default function CourseDetail() {
               </div>
             )}
 
+            {/* Participants List - Only for Admin and Teachers */}
+            {canViewParticipants && (
+              <div className="rounded-lg border bg-card p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Users className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-semibold">Kurs Katılımcıları</h3>
+                  <span className="text-sm text-muted-foreground">({courseData.participants.length})</span>
+                </div>
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {courseData.participants.map((participant) => (
+                    <div key={participant.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-sm font-semibold text-primary">
+                          {participant.name.split(' ').map(n => n[0]).join('')}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{participant.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{participant.email}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Enrolled Content - Only for enrolled students */}
+            {enrolled && !canViewParticipants && (
+              <div className="space-y-6">
+                {/* Zoom Link Section */}
+                <div className="rounded-lg border bg-card p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Video className="h-5 w-5 text-primary" />
+                    <h3 className="text-lg font-semibold">Canlı Eğitim</h3>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="p-4 bg-muted/50 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">Zoom Linki</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(enrolledContent.zoomLink);
+                            toast({
+                              title: "Link kopyalandı",
+                              description: "Zoom linki panoya kopyalandı.",
+                            });
+                          }}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={enrolledContent.zoomLink}
+                          readOnly
+                          className="flex-1"
+                        />
+                        <Button
+                          onClick={() => window.open(enrolledContent.zoomLink, '_blank')}
+                          size="sm"
+                        >
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          Katıl
+                        </Button>
+                      </div>
+                      <div className="mt-2 text-sm text-muted-foreground">
+                        Şifre: <span className="font-mono">{enrolledContent.zoomPassword}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Course Materials Section */}
+                <div className="rounded-lg border bg-card p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <FileText className="h-5 w-5 text-primary" />
+                    <h3 className="text-lg font-semibold">Eğitim İçerikleri</h3>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {enrolledContent.courseMaterials.map((material) => (
+                      <div key={material.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center gap-3">
+                          {material.type === 'video' ? (
+                            <Video className="h-5 w-5 text-red-500" />
+                          ) : (
+                            <FileText className="h-5 w-5 text-blue-500" />
+                          )}
+                          <div>
+                            <p className="text-sm font-medium">{material.title}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {material.type === 'video' ? material.duration : material.size}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            // Mock download/view action
+                            console.log(`Opening ${material.title}`);
+                            toast({
+                              title: "İçerik açılıyor",
+                              description: `${material.title} açılıyor...`,
+                            });
+                          }}
+                        >
+                          {material.type === 'video' ? (
+                            <Play className="h-4 w-4 mr-1" />
+                          ) : (
+                            <Download className="h-4 w-4 mr-1" />
+                          )}
+                          {material.type === 'video' ? 'İzle' : 'İndir'}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
             
           </div>
         </div>

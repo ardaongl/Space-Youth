@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserRole } from "@/utils/roles";
+import { UserRole, isStudent } from "@/utils/roles";
 import { Button } from "@/components/ui/button";
 import React from "react";
 
@@ -23,7 +23,10 @@ import React from "react";
 
 // This will be moved inside the component to use translations
 
-const getInitials = (name: string): string => {
+const getInitials = (name: string | undefined): string => {
+  if (!name || typeof name !== 'string') {
+    return 'U'; // Default fallback
+  }
   return name
     .split(" ")
     .map((n) => n[0])
@@ -59,11 +62,9 @@ export function Sidebar() {
     try { return localStorage.getItem("zoom.connected") === "true"; } catch { return false; }
   });
 
-  // Check if user is authenticated and has completed onboarding
+  // Check if user is authenticated
   const isAuthenticated = auth.status === "authenticated" && auth.user !== null;
-  const hasCompletedOnboarding = typeof window !== "undefined" && 
-    localStorage.getItem("onboarding.completed") === "true";
-  const canAccessPlatform = isAuthenticated && hasCompletedOnboarding;
+  const canAccessPlatform = isAuthenticated;
 
   // Listen for storage changes to update Zoom connection status
   React.useEffect(() => {
@@ -168,8 +169,8 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      {/* Zoom Integration - Only show for authenticated users */}
-      {canAccessPlatform && (
+      {/* Zoom Integration - Only show for teachers and admins */}
+      {canAccessPlatform && auth.user && !isStudent(auth.user.role) && (
         <div className="px-2 pb-3 mb-2">
           <div className="flex items-center justify-between gap-2 px-2">
             <div className="flex items-center gap-2">
@@ -200,13 +201,13 @@ export function Sidebar() {
         <div className="px-2 pb-3 border-t pt-3">
           <div className="flex items-center gap-3 px-2">
             <Avatar className="h-10 w-10">
-              <AvatarImage src="" alt={auth.user.name} />
+              <AvatarImage src="" alt={auth.user?.name || 'User'} />
               <AvatarFallback className="bg-primary/10 text-primary">
-                {getInitials(auth.user.name)}
+                {getInitials(auth.user?.name)}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{auth.user.name}</p>
+              <p className="text-sm font-medium truncate">{auth.user?.name || 'User'}</p>
               <p className="text-xs text-muted-foreground">
                 {getRoleLabel(auth.user.role)}
               </p>

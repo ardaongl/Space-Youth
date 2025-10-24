@@ -205,7 +205,7 @@ export const tr = {
     alreadyEnrolled: 'Zaten kayıtlısınız',
     alreadyEnrolledDescription: 'Bu kursa zaten kayıt oldunuz.',
     enrolledSuccessfully: 'Kursa kayıt oldunuz!',
-    enrolledSuccessfullyDescription: '{{title}} kursuna başarıyla kayıt oldunuz.',
+    enrolledSuccessfullyDescription: '{title} kursuna başarıyla kayıt oldunuz.',
   },
 
   // Lessons
@@ -236,6 +236,11 @@ export const tr = {
     zoomConnected: '📹 Dersler için otomatik Zoom linkleri oluşturulacaktır',
     zoomNotConnected: '⚠️ Zoom bağlanmadan link oluşturulamaz. Lütfen önce profilinizden Zoom hesabınızı bağlayın.',
     saveAllLessons: 'Tüm Dersleri Kaydet',
+    certificateUpload: 'Sertifika Yükleme',
+    uploadCertificate: 'Sertifika Yükle',
+    certificateFormats: 'PDF, DOC, DOCX dosyaları',
+    certificateFile: 'Sertifika Dosyası',
+    removeCertificate: 'Sertifikayı Kaldır',
   },
 
   // Tutorials
@@ -391,6 +396,9 @@ export const tr = {
     accepted: 'Kabul Edildi',
     rejected: 'Reddedildi',
     overdue: 'Gecikmiş',
+    completedStudents: 'Tamamlayan Öğrenciler',
+    student: 'öğrenci',
+    students: 'öğrenci',
   },
 
   // Dashboard
@@ -670,6 +678,16 @@ export const tr = {
     priceDescription: 'Katılımcıların etkinliğe katılmak için ödemesi gereken coin miktarı',
     organizer: 'Organizatör',
     participantCount: '{count} kişi',
+    achievements: 'Başarılar',
+    achievement: 'Başarı {number}',
+    addAchievement: 'Başarı Ekle',
+    addFiles: 'Dosya Ekle',
+    uploadPhotos: 'Fotoğraf Yükle',
+    uploadVideos: 'Video Yükle',
+    photoFormats: 'JPG, PNG, GIF formatları',
+    videoFormats: 'MP4, MOV, AVI formatları',
+    step1Info: 'Adım 1/2: Etkinlik Bilgileri',
+    eventType: 'Etkinlik Türü',
   },
 
   // Instructor

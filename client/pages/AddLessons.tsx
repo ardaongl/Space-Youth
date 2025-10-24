@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Plus, Upload, X, FileText, Calendar, Clock } from "lucide-react";
+import { ArrowLeft, Plus, Upload, X, FileText, Calendar, Clock, Award } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 interface Lesson {
@@ -29,6 +29,7 @@ export default function AddLessons() {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [certificateFile, setCertificateFile] = useState<File | null>(null);
 
   useEffect(() => {
     // Check if course data exists
@@ -52,6 +53,16 @@ export default function AddLessons() {
       ...currentLesson,
       files: currentLesson.files.filter((_, i) => i !== index),
     });
+  };
+
+  const handleCertificateUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setCertificateFile(e.target.files[0]);
+    }
+  };
+
+  const handleRemoveCertificate = () => {
+    setCertificateFile(null);
   };
 
   const handleAddLesson = () => {
@@ -115,6 +126,8 @@ export default function AddLessons() {
         ...lesson,
         fileNames: lesson.files.map(f => f.name),
       })),
+      certificateFile: certificateFile,
+      certificateFileName: certificateFile?.name,
     };
 
     console.log("Complete course data:", fullCourseData);
@@ -360,6 +373,55 @@ export default function AddLessons() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+
+            {/* Certificate Upload */}
+            <div className="bg-card rounded-lg border shadow-sm p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Award className="h-5 w-5" />
+                {t('lessons.certificateUpload')}
+              </h3>
+              
+              {!certificateFile ? (
+                <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleCertificateUpload}
+                    className="hidden"
+                    id="certificate-upload"
+                  />
+                  <label
+                    htmlFor="certificate-upload"
+                    className="cursor-pointer flex flex-col items-center gap-2"
+                  >
+                    <Award className="h-10 w-10 text-muted-foreground" />
+                    <p className="text-sm font-medium">{t('lessons.uploadCertificate')}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('lessons.certificateFormats')}
+                    </p>
+                  </label>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Award className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">{certificateFile.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(certificateFile.size / 1024).toFixed(2)} KB
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleRemoveCertificate}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
               )}
             </div>

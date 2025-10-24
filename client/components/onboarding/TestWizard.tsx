@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { useAuth } from "@/context/AuthContext";
 
 type Phase1Form = {
   firstName: string;
@@ -54,14 +55,17 @@ export default function TestWizard({
   onComplete: (data: OnboardingData) => void;
 }) {
   const { t } = useLanguage();
+  const { auth } = useAuth();
   const [step, setStep] = useState(1);
+  
+  // Pre-populate user data from auth context
   const [phase1, setPhase1] = useState<Phase1Form>({
-    firstName: "",
-    lastName: "",
+    firstName: auth.user?.name?.split(' ')[0] || "",
+    lastName: auth.user?.name?.split(' ').slice(1).join(' ') || "",
     school: "",
     age: "",
     department: "",
-    email: "",
+    email: auth.user?.email || "",
     cvFileName: undefined,
     projectOrSchool: "",
     reference: "",
@@ -97,6 +101,18 @@ export default function TestWizard({
     if (!open) setStep(1);
   }, [open]);
 
+  // Update phase1 data when user data changes
+  useEffect(() => {
+    if (auth.user) {
+      setPhase1(prev => ({
+        ...prev,
+        firstName: auth.user?.name?.split(' ')[0] || prev.firstName,
+        lastName: auth.user?.name?.split(' ').slice(1).join(' ') || prev.lastName,
+        email: auth.user?.email || prev.email,
+      }));
+    }
+  }, [auth.user]);
+
   // Auto rotate questions every 20s while recording
   useEffect(() => {
     if (!recorderRef.current || recorderRef.current.state !== "recording") return;
@@ -108,13 +124,11 @@ export default function TestWizard({
 
   const canNext = useMemo(() => {
     if (step === 1) {
+      // Only require fields that are not pre-populated from registration
       const required = [
-        phase1.firstName,
-        phase1.lastName,
         phase1.school,
         phase1.age,
         phase1.department,
-        phase1.email,
       ];
       return required.every((v) => String(v || "").trim().length > 0);
     }
@@ -246,16 +260,18 @@ export default function TestWizard({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label={t('testWizard.firstName')}>
                   <input
-                    className="w-full h-10 rounded-xl border px-3 text-sm"
+                    className="w-full h-10 rounded-xl border px-3 text-sm bg-muted/50 cursor-not-allowed"
                     value={phase1.firstName}
-                    onChange={(e) => setPhase1((p) => ({ ...p, firstName: e.target.value }))}
+                    readOnly
+                    disabled
                   />
                 </Field>
                 <Field label={t('testWizard.lastName')}>
                   <input
-                    className="w-full h-10 rounded-xl border px-3 text-sm"
+                    className="w-full h-10 rounded-xl border px-3 text-sm bg-muted/50 cursor-not-allowed"
                     value={phase1.lastName}
-                    onChange={(e) => setPhase1((p) => ({ ...p, lastName: e.target.value }))}
+                    readOnly
+                    disabled
                   />
                 </Field>
                 <Field label={t('testWizard.school')}>
@@ -284,9 +300,10 @@ export default function TestWizard({
                 <Field label={t('testWizard.email')}>
                   <input
                     type="email"
-                    className="w-full h-10 rounded-xl border px-3 text-sm"
+                    className="w-full h-10 rounded-xl border px-3 text-sm bg-muted/50 cursor-not-allowed"
                     value={phase1.email}
-                    onChange={(e) => setPhase1((p) => ({ ...p, email: e.target.value }))}
+                    readOnly
+                    disabled
                   />
                 </Field>
                 <Field label={t('testWizard.cv')}>

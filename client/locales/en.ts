@@ -205,7 +205,7 @@ export const en = {
     alreadyEnrolled: 'Already enrolled',
     alreadyEnrolledDescription: 'You are already enrolled in this course.',
     enrolledSuccessfully: 'Successfully enrolled in course!',
-    enrolledSuccessfullyDescription: 'You have successfully enrolled in {{title}} course.',
+    enrolledSuccessfullyDescription: 'You have successfully enrolled in {title} course.',
   },
 
   // Lessons
@@ -236,6 +236,11 @@ export const en = {
     zoomConnected: '📹 Automatic Zoom links will be created for lessons',
     zoomNotConnected: '⚠️ Cannot create links without Zoom connection. Please connect your Zoom account from your profile first.',
     saveAllLessons: 'Save All Lessons',
+    certificateUpload: 'Certificate Upload',
+    uploadCertificate: 'Upload Certificate',
+    certificateFormats: 'PDF, DOC, DOCX files',
+    certificateFile: 'Certificate File',
+    removeCertificate: 'Remove Certificate',
   },
 
   // Tutorials
@@ -391,6 +396,9 @@ export const en = {
     accepted: 'Accepted',
     rejected: 'Rejected',
     overdue: 'Overdue',
+    completedStudents: 'Completed Students',
+    student: 'student',
+    students: 'students',
   },
 
   // Dashboard
@@ -670,6 +678,16 @@ export const en = {
     priceDescription: 'The amount of coins participants need to pay to join the event',
     organizer: 'Organizer',
     participantCount: '{count} people',
+    achievements: 'Achievements',
+    achievement: 'Achievement {number}',
+    addAchievement: 'Add Achievement',
+    addFiles: 'Add Files',
+    uploadPhotos: 'Upload Photos',
+    uploadVideos: 'Upload Videos',
+    photoFormats: 'JPG, PNG, GIF formats',
+    videoFormats: 'MP4, MOV, AVI formats',
+    step1Info: 'Step 1/2: Event Information',
+    eventType: 'Event Type',
   },
 
   // Instructor

@@ -26,7 +26,7 @@ import { TaskStatus } from "@/data/tasks";
 import { useTasks } from "@/context/TasksContext";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { isAdmin } from "@/utils/roles";
+import { isAdmin, isTeacher } from "@/utils/roles";
 import { cn } from "@/lib/utils";
 import { AddTaskModal } from "@/components/tasks/AddTaskModal";
 
@@ -105,6 +105,8 @@ export default function Tasks() {
   };
 
   const adminUser = isAdmin(auth.user?.role);
+  const teacherUser = isTeacher(auth.user?.role);
+  const canManageTasks = adminUser || teacherUser;
 
   return (
     <AppLayout>
@@ -181,8 +183,8 @@ export default function Tasks() {
                 <TableRow>
                   <TableHead>{t('tasks.taskName')}</TableHead>
                   <TableHead>{t('tasks.coinValue')}</TableHead>
-                  <TableHead>{t('tasks.status')}</TableHead>
-                  {adminUser && <TableHead className="text-right">{t('tasks.actions')}</TableHead>}
+                  <TableHead>{canManageTasks ? t('tasks.completedStudents') : t('tasks.status')}</TableHead>
+                  {canManageTasks && <TableHead className="text-right">{t('tasks.actions')}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -209,7 +211,17 @@ export default function Tasks() {
                           <span className="text-muted-foreground">coin</span>
                         </div>
                       </TableCell>
-                      <TableCell>
+                    <TableCell>
+                      {canManageTasks ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl font-bold text-primary">
+                            {task.completionCount || 0}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {task.completionCount === 1 ? t('tasks.student') : t('tasks.students')}
+                          </span>
+                        </div>
+                      ) : (
                         <Badge
                           variant="secondary"
                           className={cn(
@@ -219,8 +231,9 @@ export default function Tasks() {
                         >
                           {getStatusTranslation(task.status)}
                         </Badge>
-                      </TableCell>
-                      {adminUser && (
+                      )}
+                    </TableCell>
+                      {canManageTasks && (
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
