@@ -677,7 +677,7 @@ const AdminPage: React.FC = () => {
         )}
       </div>
 
-      {/* ===== Drawer (yarım ekran düzenleme) ===== */}
+      {/* ===== Drawer */}
       <div
         className={`drawer-overlay ${editState ? "open" : ""}`}
         onClick={closeEdit}

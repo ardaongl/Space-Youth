@@ -232,8 +232,6 @@ form button:hover {
   margin-top: 2rem;
 }
 
-/* SpaceYouth uyumlu uyarı kutusu + başlık override */
-
 p[style*="color: red"] {
   background: linear-gradient(90deg, #F9F6FF 0%, #F3EEFF 100%) !important;
   color: #6C63FF !important;
