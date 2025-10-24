@@ -232,9 +232,7 @@ form button:hover {
   margin-top: 2rem;
 }
 
-/* ===========================
-   SpaceYouth uyumlu uyarı kutusu + başlık override
-   =========================== */
+/* SpaceYouth uyumlu uyarı kutusu + başlık override */
 
 p[style*="color: red"] {
   background: linear-gradient(90deg, #F9F6FF 0%, #F3EEFF 100%) !important;
@@ -261,9 +259,7 @@ p[style*="color: red"]:hover {
   box-shadow: 0 4px 10px rgba(108, 99, 255, 0.12);
 }
 
-/* ===========================
-   🔹 KİŞİLİK TİPLERİ – KART GÖRÜNÜMÜ
-   =========================== */
+/*KİŞİLİK TİPLERİ – KART GÖRÜNÜMÜ */
 
 .personality-cards {
   display: grid;
@@ -282,7 +278,7 @@ p[style*="color: red"]:hover {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 180px;
+  min-height: 220px;
 }
 
 .personality-card:hover {
@@ -311,6 +307,27 @@ p[style*="color: red"]:hover {
   font-size: 0.9rem;
 }
 
+/*Uzun açıklama alan yapı */
+.personality-card .long-description {
+  max-height: 120px; 
+  overflow-y: auto;  
+  margin-top: 8px;
+  color: #444;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  white-space: pre-line;
+  padding-right: 4px;
+}
+
+/* kaydırma çubuğu stili */
+.personality-card .long-description::-webkit-scrollbar {
+  width: 6px;
+}
+.personality-card .long-description::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 100, 100, 0.3);
+  border-radius: 6px;
+}
+
 .card-actions {
   display: flex;
   gap: 0.5rem;
@@ -324,9 +341,7 @@ p[style*="color: red"]:hover {
   }
 }
 
-/* ===========================
-   🔹 KARAKTERLER – KART GÖRÜNÜMÜ
-   =========================== */
+/* KARAKTERLER – KART GÖRÜNÜMÜ*/
 
 .character-cards {
   display: grid;
@@ -402,7 +417,7 @@ p[style*="color: red"]:hover {
 .character-card .card-actions {
   display: flex;
   gap: 0.5rem;
-  margin-top: auto; /* butonları alta sabitler */
+  margin-top: auto;
 }
 
 @media (max-width: 600px) {
@@ -414,9 +429,9 @@ p[style*="color: red"]:hover {
     height: 56px;
   }
 }
-/* ===========================
-   Slide Drawer (yarım ekran)
-   =========================== */
+
+/* Slide Drawer  */
+
 .drawer-overlay {
   position: fixed;
   inset: 0;
@@ -434,22 +449,21 @@ p[style*="color: red"]:hover {
 .drawer {
   position: fixed;
   top: 0;
-  right: 0;           
+  right: 0;
   height: 100vh;
   width: min(560px, 90vw);
   background: #ffffff;
-  box-shadow: -4px 0 24px rgba(108, 99, 255, 0.25); /* gölge yönünü ters çevirdik */
-  transform: translateX(105%); /* sağdan gizli başlasın */
+  box-shadow: -4px 0 24px rgba(108, 99, 255, 0.25);
+  transform: translateX(105%);
   transition: transform 260ms ease;
   z-index: 41;
   display: flex;
   flex-direction: column;
-  border-left: 1px solid #E3E0FF; /* sağda olduğu için sol kenara çizgi */
+  border-left: 1px solid #E3E0FF;
 }
 .drawer.open {
   transform: translateX(0);
 }
-
 
 .drawer-header {
   display: flex;
@@ -547,4 +561,47 @@ p[style*="color: red"]:hover {
 }
 .drawer-footer .ghost:hover {
   background: #F3EEFF;
+}
+
+.long-desc {
+  font-size: 0.9rem;
+  color: #5c5b77;
+  margin-top: 6px;
+}
+.read-more-btn {
+  background: none;
+  border: none;
+  color: #6c63ff;
+  cursor: pointer;
+  font-weight: 600;
+  margin-left: 5px;
+  transition: 0.2s ease;
+}
+.read-more-btn:hover {
+  text-decoration: underline;
+  color: #5147ff;
+}
+
+/*KİŞİLİK TİPLERİ FORM DÜZENİ*/
+.personality-section form {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.personality-section form input,
+.personality-section form textarea {
+  border: 1px solid #DAD6FF;
+  border-radius: 10px;
+  padding: 0.5rem 0.7rem;
+  background-color: #FFF;
+}
+
+.personality-section form textarea {
+  flex: 1;
+  min-width: 180px;
+  height: 42px;
+  resize: none; /* yüksekliği sabitle */
+  box-sizing: border-box;
 }

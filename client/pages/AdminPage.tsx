@@ -49,6 +49,7 @@ interface Personality {
   name: string;
   type: string;
   description: string;
+  longDescription: string;
 }
 
 interface Character {
@@ -121,7 +122,7 @@ const AdminPage: React.FC = () => {
       console.error(err);
       setError(
         err.response?.data?.error?.message ||
-          "Öğrenciler getirilirken bir hata oluştu."
+        "Öğrenciler getirilirken bir hata oluştu."
       );
       setStudents([]);
     } finally {
@@ -143,7 +144,7 @@ const AdminPage: React.FC = () => {
       console.error(err);
       setError(
         err.response?.data?.error?.message ||
-          "Öğrenci cevapları getirilirken bir hata oluştu."
+        "Öğrenci cevapları getirilirken bir hata oluştu."
       );
       setAnswers([]);
     } finally {
@@ -186,12 +187,15 @@ const AdminPage: React.FC = () => {
       name: { value: string };
       type: { value: string };
       description: { value: string };
+      longDescription: { value: string };
     };
+
     const newPersonality: Personality = {
       id: personalities.length ? Math.max(...personalities.map((p) => p.id)) + 1 : 1,
       name: target.name.value,
       type: target.type.value,
       description: target.description.value,
+      longDescription: target.longDescription.value,
     };
     setPersonalities([...personalities, newPersonality]);
     e.currentTarget.reset();
@@ -309,6 +313,14 @@ const AdminPage: React.FC = () => {
             onChange={(e) => onEditChange("description", e.target.value)}
             placeholder="Açıklama"
             rows={5}
+          />
+          <label>Uzun Açıklama</label>
+          <textarea
+            value={d.longDescription}
+            onChange={(e) => onEditChange("longDescription", e.target.value)}
+            placeholder="Uzun açıklama"
+            rows={6}
+            style={{ resize: "vertical" }}
           />
         </>
       );
@@ -544,12 +556,15 @@ const AdminPage: React.FC = () => {
             </h3>
             <form onSubmit={handleAddPersonality}>
               <input name="name" placeholder="Ad" required />
-              <input
-                name="type"
-                placeholder="Tip (örnek: INTJ-A / INTJ-T)"
+              <input name="type" placeholder="Tip (örnek: INTJ-A / INTJ-T)" required />
+              <input name="description" placeholder="Kısa Açıklama" required />
+              <textarea
+                name="longDescription"
+                placeholder="Uzun Açıklama"
+                rows={4}
+                style={{ resize: "vertical" }}
                 required
               />
-              <input name="description" placeholder="Açıklama" required />
               <button type="submit">Ekle</button>
             </form>
 
@@ -563,6 +578,9 @@ const AdminPage: React.FC = () => {
                       <h4>{p.name}</h4>
                       <span>{p.type}</span>
                       <p>{p.description}</p>
+                      {p.longDescription && (
+                        <p className="long-description">{p.longDescription}</p>
+                      )}
                     </div>
 
                     <div className="card-actions">
@@ -689,4 +707,4 @@ const AdminPage: React.FC = () => {
   );
 };
 
-export default AdminPage;
+export default AdminPage;     
