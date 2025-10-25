@@ -9,19 +9,20 @@ import { useTasks } from "@/context/TasksContext";
 import { useTaskSubmissions } from "@/context/TaskSubmissionsContext";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
-import { useAuth } from "@/context/AuthContext";
 import { isTeacher, isAdmin } from "@/utils/roles";
+import { useAppSelector } from "@/store";
 
 export default function TaskDetail() {
+  const user = useAppSelector(state => state.user);
   const navigate = useNavigate();
   const { taskId } = useParams();
   const { t } = useLanguage();
-  const { auth } = useAuth();
+
   const { tasks, updateTaskStatus } = useTasks();
   const { addSubmission } = useTaskSubmissions();
   
-  const isTeacherUser = isTeacher(auth.user?.role);
-  const isAdminUser = isAdmin(auth.user?.role);
+  const isTeacherUser = isTeacher(user.user?.role);
+  const isAdminUser = isAdmin(user.user?.role);
   const canViewSubmissions = isTeacherUser || isAdminUser;
   const canManageTasks = isTeacherUser || isAdminUser;
   

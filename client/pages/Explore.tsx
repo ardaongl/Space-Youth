@@ -15,20 +15,20 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAppSelector } from "@/store";
 
 export default function Explore() {
-  const { auth } = useAuth();
+  const user = useAppSelector(state => state.user);
   const { t } = useLanguage();
   const navigate = useNavigate();
 
   // Redirect logged in users to dashboard (which is now the main platform)
   useEffect(() => {
-    if (auth.user) {
+    if (user.user) {
       navigate("/dashboard");
     }
-  }, [auth.user, navigate]);
+  }, [user.user, navigate]);
 
   const features = [
     {
@@ -122,7 +122,7 @@ export default function Explore() {
                   {t('explore.hero.description')}
                 </p>
 
-                {!auth.user ? (
+                {!user.user ? (
                   <div className="flex flex-col sm:flex-row items-center lg:items-start gap-4">
                     <Link to="/register">
                       <Button 
@@ -304,7 +304,7 @@ export default function Explore() {
               ))}
             </div>
 
-            {!auth.user && (
+            {!user.user && (
               <div className="text-center mt-12">
                 <Link to="/register">
                   <Button 
@@ -362,7 +362,7 @@ export default function Explore() {
         </section>
 
         {/* CTA Section */}
-        {!auth.user && (
+        {!user.user && (
           <section className="py-16 sm:py-24 px-4">
             <div className="max-w-4xl mx-auto">
               <Card className="p-12 text-center bg-gradient-to-br from-primary via-primary to-purple-600 text-white border-0">

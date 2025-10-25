@@ -24,15 +24,16 @@ import {
 import { Search, Filter, Plus, Pencil, Trash2, MoreHorizontal } from "lucide-react";
 import { TaskStatus } from "@/data/tasks";
 import { useTasks } from "@/context/TasksContext";
-import { useAuth } from "@/context/AuthContext";
+
 import { useLanguage } from "@/context/LanguageContext";
 import { isAdmin, isTeacher } from "@/utils/roles";
 import { cn } from "@/lib/utils";
 import { AddTaskModal } from "@/components/tasks/AddTaskModal";
+import { useAppSelector } from "@/store";
 
 export default function Tasks() {
+  const user = useAppSelector(state => state.user);
   const navigate = useNavigate();
-  const { auth } = useAuth();
   const { t } = useLanguage();
   const { tasks } = useTasks();
   const [searchQuery, setSearchQuery] = useState("");
@@ -104,8 +105,8 @@ export default function Tasks() {
     );
   };
 
-  const adminUser = isAdmin(auth.user?.role);
-  const teacherUser = isTeacher(auth.user?.role);
+  const adminUser = isAdmin(user.user?.role);
+  const teacherUser = isTeacher(user.user?.role);
   const canManageTasks = adminUser || teacherUser;
 
   return (

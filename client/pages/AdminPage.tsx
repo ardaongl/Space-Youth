@@ -1,6 +1,7 @@
 import React, { useState, useEffect, FormEvent } from "react";
 import "./AdminPage.css";
 import axios from "axios";
+import { useAppSelector } from "@/store";
 
 const baseUrl = import.meta.env.VITE_BASE_URL;
 
@@ -60,7 +61,6 @@ interface Character {
   personality: string;
 }
 
-/** Drawer (yarım ekran) için edit state */
 type EditEntity = "task" | "personality" | "character";
 type EditData = Task | Personality | Character;
 interface EditState {
@@ -86,9 +86,11 @@ const AdminPage: React.FC = () => {
   // Drawer state
   const [editState, setEditState] = useState<EditState | null>(null);
 
-  const token = localStorage.getItem("token");
+  const user = useAppSelector(state => state.user.user)
+  const token = useAppSelector(state => state.user.token);
 
-  // İlk yüklemede LS'den oku
+  console.log(token);
+  
   useEffect(() => {
     setTasks((prev) => (prev.length ? prev : safeParse<Task[]>(localStorage.getItem(LS_KEYS.TASKS), [])));
     setPersonalities((prev) => (prev.length ? prev : safeParse<Personality[]>(localStorage.getItem(LS_KEYS.PERSONALITIES), [])));

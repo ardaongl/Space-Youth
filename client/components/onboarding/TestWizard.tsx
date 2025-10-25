@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
-import { useAuth } from "@/context/AuthContext";
 import { useAppSelector } from "@/store";
 
 type Phase1Form = {
@@ -137,7 +136,6 @@ export default function TestWizard({
         </div>
       </div>
 
-      {/* Content */}
       <div className="h-[calc(100vh-3.5rem)] overflow-y-auto">
         <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Steps indicator */}

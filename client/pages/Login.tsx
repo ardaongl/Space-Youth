@@ -6,8 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Rocket, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { authService } from "@/services/authService";
-import { useAuth } from "@/context/AuthContext";
 import { apis } from "@/services";
 import { email } from "zod/v4";
 import { useDispatch } from "react-redux";
@@ -19,7 +17,6 @@ import { setStudent } from "@/store/slices/studentSlice";
 export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { refetchUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -64,7 +61,6 @@ export default function Login() {
         });
       }
       dispatch(setUserToken(response.data.auth_token))
-      authService.setToken(response.data.auth_token)
     } catch (error) {
       console.error("Login error:", error);
       toast({

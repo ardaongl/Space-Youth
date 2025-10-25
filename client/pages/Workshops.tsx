@@ -2,11 +2,11 @@ import AppLayout from "@/components/layout/AppLayout";
 import { Link } from "react-router-dom";
 import { Clock, Trophy, Bookmark, BookmarkCheck, SlidersHorizontal, Calendar, Users2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/context/AuthContext";
 import { canSeeAddCourse } from "@/utils/roles";
 import { useBookmarks, BookmarkedContent } from "@/context/BookmarksContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAppSelector } from "@/store";
 
 type EventType = "workshop" | "hackathon";
 
@@ -154,9 +154,9 @@ function EventCard({
 }
 
 export default function Workshops() {
-  const { auth } = useAuth();
+  const user = useAppSelector(state => state.user);
   const { t } = useLanguage();
-  const role = auth.user?.role ?? null;
+  const role = user.user?.role ?? null;
   const [events, setEvents] = useState<any[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [filterType, setFilterType] = useState<"all" | EventType>("all");

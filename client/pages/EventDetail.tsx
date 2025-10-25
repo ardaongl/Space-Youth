@@ -4,21 +4,21 @@ import { Input } from "@/components/ui/input";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { CheckCircle2, Clock, ShieldCheck, BookOpen, ListChecks, ArrowLeft, Bookmark, BookmarkCheck, Coins, Play, Calendar, Users2, MapPin, Users, Video, FileText, Download, ExternalLink, Copy } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
 import { isAdmin, isTeacher } from "@/utils/roles";
 import { useBookmarks, BookmarkedContent, EnrolledContent } from "@/context/BookmarksContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAppSelector } from "@/store";
 
 type EventType = "workshop" | "hackathon";
 
 export default function EventDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { auth } = useAuth();
+  const user = useAppSelector(state => state.user);
   const { t } = useLanguage();
-  const adminUser = isAdmin(auth.user?.role);
-  const teacherUser = isTeacher(auth.user?.role);
+  const adminUser = isAdmin(user.user?.role);
+  const teacherUser = isTeacher(user.user?.role);
   const canJoinEvent = !adminUser && !teacherUser;
   const canViewParticipants = adminUser || teacherUser;
   const { addBookmark, removeBookmark, isBookmarked, addEnrollment, isEnrolled } = useBookmarks();

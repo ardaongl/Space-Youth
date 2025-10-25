@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import { useAuth } from "@/context/AuthContext";
+
 import { canSeeAddCourse } from "@/utils/roles";
 import { Video, VideoListResponse } from "@shared/api";
 import { VideoCard } from "@/components/Videos/VideoCard";
@@ -9,16 +9,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Loader2, Search } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAppSelector } from "@/store";
 
 export default function Tutorials() {
-  const { auth } = useAuth();
+  const user = useAppSelector(state => state.user);
   const { t } = useLanguage();
   const [videos, setVideos] = useState<Video[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const canAddVideo = canSeeAddCourse(auth.user?.role);
+  const canAddVideo = canSeeAddCourse(user.user?.role);
 
   const fetchVideos = async () => {
     setIsLoading(true);
@@ -129,7 +130,7 @@ export default function Tutorials() {
               <VideoCard
                 key={video.id}
                 video={video}
-                canDelete={canAddVideo && video.teacherId === auth.user?.id}
+                canDelete={canAddVideo && video.teacherId === user.user?.id}
                 onDelete={handleDeleteVideo}
               />
             ))}

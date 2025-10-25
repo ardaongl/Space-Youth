@@ -4,14 +4,14 @@ import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Coins } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
 import { isAdmin } from "@/utils/roles";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAppSelector } from "@/store";
 
 export default function EditCourse() {
   const navigate = useNavigate();
   const { slug } = useParams();
-  const { auth } = useAuth();
+  const user = useAppSelector(state => state.user);
   const { t } = useLanguage();
   
   const [courseName, setCourseName] = useState("");
@@ -19,7 +19,7 @@ export default function EditCourse() {
   const [price, setPrice] = useState("");
   const [isPaid, setIsPaid] = useState(true);
 
-  const adminUser = isAdmin(auth.user?.role);
+  const adminUser = isAdmin(user.user?.role);
 
   useEffect(() => {
     // Load course data - in real app, fetch from API

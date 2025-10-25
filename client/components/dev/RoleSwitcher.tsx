@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useAppDispatch } from "@/store";
 import { setUser, setUserToken } from "@/store/slices/userSlice";
-import { authService } from "@/services/authService";
 import { UserRole } from "@/utils/roles";
 import { User2, ChevronDown } from "lucide-react";
 
@@ -36,7 +35,7 @@ export default function RoleSwitcher() {
     dispatch(setUser(mockUser));
     // Also set a development token so that any requiresAuth requests work
     dispatch(setUserToken("dev-token"));
-    try { authService.setToken("dev-token"); } catch {}
+   
     setCurrentRole(role);
     setIsOpen(false);
     

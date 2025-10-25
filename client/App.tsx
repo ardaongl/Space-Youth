@@ -48,7 +48,6 @@ import { TokensProvider } from "./context/TokensContext";
 import { DraftsProvider } from "./context/DraftsContext";
 import { TaskSubmissionsProvider } from "./context/TaskSubmissionsContext";
 import { TasksProvider } from "./context/TasksContext";
-import { AuthProvider, useAuth } from "./context/AuthContext";
 import { StudentProvider, useStudent } from "./context/StudentContext";
 import { BookmarksProvider } from "./context/BookmarksContext";
 import { LanguageProvider } from "./context/LanguageContext";
@@ -71,8 +70,6 @@ const AppContent = () => {
 
 
   useEffect(() => {
-    console.log("apptsx student : ", student);
-    
     if (user) {
       if (user.role === IUserRoles.STUDENT) {
         const shouldShowOnboarding = student && !student.approved;        
@@ -147,19 +144,6 @@ const AppContent = () => {
           onComplete={handleComplete}
         />
       )}
-
-      {import.meta.env.DEV && !onboardingOpen && user && (
-        <>
-          <RoleSwitcher />
-          <button
-            onClick={resetOnboarding}
-            className="fixed bottom-4 right-4 z-50 rounded-full bg-foreground text-background px-4 py-2 text-sm shadow hover:brightness-110"
-            title="Geliştirme: Sorulara dön"
-          >
-            Sorulara dön
-          </button>
-        </>
-      )}
     </>
   );
 };
@@ -169,7 +153,6 @@ const App = () => {
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <LanguageProvider>
-          <AuthProvider>
             <StudentProvider>
               <TokensProvider>
                 <BookmarksProvider>
@@ -189,7 +172,6 @@ const App = () => {
                 </BookmarksProvider>
               </TokensProvider>
             </StudentProvider>
-          </AuthProvider>
         </LanguageProvider>
       </QueryClientProvider>
     </Provider>

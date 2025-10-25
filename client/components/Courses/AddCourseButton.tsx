@@ -1,15 +1,16 @@
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
 import { canSeeAddCourse } from "@/utils/roles";
 import { Plus } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAppSelector } from "@/store";
 
 export default function AddCourseButton() {
   const navigate = useNavigate();
-  const { auth } = useAuth();
+
   const { t } = useLanguage();
-  // Use role directly to support DEV role switching without strict status check
-  const role = auth.user?.role ?? null;
+  
+  const user = useAppSelector(state => state.user.user)
+  const role = user.role;
 
   if (!canSeeAddCourse(role)) {
     return null;

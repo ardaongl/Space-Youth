@@ -30,10 +30,12 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useTokens } from "@/context/TokensContext";
 import { Separator } from "@/components/ui/separator";
 import { NotificationsPopover } from "./NotificationsPopover";
-import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { AvatarDisplay } from "@/components/ui/avatar-display";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { useAppSelector } from "@/store";
+import { useDispatch } from "react-redux";
+import { clearUser } from "@/store/slices/userSlice";
 
 function TokenWallet() {
   const { tokens } = useTokens();
@@ -52,20 +54,21 @@ function TokenWallet() {
 
 export function Header() {
   const navigate = useNavigate();
-  const { auth, logout } = useAuth();
+  const user = useAppSelector(state => state.user.user)
   const { t } = useLanguage();
-  const userName = auth.user?.name || "User";
+  const userName = user?.name || "User";
 
+  const dispatch = useDispatch();
   const handleLogout = () => {
-    logout();
-    navigate('/');
+    dispatch(clearUser());
+    navigate('/login');
   };
   
   return (
     <header className="sticky top-0 z-30 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
       <div className="h-14 flex items-center gap-3 px-4">
         {/* Mobile hamburger menu - only show when user is authenticated */}
-        {auth.user && (
+        {user && (
           <div className="lg:hidden">
             <Sheet>
               <SheetTrigger asChild>
@@ -187,7 +190,7 @@ export function Header() {
         </div>
         {/* Right side buttons - sağ tarafa dayalı */}
         <div className="flex items-center gap-2 ml-auto">
-          {auth.user ? (
+          {user ? (
             <>
               <button 
                 className="px-3 py-2 rounded-full hover:bg-secondary"

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { setLanguage } from "@/store/slices/languageSlice";
@@ -47,9 +46,11 @@ import {
 import AppLayout from "@/components/layout/AppLayout";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { clearUser } from "@/store/slices/userSlice";
 
 export default function Settings() {
-  const { auth, logout } = useAuth();
+  const user = useAppSelector(state => state.user);
+
   const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const { currentLanguage } = useAppSelector((state) => state.language);
@@ -67,8 +68,8 @@ export default function Settings() {
   }, [searchParams]);
 
   // Profile state
-  const [fullName, setFullName] = useState(auth.user?.name || "");
-  const [email, setEmail] = useState(auth.user?.email || "");
+  const [fullName, setFullName] = useState(user.user?.name || "");
+  const [email, setEmail] = useState(user.user?.email || "");
 
   // Notification settings
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -193,7 +194,7 @@ export default function Settings() {
         description: t('settings.accountDeletedDescription'),
         variant: "destructive",
       });
-      logout();
+      dispatch(clearUser())
     }
   };
 
@@ -265,7 +266,7 @@ export default function Settings() {
                     <Avatar className="h-24 w-24">
                       <AvatarImage src="" />
                       <AvatarFallback className="text-2xl">
-                        {auth.user?.name.charAt(0).toUpperCase()}
+                        {user.user?.name.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <Button
@@ -277,8 +278,8 @@ export default function Settings() {
                     </Button>
                   </div>
                   <div>
-                    <h3 className="font-semibold">{auth.user?.name}</h3>
-                    <p className="text-sm text-muted-foreground">{auth.user?.role}</p>
+                    <h3 className="font-semibold">{user.user?.name}</h3>
+                    <p className="text-sm text-muted-foreground">{user.user?.role}</p>
                     <Button variant="outline" size="sm" className="mt-2">
                       {t('settings.changePhoto')}
                     </Button>

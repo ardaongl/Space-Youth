@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, ReactNode, useState } from "react";
 import { apis } from "@/services";
-import { useAuth } from "./AuthContext";
+import { useAppSelector } from "@/store";
 
 export interface StudentData {
   id: number;
@@ -36,11 +36,11 @@ export const StudentProvider: React.FC<StudentProviderProps> = ({ children }) =>
   const [studentData, setStudentData] = useState<StudentData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { auth } = useAuth();
+  const user = useAppSelector(state => state.user);
 
   const fetchStudentData = async () => {
     // Only fetch student data if user is a student
-    if (auth.user?.role !== "student") {
+    if (user.user?.role !== "student") {
       setStudentData(null);
       return;
     }
@@ -65,12 +65,12 @@ export const StudentProvider: React.FC<StudentProviderProps> = ({ children }) =>
   };
 
   useEffect(() => {
-    if (auth.user?.role === "student") {
+    if (user.user?.role === "student") {
       fetchStudentData();
     } else {
       setStudentData(null);
     }
-  }, [auth.user]);
+  }, [user.user]);
 
   return (
     <StudentContext.Provider value={{ 

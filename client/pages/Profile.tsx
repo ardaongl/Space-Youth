@@ -12,8 +12,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useLanguage } from "@/context/LanguageContext";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
 import { isTeacher, isStudent } from "@/utils/roles";
+import { useAppSelector } from "@/store";
 
 type OnboardingData = {
   phase1: any;
@@ -64,16 +64,16 @@ function useOnboardingScores() {
 }
 
 export function Profile() {
+  const user = useAppSelector(state => state.user);
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { auth } = useAuth();
   const scores = useOnboardingScores();
   const [onboarding, setOnboarding] = React.useState<OnboardingData | null>(null);
   const [zoomConnected, setZoomConnected] = React.useState<boolean>(() => {
     try { return localStorage.getItem("zoom.connected") === "true"; } catch { return false; }
   });
 
-  const isTeacherUser = isTeacher(auth.user?.role);
+  const isTeacherUser = isTeacher(user.user?.role);
   React.useEffect(() => {
     try {
       const raw = localStorage.getItem("onboarding.data");
@@ -286,7 +286,7 @@ export function Profile() {
           <div className="flex items-start justify-between max-w-6xl">
             {/* Sol taraf - İsim ve unvan */}
             <div className="ml-8">
-              <h1 className="text-2xl font-bold text-foreground mb-1">Cenker Gültekin</h1>
+              <h1 className="text-2xl font-bold text-foreground mb-1">{user.user.name}</h1>
               <p className="text-muted-foreground mb-4">Full-Stack Developer</p>
             </div>
             
@@ -540,7 +540,7 @@ export function Profile() {
           {/* Right Column - Sidebar */}
           <div className="space-y-6 lg:sticky lg:top-24 h-[calc(100vh-6rem)] overflow-auto min-w-0">
             {/* Zoom Connection Section - Only show for teachers and admins */}
-            {!isStudent(auth.user?.role) && (
+            {!isStudent(user.user?.role) && (
               <div className="bg-card border rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold flex items-center gap-2">

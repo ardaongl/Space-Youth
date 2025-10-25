@@ -20,7 +20,7 @@ api.interceptors.request.use(
 
     if (config.requiresAuth) {
       const token = store.getState().user.token;
-      //console.log(token);
+      console.log(token);
       
       if (!token) {
         return Promise.reject(new Error('Geçersiz token'));

@@ -4,16 +4,16 @@ import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Coins, Calendar, MapPin, Users2 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
 import { isAdmin } from "@/utils/roles";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAppSelector } from "@/store";
 
 type EventType = "workshop" | "hackathon";
 
 export default function EditEvent() {
   const navigate = useNavigate();
   const { slug } = useParams();
-  const { auth } = useAuth();
+  const user = useAppSelector(state => state.user);
   const { t } = useLanguage();
   
   const [eventType, setEventType] = useState<EventType>("workshop");
@@ -26,7 +26,7 @@ export default function EditEvent() {
   const [price, setPrice] = useState("");
   const [isPaid, setIsPaid] = useState(true);
 
-  const adminUser = isAdmin(auth.user?.role);
+  const adminUser = isAdmin(user.user?.role);
 
   useEffect(() => {
     // Load event data - in real app, fetch from API

@@ -2,14 +2,13 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
+import { useAppSelector } from "@/store";
 
 export default function ZoomCallback() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const { auth } = useAuth();
-  
-  const isTeacherOrAdmin = auth.user?.role === "teacher" || auth.user?.role === "admin";
+  const user = useAppSelector(state => state.user)
+  const isTeacherOrAdmin = user.user?.role === "teacher" || user.user?.role === "admin";
 
   useEffect(() => {
     // UI-only: Simulate exchanging code for tokens and mark as connected
