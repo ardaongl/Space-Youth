@@ -1,3 +1,4 @@
+import { IUserRoles } from "@/types/user/user";
 import { api } from "../api";
 
 export class StudentAPI {
@@ -42,7 +43,21 @@ export class StudentAPI {
                 {requiresAuth: true, validateStatus: s => s < 500},
             )
         } catch (error) {
-            
+            return error;
+        }
+    }
+
+    get_students = async () => {
+        try {
+            const response = await api.get("/api/users",
+                {
+                    requiresAuth: true,
+                    validateStatus: s => s < 500,
+                    params: {role: IUserRoles.STUDENT}
+                })
+            return response;
+        } catch (error) {
+            return error;
         }
     }
 

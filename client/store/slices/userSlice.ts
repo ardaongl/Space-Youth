@@ -30,12 +30,10 @@ const userSlice = createSlice({
   reducers: {
     setUserToken: (state, action: PayloadAction<string>) => {
       state.token = action.payload;
-      // ✅ persist et
       localStorage.setItem("token", action.payload);
     },
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
-      // ✅ persist et
       localStorage.setItem("user", JSON.stringify(action.payload));
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
@@ -45,7 +43,6 @@ const userSlice = createSlice({
       state.token = "";
       state.user = null;
       state.isLoading = false;
-      // ✅ temizle
       localStorage.removeItem("token");
       localStorage.removeItem("user");
     },

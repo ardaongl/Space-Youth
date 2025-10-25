@@ -2,6 +2,8 @@ import React, { useState, useEffect, FormEvent } from "react";
 import "./AdminPage.css";
 import axios from "axios";
 import { useAppSelector } from "@/store";
+import { apis } from "@/services";
+import { useNavigate } from "react-router-dom";
 
 const baseUrl = import.meta.env.VITE_BASE_URL;
 
@@ -28,9 +30,15 @@ interface Student {
   first_name: string;
   last_name: string;
   email: string;
-  school?: string;
   age?: number;
-  department?: string;
+  students?: {
+    approved: false,
+    school: string | null,
+    department: string,
+    cv_url: string,
+    questions_and_answers: string,
+    introduce: string,
+  }
 }
 
 interface Answer {
@@ -72,32 +80,21 @@ const AdminPage: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<
     "students" | "answers" | "tasks" | "personalities" | "characters"
   >("students");
-
+  const navigate = useNavigate();
   const [students, setStudents] = useState<Student[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [personalities, setPersonalities] = useState<Personality[]>([]);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [search, setSearch] = useState<string>("");
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Drawer state
   const [editState, setEditState] = useState<EditState | null>(null);
 
   const user = useAppSelector(state => state.user.user)
   const token = useAppSelector(state => state.user.token);
-
-  console.log(token);
   
-  useEffect(() => {
-    setTasks((prev) => (prev.length ? prev : safeParse<Task[]>(localStorage.getItem(LS_KEYS.TASKS), [])));
-    setPersonalities((prev) => (prev.length ? prev : safeParse<Personality[]>(localStorage.getItem(LS_KEYS.PERSONALITIES), [])));
-    setCharacters((prev) => (prev.length ? prev : safeParse<Character[]>(localStorage.getItem(LS_KEYS.CHARACTERS), [])));
-  }, []);
 
-  // Değiştikçe LS'ye yaz
   useEffect(() => {
     localStorage.setItem(LS_KEYS.TASKS, JSON.stringify(tasks));
   }, [tasks]);
@@ -108,18 +105,20 @@ const AdminPage: React.FC = () => {
     localStorage.setItem(LS_KEYS.CHARACTERS, JSON.stringify(characters));
   }, [characters]);
 
+  const handleReturnHome = () => {
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1000);
+  }
   const fetchStudents = async () => {
-    if (!token) return;
+    if (!user) return;
     setLoading(true);
     setError(null);
-
     try {
-      const res = await axios.get<{ user: Student }[]>(
-        `${baseUrl}/api/users?role=student`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const studentsData = res.data.map((item) => item.user);
-      setStudents(studentsData || []);
+      const res = await apis.student.get_students();
+      setStudents(res.data || []);
+      console.log(res.data);
+      
     } catch (err: any) {
       console.error(err);
       setError(
@@ -164,8 +163,8 @@ const AdminPage: React.FC = () => {
       s.first_name.toLowerCase().includes(search.toLowerCase()) ||
       s.last_name.toLowerCase().includes(search.toLowerCase()) ||
       s.email.toLowerCase().includes(search.toLowerCase()) ||
-      (s.school && s.school.toLowerCase().includes(search.toLowerCase())) ||
-      (s.department && s.department.toLowerCase().includes(search.toLowerCase()))
+      (s.students.school && s.students.school.toLowerCase().includes(search.toLowerCase())) ||
+      (s.students.department && s.students.department.toLowerCase().includes(search.toLowerCase()))
   );
 
   const handleAddTask = (e: FormEvent<HTMLFormElement>) => {
@@ -247,7 +246,6 @@ const AdminPage: React.FC = () => {
     });
   };
 
-  /** Kaydet */
   const saveEdit = () => {
     if (!editState) return;
 
@@ -266,7 +264,6 @@ const AdminPage: React.FC = () => {
     closeEdit();
   };
 
-  // Drawer form alanlarını entity'ye göre render et
   const renderDrawerForm = () => {
     if (!editState) return null;
 
@@ -404,6 +401,10 @@ const AdminPage: React.FC = () => {
             Karakterler
           </li>
         </ul>
+        <button
+        onClick={handleReturnHome}>
+            anasayfaya dön
+        </button>
       </div>
 
       <div className="content">
@@ -443,15 +444,15 @@ const AdminPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredStudents.map((s) => (
-                      <tr key={s.id}>
+                    {filteredStudents.map((s, indx) => (
+                      <tr key={indx}>
                         <td>{s.id}</td>
                         <td>{s.first_name}</td>
                         <td>{s.last_name}</td>
                         <td>{s.email}</td>
-                        <td>{s.school || "Bilinmiyor"}</td>
+                        <td>{s.students.school || "Bilinmiyor"}</td>
                         <td>{s.age || "-"}</td>
-                        <td>{s.department || "Bilinmiyor"}</td>
+                        <td>{s.students.department || "Bilinmiyor"}</td>
                       </tr>
                     ))}
                   </tbody>

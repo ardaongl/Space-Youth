@@ -21,13 +21,10 @@ import React from "react";
 import { useAppSelector } from "@/store";
 import { IUserRoles } from "@/types/user/user";
 
-// These will be moved inside the component to use translations
-
-// This will be moved inside the component to use translations
 
 const getInitials = (name: string | undefined): string => {
   if (!name || typeof name !== 'string') {
-    return 'U'; // Default fallback
+    return 'U';
   }
   return name
     .split(" ")
