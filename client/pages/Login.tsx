@@ -13,6 +13,8 @@ import { email } from "zod/v4";
 import { useDispatch } from "react-redux";
 import { setUser, setUserToken } from "@/store/slices/userSlice";
 import { useAppSelector } from "@/store";
+import { IUserRoles } from "@/types/user/user";
+import { setStudent } from "@/store/slices/studentSlice";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -51,6 +53,8 @@ export default function Login() {
     setIsLoading(true);
 
     try {
+      console.log("formData," ,formData);
+      
       const response = await apis.user.login(formData.email, formData.password)
       console.log(response);
       if(response.status != 200){
@@ -82,35 +86,38 @@ export default function Login() {
         if(auth_token != ""){
           const user = {
             id: response.data.id,
-            name: response.data.name,
+            name: response.data.first_name,
             email: response.data.email,
             role: response.data.role
           }
-       
+          console.log("user", user);
+          
           dispatch(setUser(user));
+          if(user.role == IUserRoles.STUDENT){
+            const student = {
+              id: response.data.student.id,
+              approved: response.data.student.approved,
+              questions_and_answers: response.data.student.questions_and_answers
+            }
+            console.log("student => ", student);
+            
+            dispatch(setStudent(student));
+          }
+
           setTimeout(() => {
             navigate("/dashboard");
           }, 1000);
+
         }
       } catch (error) {
-        
+        return error;
       }
     }
 
     fetchUser();
   }, [auth_token])
 
-  useEffect(() => {
-    try {
-      if(user.role == "student"){
-        const response  = apis.student.get_student();
-        console.log(response);
-        
-      }
-    } catch (error) {
-      
-    }
-  }, [user])
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-purple-500/5 to-pink-500/10 flex items-center justify-center p-4">

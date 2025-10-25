@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Provider } from "react-redux";
+import { Provider, useDispatch } from "react-redux";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -44,7 +44,6 @@ import Dashboard from "./pages/Dashboard";
 import AdminPage from "./pages/AdminPage";
 import BuyCoins from "./pages/BuyCoins";
 
-// Contexts
 import { TokensProvider } from "./context/TokensContext";
 import { DraftsProvider } from "./context/DraftsContext";
 import { TaskSubmissionsProvider } from "./context/TaskSubmissionsContext";
@@ -53,16 +52,12 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { StudentProvider, useStudent } from "./context/StudentContext";
 import { BookmarksProvider } from "./context/BookmarksContext";
 import { LanguageProvider } from "./context/LanguageContext";
-
-// Components
 import TestWizard, { OnboardingData } from "@/components/onboarding/TestWizard";
 import RoleSwitcher from "./components/dev/RoleSwitcher";
-
-// Store
-import { store } from "./store";
-
-// Services
+import { store, useAppSelector } from "./store";
 import { apis } from "./services";
+import { IUserRoles } from "./types/user/user";
+import { clearUser } from "./store/slices/userSlice";
 
 const queryClient = new QueryClient();
 
@@ -70,53 +65,40 @@ const queryClient = new QueryClient();
 const AppContent = () => {
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const { auth, refreshAuth } = useAuth();
-  const { studentData, isLoading: studentLoading } = useStudent();
   const navigate = useNavigate();
+  const user = useAppSelector(state => state.user.user) 
+  const student = useAppSelector(state => state.student.student);
+  const dispatch = useDispatch();
+
 
   useEffect(() => {
-    // Check if user is logged in and onboarding status
-    if (auth.user) {
-      // Only show onboarding for students who are not approved
-      if (auth.user.role === "student") {
-        const done = typeof window !== "undefined" && localStorage.getItem("onboarding.completed") === "true";
-        // Show onboarding if not completed AND student is not approved
-        const shouldShowOnboarding = !done && studentData && !studentData.approved;
+    console.log("apptsx student : ", student);
+    
+    if (user) {
+      if (user.role === IUserRoles.STUDENT) {
+        const shouldShowOnboarding = student && !student.approved;        
         setOnboardingOpen(shouldShowOnboarding);
       } else {
-        // Non-student users don't see onboarding
         setOnboardingOpen(false);
       }
     } else {
-      setOnboardingOpen(false);
+      dispatch(clearUser())
+      navigate("/login");
     }
-  }, [auth.user, studentData]);
+  }, [user, student]);
 
   const handleComplete = async (data: OnboardingData) => {
-    try {
-      localStorage.setItem("onboarding.data", JSON.stringify(data));
-    } catch {}
-    localStorage.setItem("onboarding.completed", "true");
     setOnboardingOpen(false);
-    
-    // Send onboarding data to backend
     try {
       await apis.student.set_student_answers(JSON.stringify(data));
     } catch (error) {
       console.error("Failed to save onboarding data:", error);
     }
-    
-    // Refresh auth state and student data
     refreshAuth();
-    // Redirect to home page (main platform) after completion
     navigate("/");
   };
   
   const resetOnboarding = () => {
-    try {
-      localStorage.removeItem("onboarding.completed");
-      // Optionally keep data; comment next line if you want to preserve
-      localStorage.removeItem("onboarding.data");
-    } catch {}
     setOnboardingOpen(true);
   };
 

@@ -2,7 +2,6 @@ import AppLayout from "@/components/layout/AppLayout";
 import { Link } from "react-router-dom";
 import { Clock, Trophy, Bookmark, BookmarkCheck, SlidersHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
-import { api } from "@/services";
 import AddCourseButton from "@/components/Courses/AddCourseButton";
 import { useBookmarks, BookmarkedContent } from "@/context/BookmarksContext";
 import { useToast } from "@/hooks/use-toast";
