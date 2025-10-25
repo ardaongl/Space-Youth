@@ -124,34 +124,22 @@ export default function Register() {
         formData.password
       );
 
-      if (!response) {
-        throw new Error("No response from server");
-      }
-
-      const data = response.data as { token?: string; message?: string };
-
-      if (response.status >= 200 && response.status < 300 && data?.token) {
-        // Save token
-        authService.setToken(data.token);
-        
+      console.log(response);
+      
+      if(response.status == 200){
         toast({
-          title: t('auth.success'),
-          description: t('auth.registerSuccess'),
-        });
+          title: "Kayıt başarılı",
+          description: "Kullanıcı kaydı tamamlandı"
+        })
 
-        // Refetch user data
-        await refetchUser();
-
-        // Redirect to home (onboarding modal will be shown automatically)
         setTimeout(() => {
-          navigate("/");
+          navigate("/login");
         }, 1000);
-      } else {
+      }else {
         toast({
-          title: "Kayıt Başarısız",
-          description: data?.message || "Kayıt sırasında bir hata oluştu.",
-          variant: "destructive",
-        });
+          title: "Kayıt başarısız",
+          description: "Kullanıcı kaydı tamamlanamadı"
+        })
       }
     } catch (error) {
       console.error("Register error:", error);

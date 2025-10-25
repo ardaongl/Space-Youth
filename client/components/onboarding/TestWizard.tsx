@@ -2,18 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { useAuth } from "@/context/AuthContext";
+import { useAppSelector } from "@/store";
 
 type Phase1Form = {
-  firstName: string;
-  lastName: string;
   school: string;
   age: string;
   department: string;
-  email: string;
   cvFileName?: string;
-  projectOrSchool?: string;
-  reference?: string;
-  awards?: string;
 };
 
 type Phase2Form = {
@@ -32,10 +27,8 @@ type Phase3Form = {
 };
 
 type Phase4Form = {
-  recordingUrl: string | null;
-  durationSec: number;
   questionIndex: number;
-  answers: string[]; // text answers per question (optional)
+  answers: string[];
 };
 
 export type OnboardingData = {
@@ -55,21 +48,15 @@ export default function TestWizard({
   onComplete: (data: OnboardingData) => void;
 }) {
   const { t } = useLanguage();
-  const { auth } = useAuth();
   const [step, setStep] = useState(1);
   
-  // Pre-populate user data from auth context
+  const user = useAppSelector(state => state.user.user)
+
   const [phase1, setPhase1] = useState<Phase1Form>({
-    firstName: auth.user?.name?.split(' ')[0] || "",
-    lastName: auth.user?.name?.split(' ').slice(1).join(' ') || "",
     school: "",
     age: "",
     department: "",
-    email: auth.user?.email || "",
     cvFileName: undefined,
-    projectOrSchool: "",
-    reference: "",
-    awards: "",
   });
   const [phase2, setPhase2] = useState<Phase2Form>({ q1: "", q2: "", q3: "3", q4: "3" });
   const [phase3, setPhase3] = useState<Phase3Form>({ a1: "", a2: "", a3: "", a4: "", a5: "" });
@@ -84,141 +71,52 @@ export default function TestWizard({
     [t]
   );
   const [phase4, setPhase4] = useState<Phase4Form>({
-    recordingUrl: null,
-    durationSec: 0,
     questionIndex: 0,
     answers: Array(5).fill(""),
   });
 
-  // Camera + recording refs
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!open) setStep(1);
   }, [open]);
 
-  // Update phase1 data when user data changes
-  useEffect(() => {
-    if (auth.user) {
-      setPhase1(prev => ({
-        ...prev,
-        firstName: auth.user?.name?.split(' ')[0] || prev.firstName,
-        lastName: auth.user?.name?.split(' ').slice(1).join(' ') || prev.lastName,
-        email: auth.user?.email || prev.email,
-      }));
-    }
-  }, [auth.user]);
-
-  // Auto rotate questions every 20s while recording
-  useEffect(() => {
-    if (!recorderRef.current || recorderRef.current.state !== "recording") return;
-    const id = window.setInterval(() => {
-      setPhase4((p) => ({ ...p, questionIndex: (p.questionIndex + 1) % phase4Questions.length }));
-    }, 20000);
-    return () => window.clearInterval(id);
-  }, [phase4Questions, phase4.recordingUrl]);
 
   const canNext = useMemo(() => {
     if (step === 1) {
-      // Only require fields that are not pre-populated from registration
       const required = [
         phase1.school,
         phase1.age,
         phase1.department,
       ];
+      console.log(required.every((v) => String(v || "").trim().length > 0));
+      
       return required.every((v) => String(v || "").trim().length > 0);
     }
     if (step === 2) {
-      return phase2.q1 !== "" && phase2.q2 !== "" && phase2.q3 !== "" && phase2.q4 !== "";
+      console.log();
+      const flag = phase2.q1 !== "" && phase2.q2 !== "" && phase2.q3 !== "" && phase2.q4 !== "";
+      console.log(flag);
+      return flag
     }
     if (step === 3) {
-      return [phase3.a1, phase3.a2, phase3.a3, phase3.a4, phase3.a5].every((v) => v.trim().length > 0);
+      const flag = [phase3.a1, phase3.a2, phase3.a3, phase3.a4, phase3.a5].every((v) => v.trim().length > 0);
+      console.log(flag);
+      return flag;
     }
     if (step === 4) {
-      return !!phase4.recordingUrl; // require a recording
+      const flag = phase4.answers;
+      return flag;
     }
     return false;
   }, [step, phase1, phase2, phase3, phase4]);
 
   const handleComplete = () => {
     const payload: OnboardingData = { phase1, phase2, phase3, phase4 };
+    console.log("student answers : ",payload);
+    
     onComplete(payload);
   };
 
-  const startCamera = async () => {
-    try {
-      // stop previous
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((t) => t.stop());
-      }
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-    } catch (e) {
-      console.error("Camera error", e);
-    }
-  };
-
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-  };
-
-  const startRecording = async () => {
-    if (!streamRef.current) await startCamera();
-    if (!streamRef.current) return;
-    chunksRef.current = [];
-    const rec = new MediaRecorder(streamRef.current, { mimeType: "video/webm;codecs=vp9,opus" });
-    recorderRef.current = rec;
-    rec.ondataavailable = (e) => {
-      if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
-    };
-    rec.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: "video/webm" });
-      const url = URL.createObjectURL(blob);
-      setPhase4((p) => ({ ...p, recordingUrl: url }));
-      if (timerRef.current) {
-        window.clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-    rec.start();
-    // start duration counter
-    setPhase4((p) => ({ ...p, durationSec: 0 }));
-    timerRef.current = window.setInterval(() => {
-      setPhase4((p) => ({ ...p, durationSec: p.durationSec + 1 }));
-    }, 1000);
-  };
-
-  const stopRecording = () => {
-    recorderRef.current?.stop();
-  };
-
-  const resetRecording = () => {
-    if (phase4.recordingUrl) URL.revokeObjectURL(phase4.recordingUrl);
-    setPhase4((p) => ({ ...p, recordingUrl: null, durationSec: 0 }));
-  };
-
-  // Cleanup on unmount/close
-  useEffect(() => {
-    return () => {
-      stopCamera();
-      if (phase4.recordingUrl) URL.revokeObjectURL(phase4.recordingUrl);
-      if (timerRef.current) window.clearInterval(timerRef.current);
-    };
-  }, []);
 
   if (!open) return null;
 
@@ -258,22 +156,7 @@ export default function TestWizard({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label={t('testWizard.firstName')}>
-                  <input
-                    className="w-full h-10 rounded-xl border px-3 text-sm bg-muted/50 cursor-not-allowed"
-                    value={phase1.firstName}
-                    readOnly
-                    disabled
-                  />
-                </Field>
-                <Field label={t('testWizard.lastName')}>
-                  <input
-                    className="w-full h-10 rounded-xl border px-3 text-sm bg-muted/50 cursor-not-allowed"
-                    value={phase1.lastName}
-                    readOnly
-                    disabled
-                  />
-                </Field>
+                
                 <Field label={t('testWizard.school')}>
                   <input
                     className="w-full h-10 rounded-xl border px-3 text-sm"
@@ -297,15 +180,6 @@ export default function TestWizard({
                     onChange={(e) => setPhase1((p) => ({ ...p, department: e.target.value }))}
                   />
                 </Field>
-                <Field label={t('testWizard.email')}>
-                  <input
-                    type="email"
-                    className="w-full h-10 rounded-xl border px-3 text-sm bg-muted/50 cursor-not-allowed"
-                    value={phase1.email}
-                    readOnly
-                    disabled
-                  />
-                </Field>
                 <Field label={t('testWizard.cv')}>
                   <label className="h-10 rounded-xl border px-3 text-sm flex items-center justify-between cursor-pointer bg-secondary/50">
                     <span className="truncate">{phase1.cvFileName || t('testWizard.chooseFile')}</span>
@@ -320,57 +194,12 @@ export default function TestWizard({
                     />
                   </label>
                 </Field>
-                <Field label={t('testWizard.projectOrSchool')}>
-                  <input
-                    className="w-full h-10 rounded-xl border px-3 text-sm"
-                    value={phase1.projectOrSchool}
-                    onChange={(e) => setPhase1((p) => ({ ...p, projectOrSchool: e.target.value }))}
-                  />
-                </Field>
-                <Field label={t('testWizard.reference')}>
-                  <input
-                    className="w-full h-10 rounded-xl border px-3 text-sm"
-                    value={phase1.reference}
-                    onChange={(e) => setPhase1((p) => ({ ...p, reference: e.target.value }))}
-                  />
-                </Field>
-                <Field label={t('testWizard.awards')}>
-                  <input
-                    className="w-full h-10 rounded-xl border px-3 text-sm"
-                    value={phase1.awards}
-                    onChange={(e) => setPhase1((p) => ({ ...p, awards: e.target.value }))}
-                  />
-                </Field>
               </div>
             </div>
           )}
 
           {step === 4 && (
             <div className="p-6">
-              <div className="mb-4">
-                <h2 className="text-lg font-semibold">{t('testWizard.phase4')}</h2>
-                <p className="text-sm text-muted-foreground">{t('testWizard.phase4Description')}</p>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Left: Camera / Video */}
-                <div className="rounded-xl border overflow-hidden bg-black relative aspect-video">
-                  {phase4.recordingUrl ? (
-                    <video className="w-full h-full object-cover" src={phase4.recordingUrl} controls />
-                  ) : (
-                    <video ref={videoRef} className="w-full h-full object-cover" muted playsInline />
-                  )}
-                  {/* Recording badge */}
-                  {recorderRef.current && recorderRef.current.state === "recording" && (
-                    <div className="absolute top-3 left-3 flex items-center gap-2 text-white text-xs">
-                      <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
-                      <span>{t('testWizard.recording')} {phase4.durationSec}s</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right: Questions */}
-                <div className="rounded-xl border p-4 bg-card">
                   <div className="text-xs text-muted-foreground mb-2">{t('testWizard.question')} {phase4.questionIndex + 1} {t('testWizard.of')} {phase4Questions.length}</div>
                   <div className="text-sm font-medium mb-3">{phase4Questions[phase4.questionIndex]}</div>
                   <textarea
@@ -406,25 +235,6 @@ export default function TestWizard({
                       {t('testWizard.next')}
                     </button>
                   </div>
-                </div>
-              </div>
-
-              {/* Controls */}
-              <div className="mt-4 flex items-center gap-2">
-                {!recorderRef.current || recorderRef.current.state !== "recording" ? (
-                  <>
-                    <button type="button" onClick={startCamera} className="rounded-full border px-4 py-2 text-sm">{t('testWizard.enableCamera')}</button>
-                    <button type="button" onClick={startRecording} className="rounded-full px-4 py-2 text-sm font-semibold shadow bg-primary text-primary-foreground">{t('testWizard.startRecording')}</button>
-                    {phase4.recordingUrl && (
-                      <button type="button" onClick={resetRecording} className="rounded-full border px-4 py-2 text-sm">{t('testWizard.retake')}</button>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <button type="button" onClick={stopRecording} className="rounded-full px-4 py-2 text-sm font-semibold shadow bg-destructive text-destructive-foreground">{t('testWizard.stopRecording')}</button>
-                  </>
-                )}
-              </div>
             </div>
           )}
 

@@ -64,7 +64,6 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   const [onboardingOpen, setOnboardingOpen] = useState(false);
-  const { auth, refreshAuth } = useAuth();
   const navigate = useNavigate();
   const user = useAppSelector(state => state.user.user) 
   const student = useAppSelector(state => state.student.student);
@@ -94,7 +93,6 @@ const AppContent = () => {
     } catch (error) {
       console.error("Failed to save onboarding data:", error);
     }
-    refreshAuth();
     navigate("/");
   };
   
@@ -142,7 +140,7 @@ const AppContent = () => {
       </Routes>
 
       {/* Only show onboarding for logged in users */}
-      {auth.user && (
+      {user && (
         <TestWizard
           open={onboardingOpen}
           onClose={() => { /* Gate: do nothing to enforce completion */ }}
@@ -150,7 +148,7 @@ const AppContent = () => {
         />
       )}
 
-      {import.meta.env.DEV && !onboardingOpen && auth.user && (
+      {import.meta.env.DEV && !onboardingOpen && user && (
         <>
           <RoleSwitcher />
           <button

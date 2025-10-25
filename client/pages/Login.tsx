@@ -262,31 +262,6 @@ export default function Login() {
             </Link>
           </div>
         </Card>
-
-        {/* Test Accounts Note */}
-        <div className="mt-4 p-4 rounded-lg bg-blue-50 text-blue-900 text-sm border border-blue-200">
-          <div className="font-bold mb-2">🔧 Test Hesapları:</div>
-          <div className="space-y-1 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold">Öğrenci:</span>
-              <code className="bg-blue-100 px-2 py-0.5 rounded">student@test.com</code>
-              <span>/</span>
-              <code className="bg-blue-100 px-2 py-0.5 rounded">123456</code>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold">Öğretmen:</span>
-              <code className="bg-blue-100 px-2 py-0.5 rounded">teacher@test.com</code>
-              <span>/</span>
-              <code className="bg-blue-100 px-2 py-0.5 rounded">123456</code>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold">Admin:</span>
-              <code className="bg-blue-100 px-2 py-0.5 rounded">admin@test.com</code>
-              <span>/</span>
-              <code className="bg-blue-100 px-2 py-0.5 rounded">123456</code>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

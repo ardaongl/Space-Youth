@@ -3,13 +3,17 @@ import { api } from "../api";
 export class UserAPI {
 
     register = async (firstname:string, lastname:string , role:string ,email:string, password: string) => {
-        return {
-            status: 200,
-            data: {
-                message: "Kullanıcı başarıyla kaydedildi",
-                user_id: Date.now()
+        const response = await api.post("/user/register",
+            {
+                first_name: firstname,
+                last_name: lastname,
+                email: email,
+                password: password,
+                language: "tr",
+                role: role
             }
-        };
+        )
+        return response;
     }
 
     login = async (email:string, password: string) => {
