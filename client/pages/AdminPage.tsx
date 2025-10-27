@@ -4,6 +4,7 @@ import axios from "axios";
 import { useAppSelector } from "@/store";
 import { apis } from "@/services";
 import { useNavigate } from "react-router-dom";
+import { IPersonality } from "@/types/common/common";
 
 const baseUrl = import.meta.env.VITE_BASE_URL;
 
@@ -54,14 +55,6 @@ interface Task {
   description: string;
 }
 
-interface Personality {
-  id: number;
-  name: string;
-  type: string;
-  description: string;
-  longDescription: string;
-}
-
 interface Character {
   id: number;
   name: string;
@@ -71,7 +64,7 @@ interface Character {
 }
 
 type EditEntity = "task" | "personality" | "character";
-type EditData = Task | Personality | Character;
+type EditData = Task | IPersonality | Character;
 interface EditState {
   entity: EditEntity;
   data: EditData;
@@ -85,7 +78,7 @@ const AdminPage: React.FC = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [personalities, setPersonalities] = useState<Personality[]>([]);
+  const [personalities, setPersonalities] = useState<IPersonality[]>([]);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [search, setSearch] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -97,14 +90,23 @@ const AdminPage: React.FC = () => {
   
 
   useEffect(() => {
-    localStorage.setItem(LS_KEYS.TASKS, JSON.stringify(tasks));
-  }, [tasks]);
-  useEffect(() => {
-    localStorage.setItem(LS_KEYS.PERSONALITIES, JSON.stringify(personalities));
-  }, [personalities]);
-  useEffect(() => {
-    localStorage.setItem(LS_KEYS.CHARACTERS, JSON.stringify(characters));
-  }, [characters]);
+    const getPersonalities = async () => {
+      try {
+        const response = await apis.common.get_personalities();
+        console.log(response);
+        
+        if(response.status == 200){
+          console.log(response);
+          
+          setPersonalities(response.data);
+        }
+      } catch (error) {
+        
+      }
+    }
+
+    getPersonalities()
+  }, [])
 
   const handleReturnHome = () => {
       setTimeout(() => {
@@ -161,7 +163,7 @@ const AdminPage: React.FC = () => {
     e.currentTarget.reset();
   };
 
-  const handleAddPersonality = (e: FormEvent<HTMLFormElement>) => {
+  const handleAddPersonality = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const target = e.target as typeof e.target & {
       name: { value: string };
@@ -170,18 +172,21 @@ const AdminPage: React.FC = () => {
       longDescription: { value: string };
     };
 
-    const newPersonality: Personality = {
-      id: personalities.length ? Math.max(...personalities.map((p) => p.id)) + 1 : 1,
+    const newPersonality: IPersonality = {
       name: target.name.value,
       type: target.type.value,
-      description: target.description.value,
-      longDescription: target.longDescription.value,
+      short_description: target.description.value,
+      long_description: target.longDescription.value,
     };
     setPersonalities([...personalities, newPersonality]);
+    
+    const response = await apis.common.admin_add_personality(newPersonality);
+    console.log(response);
+    
     e.currentTarget.reset();
   };
 
-  const handleAddCharacter = (e: FormEvent<HTMLFormElement>) => {
+  const handleAddCharacter = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const target = e.target as typeof e.target & {
       name: { value: string };
@@ -197,8 +202,13 @@ const AdminPage: React.FC = () => {
       image_url: target.image_url.value,
       personality: target.personality.value,
     };
-
+    console.log(newCharacter);
+    
     setCharacters([...characters, newCharacter]);
+    
+    const response = await apis.common.admin_add_character(newCharacter);
+    console.log(response);
+
     e.currentTarget.reset();
   };
 
@@ -233,7 +243,7 @@ const AdminPage: React.FC = () => {
       setTasks((prev) => prev.map((t) => (t.id === item.id ? item : t)));
     }
     if (editState.entity === "personality") {
-      const item = editState.data as Personality;
+      const item = editState.data as IPersonality;
       setPersonalities((prev) => prev.map((p) => (p.id === item.id ? item : p)));
     }
     if (editState.entity === "character") {
@@ -269,7 +279,7 @@ const AdminPage: React.FC = () => {
     }
 
     if (editState.entity === "personality") {
-      const d = editState.data as Personality;
+      const d = editState.data as IPersonality;
       return (
         <>
           <h3>Kişilik Tipi Düzenle</h3>
@@ -287,14 +297,14 @@ const AdminPage: React.FC = () => {
           />
           <label>Açıklama</label>
           <textarea
-            value={d.description}
+            value={d.short_description}
             onChange={(e) => onEditChange("description", e.target.value)}
             placeholder="Açıklama"
             rows={5}
           />
           <label>Uzun Açıklama</label>
           <textarea
-            value={d.longDescription}
+            value={d.long_description}
             onChange={(e) => onEditChange("longDescription", e.target.value)}
             placeholder="Uzun açıklama"
             rows={6}
@@ -323,8 +333,8 @@ const AdminPage: React.FC = () => {
           list="personalityList"
         />
         <datalist id="personalityList">
-          {personalities.map((p) => (
-            <option key={p.id} value={p.name} />
+          {personalities.map((p, i) => (
+            <option key={i} value={p.name} />
           ))}
         </datalist>
         <label>Detaylar</label>
@@ -724,9 +734,6 @@ const AdminPage: React.FC = () => {
           </>
         )}
 
-
-
-
         {/* Görevler */}
         {selectedTab === "tasks" && (
           <div>
@@ -786,9 +793,11 @@ const AdminPage: React.FC = () => {
               Kişilik Tipleri
             </h3>
             <form onSubmit={handleAddPersonality}>
-              <input name="name" placeholder="Ad" required />
-              <input name="type" placeholder="Tip (örnek: INTJ-A / INTJ-T)" required />
-              <input name="description" placeholder="Kısa Açıklama" required />
+              <div>
+                <input name="name" placeholder="Ad" required />
+                <input name="type" placeholder="Tip (örnek: INTJ-A / INTJ-T)" required />
+                <input name="description" placeholder="Kısa Açıklama" required />
+              </div>
               <textarea
                 name="longDescription"
                 placeholder="Uzun Açıklama"
@@ -803,14 +812,14 @@ const AdminPage: React.FC = () => {
               <p>Kişilik tipi bulunmamaktadır.</p>
             ) : (
               <div className="personality-cards">
-                {personalities.map((p) => (
-                  <div key={p.id} className="personality-card">
+                {personalities.map((p, i) => (
+                  <div key={i} className="personality-card">
                     <div>
                       <h4>{p.name}</h4>
                       <span>{p.type}</span>
-                      <p>{p.description}</p>
-                      {p.longDescription && (
-                        <p className="long-description">{p.longDescription}</p>
+                      <p>{p.short_description}</p>
+                      {p.long_description && (
+                        <p className="long-description">{p.long_description}</p>
                       )}
                     </div>
 
@@ -824,9 +833,7 @@ const AdminPage: React.FC = () => {
                       <button
                         className="delete-btn"
                         onClick={() =>
-                          setPersonalities(
-                            personalities.filter((x) => x.id !== p.id)
-                          )
+                          handleAddPersonality
                         }
                       >
                         Sil
@@ -850,8 +857,8 @@ const AdminPage: React.FC = () => {
               <input name="image_url" placeholder="Görsel URL (opsiyonel)" />
               <select name="personality" required>
                 <option value="">Kişilik Tipi Seçin</option>
-                {personalities.map((p) => (
-                  <option key={p.id} value={p.name}>
+                {personalities.map((p, i) => (
+                  <option key={i} value={p.id}>
                     {p.name}
                   </option>
                 ))}
