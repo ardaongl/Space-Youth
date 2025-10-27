@@ -40,16 +40,19 @@ export class StudentAPI {
         }
       }
 
-    admin_approve_student = async (_id:number , _check: boolean) => {
+    admin_approve_student = async (_id:string , _check: string) => {
         try {
             const response = await api.post(
                 '/api/student/approve',
                 {
                     student_id: _id,
-                    ai_check: _check
+                    approve: _check
                 },
                 {requiresAuth: true, validateStatus: s => s < 500},
             )
+            console.log(response);
+            
+            return response;
         } catch (error) {
             return error;
         }

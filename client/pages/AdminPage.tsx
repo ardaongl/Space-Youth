@@ -26,7 +26,7 @@ function safeParse<T>(raw: string | null, fallback: T): T {
 }
 
 interface Student {
-  id: number;
+  id: string;
   first_name: string;
   last_name: string;
   email: string;
@@ -344,6 +344,14 @@ const AdminPage: React.FC = () => {
     );
   };
 
+  const approve = async ( student_id: string ,approveStatus: string) => {
+    try {
+      const response = await apis.student.admin_approve_student(student_id, approveStatus)
+    } catch (error) {
+      
+    }
+  }
+
   return (
     <div className="admin-dashboard">
       <div className="sidebar">
@@ -642,6 +650,72 @@ const AdminPage: React.FC = () => {
                           </pre>
                         </div>
                       </div>
+                      {s.students.status == "PENDING" && <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: "10px",
+                          marginTop: "16px",
+                        }}
+                      >
+                        <button
+                          style={{
+                            backgroundColor: "#2ecc71",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "6px",
+                            padding: "8px 14px",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+                            transition: "0.2s all",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#27ae60")}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#2ecc71")}
+                          onClick={() => approve( s.id, "approve")}
+                        >
+                          Onayla
+                        </button>
+
+                        <button
+                          style={{
+                            backgroundColor: "#3498db",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "6px",
+                            padding: "8px 14px",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+                            transition: "0.2s all",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2980b9")}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#3498db")}
+                          onClick={() => approve( s.id, "ai_approve")}
+                        >
+                          AI ile Onayla
+                        </button>
+
+                        <button
+                          style={{
+                            backgroundColor: "#e74c3c",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "6px",
+                            padding: "8px 14px",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+                            transition: "0.2s all",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#c0392b")}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#e74c3c")}
+                          onClick={() => approve( s.id ,"reject")}
+                        >
+                          Reddet
+                        </button>
+                      </div>}
+
                     </details>
                   ))}
                 </div>
