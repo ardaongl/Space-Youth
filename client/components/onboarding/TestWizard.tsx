@@ -35,6 +35,7 @@ export type OnboardingData = {
   phase2: Phase2Form;
   phase3: Phase3Form;
   phase4: Phase4Form;
+  version: number;
 };
 
 export default function TestWizard({
@@ -110,9 +111,8 @@ export default function TestWizard({
   }, [step, phase1, phase2, phase3, phase4]);
 
   const handleComplete = () => {
-    const payload: OnboardingData = { phase1, phase2, phase3, phase4 };
-    console.log("student answers : ",payload);
-    
+    const version = 1;
+    const payload: OnboardingData = { phase1, phase2, phase3, phase4, version};
     onComplete(payload);
   };
 

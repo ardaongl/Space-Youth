@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   Home,
   BookOpen,
@@ -17,7 +17,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserRole, isStudent } from "@/utils/roles";
 import { Button } from "@/components/ui/button";
-import React from "react";
+import React, { useEffect } from "react";
 import { useAppSelector } from "@/store";
 import { IUserRoles } from "@/types/user/user";
 
@@ -35,12 +35,14 @@ const getInitials = (name: string | undefined): string => {
 };
 
 export function Sidebar() {
-  
+  const navigate = useNavigate();
+  const flag = false;
   const user = useAppSelector(state => state.user)
-
+  
   const { t } = useLanguage();
   const exploreItem = { to: "/", label: t('navigation.explore'), icon: Compass };
   
+
   const items = [
     { to: "/dashboard", label: t('navigation.dashboard'), icon: Home },
     { to: "/tasks", label: t('navigation.tasks'), icon: ClipboardList },
@@ -49,6 +51,14 @@ export function Sidebar() {
     { to: "/tutorials", label: t('navigation.tutorials'), icon: PencilRuler },
     { to: "/job-board", label: t('navigation.jobBoard'), icon: BriefcaseBusiness },
   ];
+   
+  useEffect(() => {
+    if(user.token == ""){
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1000);
+    }
+  }, [user])
 
   if(user.user.role == IUserRoles.ADMIN){
     items.push({ to: "/admin", label: t('admin'), icon: BriefcaseBusiness },)

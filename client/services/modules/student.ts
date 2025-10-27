@@ -20,17 +20,25 @@ export class StudentAPI {
         }
     }
 
-    set_student_answers = async (ques_and_answes: string) => {
-        try {
-            const response = await api.post(
-                '/api/student',
-                {questions_and_answers: ques_and_answes},
-                {requiresAuth: true, validateStatus: s => s < 500},
-            )
+    set_student_answers = async (payload: {
+        school?: string;
+        department?: string;
+        cv_url?: string;
+        questions_and_answers: string;
+        phases: Record<string, any>;
+      }) => {
+        try {            
+          const response = await api.post(
+            '/api/student',
+            payload,
+            { requiresAuth: true, validateStatus: s => s < 500 }
+          );
+          return response;
         } catch (error) {
-            
+          console.error("API error:", error);
+          throw error;
         }
-    }
+      }
 
     admin_approve_student = async (_id:number , _check: boolean) => {
         try {

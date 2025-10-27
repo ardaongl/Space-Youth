@@ -32,12 +32,13 @@ interface Student {
   email: string;
   age?: number;
   students?: {
-    approved: false,
-    school: string | null,
-    department: string,
     cv_url: string,
-    questions_and_answers: string,
-    introduce: string,
+    department: string
+    id: string,
+    phases: any
+    questions_and_answers: string
+    school:string, 
+    status: string,
   }
 }
 
@@ -131,31 +132,9 @@ const AdminPage: React.FC = () => {
     }
   };
 
-  const fetchAnswers = async () => {
-    if (!token) return;
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await axios.get<Answer[]>(`${baseUrl}/api/answers`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setAnswers(res.data || []);
-    } catch (err: any) {
-      console.error(err);
-      setError(
-        err.response?.data?.error?.message ||
-        "Öğrenci cevapları getirilirken bir hata oluştu."
-      );
-      setAnswers([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    if (selectedTab === "students") fetchStudents();
-    if (selectedTab === "answers") fetchAnswers();
+    if (selectedTab === "students" || selectedTab === "answers") fetchStudents();
   }, [selectedTab]);
 
   const filteredStudents = students.filter(
@@ -465,39 +444,214 @@ const AdminPage: React.FC = () => {
         {/* Cevaplar */}
         {selectedTab === "answers" && (
           <>
-            <h3 style={{ fontWeight: "bold", color: "#2c3e50" }}>
-              Öğrenci Cevapları
+            <h3 style={{ fontWeight: "bold", color: "#2c3e50", marginBottom: 10 }}>
+              Öğrenciler
             </h3>
+
             {!token ? (
               <p style={{ color: "red" }}>Lütfen giriş yapınız.</p>
             ) : loading ? (
               <p>Yükleniyor...</p>
             ) : error ? (
               <p style={{ color: "red" }}>{error}</p>
-            ) : answers.length === 0 ? (
-              <p>Öğrenci cevabı bulunmamaktadır.</p>
+            ) : students.length === 0 ? (
+              <p>Henüz öğrenci bulunmamaktadır.</p>
             ) : (
-              <table className="tasks-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Öğrenci</th>
-                    <th>Cevap</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {answers.map((a) => (
-                    <tr key={a.id}>
-                      <td>{a.id}</td>
-                      <td>{a.student_name}</td>
-                      <td>{a.answer}</td>
-                    </tr>
+              <>
+                <input
+                  type="text"
+                  placeholder="İsim, e-posta, okul veya bölüm ara..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: "8px",
+                    border: "1px solid #ccc",
+                    marginBottom: "15px",
+                    outline: "none",
+                    transition: "0.2s all",
+                  }}
+                />
+
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "16px",
+                  }}
+                >
+                  {students.map((s, idx) => (
+                    <details
+                      key={s.id || idx}
+                      style={{
+                        background: "#fff",
+                        borderRadius: "10px",
+                        border: "1px solid #e1e4e8",
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+                        padding: "14px 18px",
+                        transition: "0.2s",
+                      }}
+                    >
+                      <summary
+                        style={{
+                          cursor: "pointer",
+                          fontWeight: "600",
+                          fontSize: "15px",
+                          color: "#2c3e50",
+                          outline: "none",
+                          listStyle: "none",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                            <span style={{ fontWeight: "bold", fontSize: "16px" }}>
+                              {idx + 1}. {s.first_name} {s.last_name}
+                            </span>
+                            <span style={{ fontSize: "14px", color: "#555" }}>{s.email}</span>
+                          </div>
+
+                          <div
+                            style={{
+                              display: "flex",
+                              flexWrap: "wrap",
+                              alignItems: "center",
+                              gap: "14px",
+                              fontSize: "14px",
+                              color: "#34495e",
+                            }}
+                          >
+                            <span>
+                              <b>Okul:</b> {s.students.school || "-"}
+                            </span>
+                            <span>
+                              <b>Bölüm:</b> {s.students.department || "-"}
+                            </span>
+                            <span>
+                              <b>Durum:</b>{" "}
+                              <span
+                                style={{
+                                  fontWeight: "bold",
+                                  color:
+                                    s.students.status === "APPROVED"
+                                      ? "green"
+                                      : s.students.status === "REJECTED"
+                                      ? "red"
+                                      : "gray",
+                                }}
+                              >
+                                {s.students.status || "PENDING"}
+                              </span>
+                            </span>
+                            <span>
+                              <b>CV:</b>{" "}
+                              {s.students.cv_url ? (
+                                <a
+                                  href={s.students.cv_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    color: "#3498db",
+                                    textDecoration: "none",
+                                    fontWeight: "500",
+                                  }}
+                                >
+                                  Görüntüle
+                                </a>
+                              ) : (
+                                "-"
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </summary>
+
+                      {/* FORM DETAYI */}
+                      <div
+                        style={{
+                          marginTop: "15px",
+                          background: "#f9fbfd",
+                          borderRadius: "8px",
+                          padding: "14px",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "12px",
+                          border: "1px solid #e0e0e0",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                            gap: "10px",
+                            background: "#fff",
+                            padding: "10px",
+                            borderRadius: "6px",
+                            boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+                          }}
+                        >
+                          <p>
+                            <b>Yaş:</b> {s.students.phases?.phase1?.age || s.age || "-"}
+                          </p>
+                          <p>
+                            <b>Okul:</b> {s.students.phases?.phase1?.school || "-"}
+                          </p>
+                          <p>
+                            <b>Bölüm:</b> {s.students.phases?.phase1?.department || "-"}
+                          </p>
+                        </div>
+
+                        <div
+                          style={{
+                            borderTop: "1px solid #e0e0e0",
+                            paddingTop: "10px",
+                          }}
+                        >
+                          <h4
+                            style={{
+                              fontSize: "14px",
+                              fontWeight: "600",
+                              marginBottom: "6px",
+                              color: "#2c3e50",
+                            }}
+                          >
+                            Form Yanıtları
+                          </h4>
+                          <pre
+                            style={{
+                              background: "#fff",
+                              padding: "10px",
+                              borderRadius: "6px",
+                              whiteSpace: "pre-wrap",
+                              wordWrap: "break-word",
+                              fontSize: "13px",
+                              color: "#34495e",
+                              lineHeight: "1.5",
+                              boxShadow: "inset 0 1px 3px rgba(0,0,0,0.05)",
+                            }}
+                          >
+                            {s.students.questions_and_answers || "Cevap bulunamadı."}
+                          </pre>
+                        </div>
+                      </div>
+                    </details>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              </>
             )}
           </>
         )}
+
+
+
 
         {/* Görevler */}
         {selectedTab === "tasks" && (
