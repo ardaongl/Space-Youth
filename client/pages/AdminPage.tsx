@@ -61,6 +61,14 @@ interface Character {
   details: string;
   image_url: string;
   personality: string;
+  image?: File; // For editing purposes
+}
+
+interface CharacterFormData {
+  name: string;
+  details: string;
+  personality: string;
+  image: File;
 }
 
 type EditEntity = "task" | "personality" | "character";
@@ -92,7 +100,7 @@ const AdminPage: React.FC = () => {
   useEffect(() => {
     const getPersonalities = async () => {
       try {
-        const response = await apis.common.get_personalities();
+        const response = await apis.personality.get_personalities();
         console.log(response);
         
         if(response.status == 200){
@@ -134,9 +142,18 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  const fetchCharacters = async () => {
+    try {
+      const response = await apis.character.get_characters();
+      setCharacters(response.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
   useEffect(() => {
     if (selectedTab === "students" || selectedTab === "answers") fetchStudents();
+    if (selectedTab === "characters") fetchCharacters();
   }, [selectedTab]);
 
   const filteredStudents = students.filter(
@@ -180,7 +197,7 @@ const AdminPage: React.FC = () => {
     };
     setPersonalities([...personalities, newPersonality]);
     
-    const response = await apis.common.admin_add_personality(newPersonality);
+    const response = await apis.personality.admin_add_personality(newPersonality);
     console.log(response);
     
     e.currentTarget.reset();
@@ -191,25 +208,42 @@ const AdminPage: React.FC = () => {
     const target = e.target as typeof e.target & {
       name: { value: string };
       details: { value: string };
-      image_url: { value: string };
+      image: { files: FileList };
       personality: { value: string };
     };
 
-    const newCharacter: Character = {
-      id: characters.length ? Math.max(...characters.map((c) => c.id)) + 1 : 1,
+    const imageFile = target.image.files?.[0];
+    if (!imageFile) {
+      alert("Lütfen bir görsel seçin");
+      return;
+    }
+
+    const formData: CharacterFormData = {
       name: target.name.value,
       details: target.details.value,
-      image_url: target.image_url.value,
       personality: target.personality.value,
+      image: imageFile,
     };
-    console.log(newCharacter);
     
-    setCharacters([...characters, newCharacter]);
+    console.log("Form data:", formData);
     
-    const response = await apis.common.admin_add_character(newCharacter);
-    console.log(response);
+    try {
+      const response = await apis.character.admin_add_character(formData);
+      console.log("Character added:", response);
+      
+      if (response.status === 200 || response.status === 201) {
+        // Refresh characters list after successful addition
+        fetchCharacters();
+      }
+    } catch (error) {
+      console.error("Error adding character:", error);
+      alert("Karakter eklenirken bir hata oluştu");
+    }
 
-    e.currentTarget.reset();
+    // Reset form if it's still available
+    if (e.currentTarget) {
+      e.currentTarget.reset();
+    }
   };
 
   /** Drawer aç */
@@ -227,7 +261,7 @@ const AdminPage: React.FC = () => {
   };
 
   /** Drawer içi form alanı güncelleme (controlled) */
-  const onEditChange = (field: string, value: string) => {
+  const onEditChange = (field: string, value: string | File) => {
     if (!editState) return;
     setEditState({
       ...editState,
@@ -235,7 +269,7 @@ const AdminPage: React.FC = () => {
     });
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editState) return;
 
     if (editState.entity === "task") {
@@ -248,7 +282,32 @@ const AdminPage: React.FC = () => {
     }
     if (editState.entity === "character") {
       const item = editState.data as Character;
-      setCharacters((prev) => prev.map((c) => (c.id === item.id ? item : c)));
+      
+      // If there's a new image file, upload it
+      if (item.image) {
+        try {
+          const formData = {
+            name: item.name,
+            details: item.details,
+            personality: item.personality,
+            image: item.image
+          };
+          
+          const response = await apis.character.admin_add_character(formData);
+          console.log("Character updated:", response);
+          
+          if (response.status === 200 || response.status === 201) {
+            // Refresh characters list
+            fetchCharacters();
+          }
+        } catch (error) {
+          console.error("Error updating character:", error);
+          alert("Karakter güncellenirken bir hata oluştu");
+        }
+      } else {
+        // Just update locally if no new image
+        setCharacters((prev) => prev.map((c) => (c.id === item.id ? item : c)));
+      }
     }
     closeEdit();
   };
@@ -344,12 +403,29 @@ const AdminPage: React.FC = () => {
           placeholder="Detaylar"
           rows={5}
         />
-        <label>Görsel URL (opsiyonel)</label>
+        <label>Görsel (opsiyonel)</label>
         <input
-          value={d.image_url}
-          onChange={(e) => onEditChange("image_url", e.target.value)}
-          placeholder="https://..."
+          type="file"
+          accept="image/*"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              onEditChange("image", file);
+            }
+          }}
+          placeholder="Yeni görsel seçin"
         />
+        {d.image_url && (
+          <div style={{ marginTop: "8px" }}>
+            <small>Mevcut görsel:</small>
+            <br />
+            <img 
+              src={d.image_url} 
+              alt="Current character" 
+              style={{ maxWidth: "100px", maxHeight: "100px", marginTop: "4px" }}
+            />
+          </div>
+        )}
       </>
     );
   };
@@ -851,10 +927,16 @@ const AdminPage: React.FC = () => {
           <div className="character-section">
             <h3 style={{ fontWeight: "bold", color: "#2c3e50" }}>Karakterler</h3>
 
-            <form onSubmit={handleAddCharacter}>
+            <form onSubmit={handleAddCharacter} encType="multipart/form-data">
               <input name="name" placeholder="Karakter Adı" required />
               <input name="details" placeholder="Detaylar" required />
-              <input name="image_url" placeholder="Görsel URL (opsiyonel)" />
+              <input 
+                name="image" 
+                type="file" 
+                accept="image/*" 
+                placeholder="Karakter Görseli" 
+                required 
+              />
               <select name="personality" required>
                 <option value="">Kişilik Tipi Seçin</option>
                 {personalities.map((p, i) => (
