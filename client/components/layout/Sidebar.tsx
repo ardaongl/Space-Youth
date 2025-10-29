@@ -60,7 +60,7 @@ export function Sidebar() {
     }
   }, [user])
 
-  if(user.user.role == IUserRoles.ADMIN){
+  if(user.user && user.user.role == IUserRoles.ADMIN){
     items.push({ to: "/admin", label: t('admin'), icon: BriefcaseBusiness },)
   }
 
@@ -184,7 +184,7 @@ export function Sidebar() {
       </nav>
 
       {/* Zoom Integration - Only show for teachers and admins */}
-      {canAccessPlatform && user.user && !isStudent(user.user.role) && (
+      {canAccessPlatform && user.user && user.user.role && !isStudent(user.user.role) && (
         <div className="px-2 pb-3 mb-2">
           <div className="flex items-center justify-between gap-2 px-2">
             <div className="flex items-center gap-2">
@@ -222,7 +222,7 @@ export function Sidebar() {
             <div className="flex flex-col flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{user.user?.name || 'User'}</p>
               <p className="text-xs text-muted-foreground">
-                {getRoleLabel(user.user.role)}
+                {user.user ? getRoleLabel(user.user.role) : ''}
               </p>
             </div>
           </div>
