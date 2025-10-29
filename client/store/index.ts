@@ -3,12 +3,14 @@ import {TypedUseSelectorHook, useDispatch, useSelector} from 'react-redux';
 import userReducer from './slices/userSlice';
 import languageReducer from './slices/languageSlice';
 import studentReducer from './slices/studentSlice';
+import bookmarksReducer from './slices/bookmarksSlice';
 
 export const store = configureStore({
     reducer: {
       user: userReducer,
       language: languageReducer,
       student: studentReducer,
+      bookmarks: bookmarksReducer,
     },
   });
   

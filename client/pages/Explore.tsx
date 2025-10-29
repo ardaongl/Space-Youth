@@ -23,12 +23,7 @@ export default function Explore() {
   const { t } = useLanguage();
   const navigate = useNavigate();
 
-  // Redirect logged in users to dashboard (which is now the main platform)
-  useEffect(() => {
-    if (user.user) {
-      navigate("/dashboard");
-    }
-  }, [user.user, navigate]);
+  // No automatic redirect - let users choose where to go
 
   const features = [
     {

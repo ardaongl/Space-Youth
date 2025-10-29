@@ -5,7 +5,8 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { CheckCircle2, Clock, ShieldCheck, BookOpen, ListChecks, ArrowLeft, Bookmark, BookmarkCheck, Coins, Play, Calendar, Users2, MapPin, Users, Video, FileText, Download, ExternalLink, Copy } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { isAdmin, isTeacher } from "@/utils/roles";
-import { useBookmarks, BookmarkedContent, EnrolledContent } from "@/context/BookmarksContext";
+import { useBookmarks } from "@/hooks/useBookmarks";
+import { BookmarkedContent, EnrolledContent } from "@/store/slices/bookmarksSlice";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAppSelector } from "@/store";

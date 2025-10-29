@@ -49,7 +49,6 @@ import { DraftsProvider } from "./context/DraftsContext";
 import { TaskSubmissionsProvider } from "./context/TaskSubmissionsContext";
 import { TasksProvider } from "./context/TasksContext";
 import { StudentProvider, useStudent } from "./context/StudentContext";
-import { BookmarksProvider } from "./context/BookmarksContext";
 import { LanguageProvider, useLanguage } from "./context/LanguageContext";
 import TestWizard, { OnboardingData } from "@/components/onboarding/TestWizard";
 import RoleSwitcher from "./components/dev/RoleSwitcher";
@@ -78,10 +77,8 @@ const AppContent = () => {
       } else {
         setOnboardingOpen(false);
       }
-    } else {
-      dispatch(clearUser())
-      navigate("/login");
     }
+    // Don't automatically redirect to login - let users access public pages
   }, [user, student]);
 
   const handleComplete = async (data: OnboardingData) => {
@@ -211,21 +208,19 @@ const App = () => {
         <LanguageProvider>
             <StudentProvider>
               <TokensProvider>
-                <BookmarksProvider>
-                  <DraftsProvider>
-                    <TaskSubmissionsProvider>
-                      <TasksProvider>
-                        <TooltipProvider>
-                          <Toaster />
-                          <Sonner />
-                          <BrowserRouter>
-                            <AppContent />
-                          </BrowserRouter>
-                        </TooltipProvider>
-                      </TasksProvider>
-                    </TaskSubmissionsProvider>
-                  </DraftsProvider>
-                </BookmarksProvider>
+                <DraftsProvider>
+                  <TaskSubmissionsProvider>
+                    <TasksProvider>
+                      <TooltipProvider>
+                        <Toaster />
+                        <Sonner />
+                        <BrowserRouter>
+                          <AppContent />
+                        </BrowserRouter>
+                      </TooltipProvider>
+                    </TasksProvider>
+                  </TaskSubmissionsProvider>
+                </DraftsProvider>
               </TokensProvider>
             </StudentProvider>
         </LanguageProvider>

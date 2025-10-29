@@ -52,13 +52,7 @@ export function Sidebar() {
     { to: "/job-board", label: t('navigation.jobBoard'), icon: BriefcaseBusiness },
   ];
    
-  useEffect(() => {
-    if(user.token == ""){
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 1000);
-    }
-  }, [user])
+  // Removed automatic redirect - let users navigate manually
 
   if(user.user && user.user.role == IUserRoles.ADMIN){
     items.push({ to: "/admin", label: t('admin'), icon: BriefcaseBusiness },)
