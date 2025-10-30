@@ -11,7 +11,7 @@ import { email } from "zod/v4";
 import { useDispatch } from "react-redux";
 import { setUser, setUserToken } from "@/store/slices/userSlice";
 import { useAppSelector } from "@/store";
-import { IUserRoles } from "@/types/user/user";
+import { IUserRoles, STUDENT_STATUS } from "@/types/user/user";
 import { setStudent } from "@/store/slices/studentSlice";
 
 export default function Login() {
@@ -92,17 +92,35 @@ export default function Login() {
           if(user.role == IUserRoles.STUDENT){
             const student = {
               id: response.data.student.id,
-              approved: response.data.student.approved,
+              status: response.data.student.status,
               questions_and_answers: response.data.student.questions_and_answers
             }
             console.log("student => ", student);
             
             dispatch(setStudent(student));
+            
+            // Redirect based on student status
+            setTimeout(() => {
+              switch (student.status) {
+                case STUDENT_STATUS.INCOMPLETE:
+                case STUDENT_STATUS.PENDING:
+                case STUDENT_STATUS.REJECTED:
+                  // These will be handled by App.tsx status components - redirect to home
+                  navigate("/");
+                  break;
+                case STUDENT_STATUS.APPROVED:
+                  navigate("/dashboard");
+                  break;
+                default:
+                  navigate("/dashboard");
+              }
+            }, 1000);
+          } else {
+            // Non-student users go to dashboard
+            setTimeout(() => {
+              navigate("/dashboard");
+            }, 1000);
           }
-
-          setTimeout(() => {
-            navigate("/dashboard");
-          }, 1000);
 
         }
       } catch (error) {

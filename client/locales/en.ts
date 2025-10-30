@@ -41,6 +41,7 @@ export const en = {
     viewDetails: 'View Details',
     continue: 'Continue',
     active: 'Active',
+    logout: 'Logout',
     minutes: 'min',
     hours: 'hr',
     days: 'days',
@@ -1128,6 +1129,31 @@ export const en = {
       title: 'New Educational Videos',
       description: 'Explore our expanded video library with tutorials, lectures, and practical guides.',
       action: 'Watch Now'
+    }
+  },
+
+  // Student Status
+  status: {
+    pending: {
+      title: 'Your Application is Pending',
+      description: 'Your application has been successfully received and is currently under review. You will receive feedback as soon as possible. Please wait patiently.',
+      step1: 'Application Completed',
+      step2: 'Under Review',
+      step3: 'Awaiting Results',
+      info: 'The review process typically takes 2-3 business days. Results will be sent to your email address.',
+      contact: 'For questions: info@spaceyouth.com'
+    },
+    rejected: {
+      title: 'Your Application was Rejected',
+      description: 'Unfortunately, your application could not be accepted this time. However, this is not the end! You can reapply by continuing your development.',
+      possibleReasons: 'Possible Reasons:',
+      reason1: 'Incomplete or insufficient information',
+      reason2: 'Criteria compliance',
+      reason3: 'Quota limitations',
+      reapply: 'Reapply',
+      contact: 'Contact Support',
+      goBack: 'Back to Home',
+      encouragement: 'Every rejection is a new opportunity. Keep developing and try again!'
     }
   }
 };

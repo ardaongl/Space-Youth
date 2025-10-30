@@ -4,8 +4,18 @@ export enum IUserRoles {
     ADMIN = "admin"
 }
 
+
+export enum STUDENT_STATUS {
+    INCOMPLETE = "INCOMPLETE",
+    PENDING = "PENDING",
+    APPROVED = "APPROVED",
+    REJECTED = "REJECTED"
+}
+
 export interface Student {
     id: string;
-    approved: string;
+    status: STUDENT_STATUS;
     questions_and_answers: string;
 }
+
+

@@ -41,6 +41,7 @@ export const tr = {
     viewDetails: 'Detayları Gör',
     continue: 'Devam Et',
     active: 'Aktif',
+    logout: 'Çıkış Yap',
     minutes: 'dk',
     hours: 'sa',
     days: 'gün',
@@ -1127,6 +1128,31 @@ export const tr = {
       title: 'Yeni Eğitim Videoları',
       description: 'Eğitimler, dersler ve pratik rehberlerle genişletilmiş video kütüphanemizi keşfedin.',
       action: 'Şimdi İzle'
+    }
+  },
+
+  // Student Status
+  status: {
+    pending: {
+      title: 'Başvurunuz Onay Bekliyor',
+      description: 'Başvurunuz başarıyla alınmıştır ve şu anda değerlendirme aşamasındadır. En kısa sürede size geri dönüş yapılacaktır. Lütfen sabırla bekleyiniz.',
+      step1: 'Başvuru Tamamlandı',
+      step2: 'Değerlendirme Aşamasında',
+      step3: 'Sonuç Bekleniyor',
+      info: 'Değerlendirme süreci genellikle 2-3 iş günü sürmektedir. Sonuçlar e-posta adresinize gönderilecektir.',
+      contact: 'Sorularınız için: info@spaceyouth.com'
+    },
+    rejected: {
+      title: 'Başvurunuz Reddedildi',
+      description: 'Maalesef bu sefer başvurunuz kabul edilememiştir. Ancak bu bir son değil! Gelişiminizi sürdürerek tekrar başvurabilirsiniz.',
+      possibleReasons: 'Olası Nedenler:',
+      reason1: 'Eksik veya yetersiz bilgi',
+      reason2: 'Kriterlere uygunluk',
+      reason3: 'Kontenjan sınırı',
+      reapply: 'Tekrar Başvur',
+      contact: 'Destek İle İletişim',
+      goBack: 'Ana Sayfaya Dön',
+      encouragement: 'Her reddedilme yeni bir fırsattır. Gelişiminizi sürdürün ve tekrar deneyin!'
     }
   }
 };

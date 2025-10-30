@@ -865,24 +865,192 @@ const AdminPage: React.FC = () => {
         {/* Kişilik Tipleri — Kart Grid */}
         {selectedTab === "personalities" && (
           <div className="personality-section">
-            <h3 style={{ fontWeight: "bold", color: "#2c3e50" }}>
+            <h3 style={{ fontWeight: "bold", color: "#2c3e50", marginBottom: "24px" }}>
               Kişilik Tipleri
             </h3>
-            <form onSubmit={handleAddPersonality}>
-              <div>
-                <input name="name" placeholder="Ad" required />
-                <input name="type" placeholder="Tip (örnek: INTJ-A / INTJ-T)" required />
-                <input name="description" placeholder="Kısa Açıklama" required />
-              </div>
-              <textarea
-                name="longDescription"
-                placeholder="Uzun Açıklama"
-                rows={4}
-                style={{ resize: "vertical" }}
-                required
-              />
-              <button type="submit">Ekle</button>
-            </form>
+            
+            {/* Modern Compact Form Design */}
+            <div style={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              borderRadius: "12px",
+              padding: "20px",
+              marginBottom: "24px",
+              boxShadow: "0 6px 20px rgba(0,0,0,0.1)",
+              color: "white",
+              width: "100%"
+            }}>
+              <h4 style={{ 
+                margin: "0 0 16px 0", 
+                fontSize: "18px", 
+                fontWeight: "600",
+                color: "white"
+              }}>
+                Yeni Kişilik Tipi Ekle
+              </h4>
+              
+              <form onSubmit={handleAddPersonality} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                <div style={{ 
+                  display: "grid", 
+                  gridTemplateColumns: "1fr 1fr", 
+                  gap: "12px",
+                }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ 
+                      fontSize: "13px", 
+                      fontWeight: "500", 
+                      color: "rgba(255,255,255,0.9)" 
+                    }}>
+                      Kişilik Adı *
+                    </label>
+                    <input 
+                      name="name" 
+                      placeholder="Örn: Analitik Düşünür" 
+                      required 
+                      style={{
+                        padding: "14px 16px",
+                        borderRadius: "8px",
+                        border: "none",
+                        fontSize: "15px",
+                        backgroundColor: "rgba(255,255,255,0.95)",
+                        color: "#2c3e50",
+                        outline: "none",
+                        transition: "all 0.2s ease",
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                        height: "48px"
+                      }}
+                      onFocus={(e) => e.target.style.backgroundColor = "white"}
+                      onBlur={(e) => e.target.style.backgroundColor = "rgba(255,255,255,0.95)"}
+                    />
+                  </div>
+                  
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ 
+                      fontSize: "13px", 
+                      fontWeight: "500", 
+                      color: "rgba(255,255,255,0.9)" 
+                    }}>
+                      Tip Kodu *
+                    </label>
+                    <input 
+                      name="type" 
+                      placeholder="INTJ-A / INTJ-T" 
+                      required 
+                      style={{
+                        padding: "14px 16px",
+                        borderRadius: "8px",
+                        border: "none",
+                        fontSize: "15px",
+                        backgroundColor: "rgba(255,255,255,0.95)",
+                        color: "#2c3e50",
+                        outline: "none",
+                        transition: "all 0.2s ease",
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                        height: "48px"
+                      }}
+                      onFocus={(e) => e.target.style.backgroundColor = "white"}
+                      onBlur={(e) => e.target.style.backgroundColor = "rgba(255,255,255,0.95)"}
+                    />
+                  </div>
+                </div>
+                
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", width: "100%" }}>
+                  <label style={{ 
+                    fontSize: "13px", 
+                    fontWeight: "500", 
+                    color: "rgba(255,255,255,0.9)" 
+                  }}>
+                    Kısa Açıklama *
+                  </label>
+                  <textarea
+                    name="description" 
+                    placeholder="Bu kişilik tipinin kısa ve öz açıklamasını yazın..."
+                    required 
+                    rows={1}
+                    style={{
+                      padding: "14px 16px",
+                      borderRadius: "8px",
+                      border: "none",
+                      fontSize: "15px",
+                      backgroundColor: "rgba(255,255,255,0.95)",
+                      color: "#2c3e50",
+                      outline: "none",
+                      resize: "vertical",
+                      minHeight: "40px",
+                      maxHeight: "80px",
+                      width: "100%",
+                      fontFamily: "inherit",
+                      transition: "all 0.2s ease",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                    }}
+                    onFocus={(e) => e.target.style.backgroundColor = "white"}
+                    onBlur={(e) => e.target.style.backgroundColor = "rgba(255,255,255,0.95)"}
+                  />
+                </div>
+                
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", width: "100%" }}>
+                  <label style={{ 
+                    fontSize: "13px", 
+                    fontWeight: "500", 
+                    color: "rgba(255,255,255,0.9)" 
+                  }}>
+                    Detaylı Açıklama *
+                  </label>
+                  <textarea
+                    name="longDescription"
+                    placeholder="Bu kişilik tipinin detaylı özelliklerini, güçlü yanlarını, zayıf yanlarını ve genel karakteristiklerini yazın..."
+                    rows={2}
+                    style={{ 
+                      resize: "vertical",
+                      padding: "14px 16px",
+                      borderRadius: "8px",
+                      border: "none",
+                      fontSize: "15px",
+                      backgroundColor: "rgba(255,255,255,0.95)",
+                      color: "#2c3e50",
+                      outline: "none",
+                      minHeight: "60px",
+                      maxHeight: "120px",
+                      width: "100%",
+                      fontFamily: "inherit",
+                      transition: "all 0.2s ease",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                    }}
+                    required
+                    onFocus={(e) => e.target.style.backgroundColor = "white"}
+                    onBlur={(e) => e.target.style.backgroundColor = "rgba(255,255,255,0.95)"}
+                  />
+                </div>
+                
+                <button 
+                  type="submit" 
+                  style={{
+                    background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "8px",
+                    padding: "12px 20px",
+                    fontSize: "15px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    boxShadow: "0 4px 15px rgba(79, 172, 254, 0.3)",
+                    alignSelf: "flex-start",
+                    minWidth: "140px",
+                    height: "44px"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(79, 172, 254, 0.4)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "0 4px 15px rgba(79, 172, 254, 0.3)";
+                  }}
+                >
+                  ✨ Kişilik Tipi Ekle
+                </button>
+              </form>
+            </div>
 
             {personalities.length === 0 ? (
               <p>Kişilik tipi bulunmamaktadır.</p>

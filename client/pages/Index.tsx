@@ -7,6 +7,20 @@ import { useBookmarks } from "@/hooks/useBookmarks";
 import { BookmarkedContent } from "@/store/slices/bookmarksSlice";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/context/LanguageContext";
+import { apis } from "@/services";
+
+interface CourseData {
+  id: number;
+  title: string;
+  description: string;
+  image_url: string | null;
+  video_url: string | null;
+  category: string;
+  level: string;
+  duration: number;
+  certificate_url: string | null;
+  points: number;
+}
 
 function CourseCard({
   id,
@@ -18,6 +32,7 @@ function CourseCard({
   time,
   popular,
   slug,
+  imageUrl,
 }: {
   id: string;
   to: string;
@@ -28,6 +43,7 @@ function CourseCard({
   time: string;
   popular?: boolean;
   slug: string;
+  imageUrl?: string | null;
 }) {
   const { addBookmark, removeBookmark, isBookmarked } = useBookmarks();
   const { toast } = useToast();
@@ -55,7 +71,7 @@ function CourseCard({
         type: "course",
         slug,
         bookmarkedAt: Date.now(),
-        description: "Learn the essentials of planning and leading effective workshops. Build skills in facilitation, collaboration, and driving desired outcomes."
+        description: t('courses.sampleDescription')
       };
       addBookmark(bookmarkItem);
       toast({
@@ -86,8 +102,12 @@ function CourseCard({
             <Bookmark className="h-4 w-4" />
           )}
         </button>
-        <div className="aspect-[5/4] w-full rounded-xl bg-accent grid place-items-center">
-          <img src="/placeholder.svg" alt="course" className="h-24 opacity-70"/>
+        <div className="aspect-[5/4] w-full rounded-xl bg-accent grid place-items-center overflow-hidden">
+          {imageUrl ? (
+            <img src={imageUrl} alt={title} className="w-full h-full object-cover"/>
+          ) : (
+            <img src="/placeholder.svg" alt="course" className="h-24 opacity-70"/>
+          )}
         </div>
       </div>
       <div className="p-5">
@@ -108,45 +128,30 @@ function CourseCard({
 
 export default function Courses() {
   const { t } = useLanguage();
-  const [courses, setCourses] = useState([])
+  const [courses, setCourses] = useState<CourseData[]>([])
   const [showFilters, setShowFilters] = useState(false)
+  const { toast } = useToast();
 
   const handleGetCourses = async () => {
     try {
-      // Mock courses data - since we don't have real backend
-      const mockCourses = [
-        {
-          id: "course-1",
-          title: "Workshop Facilitation",
-          author: "Colin Michael Pace",
-          level: "Advanced",
-          rating: "4.6 (4,061)",
-          time: `4${t('common.hours')}`,
-          popular: true
-        },
-        {
-          id: "course-2", 
-          title: "UX Design Foundations",
-          author: "Gene Kamenez",
-          level: "Beginner",
-          rating: "4.8 (3,834)",
-          time: `6${t('common.hours')}`,
-          popular: false
-        },
-        {
-          id: "course-3",
-          title: "Introduction to Customer Journey Mapping", 
-          author: "Oliver West",
-          level: "Intermediate",
-          rating: "4.7 (2,102)",
-          time: `5${t('common.hours')}`,
-          popular: false
-        }
-      ];
+      const response = await apis.course.get_courses();
       
-      setCourses(mockCourses);
+      if (response.status === 200 && response.data) {
+        setCourses(response.data);
+      } else {
+        toast({
+          title: t('error.title') || 'Error',
+          description: t('error.loadingCourses') || 'Failed to load courses',
+          variant: 'destructive'
+        });
+      }
     } catch (error) {
       console.error("Error loading courses:", error);
+      toast({
+        title: t('error.title') || 'Error',
+        description: t('error.loadingCourses') || 'Failed to load courses',
+        variant: 'destructive'
+      });
     }
   }
 
@@ -155,7 +160,6 @@ export default function Courses() {
   }, [t])
 
   return (
-    // courses.map ile yapılmalı
     <AppLayout>
       <div className="py-6">
         {/* Header Section */}
@@ -223,37 +227,30 @@ export default function Courses() {
         </div>
 
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <CourseCard
-            id="course-1"
-            to="/courses/workshop-facilitation"
-            slug="workshop-facilitation"
-            title="Workshop Facilitation"
-            author="Colin Michael Pace"
-            level="Advanced"
-            rating="4.6 (4,061)"
-            time={`4${t('common.hours')}`}
-            popular
-          />
-          <CourseCard
-            id="course-2"
-            to="/courses/ux-design-foundations"
-            slug="ux-design-foundations"
-            title="UX Design Foundations"
-            author="Gene Kamenez"
-            level="Beginner"
-            rating="4.8 (3,834)"
-            time={`6${t('common.hours')}`}
-          />
-          <CourseCard
-            id="course-3"
-            to="/courses/introduction-to-customer-journey-mapping"
-            slug="introduction-to-customer-journey-mapping"
-            title="Introduction to Customer Journey Mapping"
-            author="Oliver West"
-            level="Intermediate"
-            rating="4.7 (2,102)"
-            time={`5${t('common.hours')}`}
-          />
+          {courses.map((course) => {
+            const slug = course.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+            const durationHours = Math.floor(course.duration / 60);
+            const durationMinutes = course.duration % 60;
+            const timeString = durationHours > 0 
+              ? `${durationHours}${t('common.hours')}` 
+              : `${durationMinutes}${t('common.minutes')}`;
+            
+            return (
+              <CourseCard
+                key={course.id}
+                id={course.id.toString()}
+                to={`/courses/${slug}`}
+                slug={slug}
+                title={course.title}
+                author={course.category || 'N/A'}
+                level={course.level}
+                rating={`${course.points} ${t('common.points')}`}
+                time={timeString}
+                popular={course.points > 100}
+                imageUrl={course.image_url}
+              />
+            );
+          })}
         </div>
       </div>
     </AppLayout>

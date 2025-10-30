@@ -3,7 +3,7 @@ import {createSlice, PayloadAction} from "@reduxjs/toolkit"
 
 
 interface studentState {
-    student: Student;
+    student: Student | null;
     isLoading: boolean;
 }
 

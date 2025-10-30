@@ -51,10 +51,12 @@ import { TasksProvider } from "./context/TasksContext";
 import { StudentProvider, useStudent } from "./context/StudentContext";
 import { LanguageProvider, useLanguage } from "./context/LanguageContext";
 import TestWizard, { OnboardingData } from "@/components/onboarding/TestWizard";
+import PendingStatus from "@/components/status/PendingStatus";
+import RejectedStatus from "@/components/status/RejectedStatus";
 import RoleSwitcher from "./components/dev/RoleSwitcher";
 import { store, useAppSelector } from "./store";
 import { apis } from "./services";
-import { IUserRoles } from "./types/user/user";
+import { IUserRoles, STUDENT_STATUS } from "./types/user/user";
 import { clearUser } from "./store/slices/userSlice";
 import { useToast } from "./hooks/use-toast";
 
@@ -69,16 +71,27 @@ const AppContent = () => {
   const dispatch = useDispatch();
   const { toast } = useToast();
   const { t } = useLanguage();
+
+  // Handle student status routing
   useEffect(() => {
-    if (user) {
-      if (user.role === IUserRoles.STUDENT) {
-        const shouldShowOnboarding = student && !student.approved;        
-        setOnboardingOpen(shouldShowOnboarding);
-      } else {
-        setOnboardingOpen(false);
+    if (user && user.role === IUserRoles.STUDENT && student) {
+      switch (student.status) {
+        case STUDENT_STATUS.INCOMPLETE:
+          setOnboardingOpen(true);
+          break;
+        case STUDENT_STATUS.PENDING:
+        case STUDENT_STATUS.REJECTED:
+          setOnboardingOpen(false);
+          break;
+        case STUDENT_STATUS.APPROVED:
+          setOnboardingOpen(false);
+          break;
+        default:
+          setOnboardingOpen(false);
       }
+    } else {
+      setOnboardingOpen(false);
     }
-    // Don't automatically redirect to login - let users access public pages
   }, [user, student]);
 
   const handleComplete = async (data: OnboardingData) => {
@@ -150,6 +163,34 @@ const AppContent = () => {
     setOnboardingOpen(true);
   };
 
+  // Check if user is a non-approved student
+  const isNonApprovedStudent = user && 
+    user.role === IUserRoles.STUDENT && 
+    student && 
+    student.status !== STUDENT_STATUS.APPROVED;
+
+  // If user is a non-approved student, show only status components
+  if (isNonApprovedStudent) {
+    return (
+      <>
+        {/* Show onboarding for incomplete applications */}
+        {student.status === STUDENT_STATUS.INCOMPLETE && (
+          <TestWizard
+            open={onboardingOpen}
+            onClose={() => { /* Gate: do nothing to enforce completion */ }}
+            onComplete={handleComplete}
+          />
+        )}
+        
+        {/* Show pending status for pending applications */}
+        {student.status === STUDENT_STATUS.PENDING && <PendingStatus />}
+        
+        {/* Show rejected status for rejected applications */}
+        {student.status === STUDENT_STATUS.REJECTED && <RejectedStatus />}
+      </>
+    );
+  }
+
   return (
     <>
       <Routes>
@@ -188,15 +229,6 @@ const AppContent = () => {
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-
-      {/* Only show onboarding for logged in users */}
-      {user && (
-        <TestWizard
-          open={onboardingOpen}
-          onClose={() => { /* Gate: do nothing to enforce completion */ }}
-          onComplete={handleComplete}
-        />
-      )}
     </>
   );
 };

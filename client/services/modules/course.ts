@@ -1,45 +1,45 @@
+import { api } from "../api";
+
 export class CourseAPI {
     
-    async getAllCourses(): Promise<any> {
+    get_courses = async () => {
         try {
-            // Mock courses data - since we don't have real backend
-            const mockCourses = [
-                {
-                    id: "course-1",
-                    title: "Workshop Facilitation",
-                    author: "Colin Michael Pace",
-                    level: "Advanced",
-                    rating: "4.6 (4,061)",
-                    time: "4h",
-                    popular: true
-                },
-                {
-                    id: "course-2", 
-                    title: "UX Design Foundations",
-                    author: "Gene Kamenez",
-                    level: "Beginner",
-                    rating: "4.8 (3,834)",
-                    time: "6h",
-                    popular: false
-                },
-                {
-                    id: "course-3",
-                    title: "Introduction to Customer Journey Mapping", 
-                    author: "Oliver West",
-                    level: "Intermediate",
-                    rating: "4.7 (2,102)",
-                    time: "5h",
-                    popular: false
-                }
-            ];
-            
-            return mockCourses;
+            const response = await api.get("/api/courses", {requiresAuth: true, validateStatus: s => s < 500})
+            return response;
         } catch (error) {
-            console.log(error);
-            throw new Error(
-                (error?.response?.status) || error.message
-            );
+            return error;
         }
     }
 
+    get_course = async (id: string) => {
+        try {
+            const response = await api.get(`/api/courses/${id}`, {requiresAuth: true, validateStatus: s => s < 500})
+            return response;
+        } catch (error) {
+            return error;
+        }
+    }
+
+    add_course = async (payload: {title: string, description: string, full_description: string, category: string, duration: string}) => {
+        try {
+            const response = await api.post(`/api/courses`, 
+                {
+                    title: payload.title,
+                    description: payload.description,
+                    full_description: payload.full_description
+                }, {requiresAuth: true, validateStatus: s => s < 500})
+            return response;
+        } catch (error) {
+            return error;
+        }
+    }
+
+    delete_course = async (id: string) => {
+        try {
+            const response = await api.delete(`/api/courses/${id}`, {requiresAuth: true, validateStatus: s => s < 500})
+            return response;
+        } catch (error) {
+            return error;
+        }
+    }
 }
