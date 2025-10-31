@@ -419,6 +419,16 @@ export default function CourseDetail() {
                               {transformedCourseData.lessons[0].duration} dakika
                             </span>
                           </div>
+                          {transformedCourseData.lessons[0].zoom_join_url && (
+                            <Button
+                              size="sm"
+                              className="mt-3 gap-2"
+                              onClick={() => window.open(transformedCourseData.lessons[0].zoom_join_url, '_blank')}
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                              {t('courseDetail.joinZoom')}
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -438,21 +448,23 @@ export default function CourseDetail() {
                               <p className="font-medium">{lesson.title}</p>
                             </div>
                             <p className="text-sm text-muted-foreground">{lesson.content}</p>
-                            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {lesson.duration} dakika
-                              </span>
+                            <div className="flex items-center justify-between mt-3">
+                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  {lesson.duration} dakika
+                                </span>
+                              </div>
                               {lesson.zoom_join_url && (
-                                <a
-                                  href={lesson.zoom_join_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 hover:underline flex items-center gap-1"
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="gap-2"
+                                  onClick={() => window.open(lesson.zoom_join_url, '_blank')}
                                 >
-                                  <ExternalLink className="h-3 w-3" />
-                                  Zoom
-                                </a>
+                                  <ExternalLink className="h-4 w-4" />
+                                  {t('courseDetail.joinZoom')}
+                                </Button>
                               )}
                             </div>
                           </div>

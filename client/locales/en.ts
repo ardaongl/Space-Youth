@@ -161,6 +161,8 @@ export const en = {
   // Courses
   courses: {
     title: 'Courses',
+    myCourses: 'My Courses',
+    otherCourses: 'Other Courses',
     addCourse: 'Add Course',
     editCourse: 'Edit Course',
     courseTitle: 'Course Title',
@@ -1038,6 +1040,7 @@ export const en = {
   courseDetail: {
     enrolled: 'Enrolled',
     enrollWithCoins: 'enroll with coins',
+    joinZoom: 'Join Zoom',
     description: 'Description',
     details: 'Details',
     teacher: 'Teacher',

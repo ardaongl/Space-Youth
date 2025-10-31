@@ -161,6 +161,8 @@ export const tr = {
   // Courses
   courses: {
     title: 'Kurslar',
+    myCourses: 'Kurslarım',
+    otherCourses: 'Diğer Kurslar',
     addCourse: 'Kurs Ekle',
     editCourse: 'Kursu Düzenle',
     courseTitle: 'Kurs Başlığı',
@@ -1037,6 +1039,7 @@ export const tr = {
   courseDetail: {
     enrolled: 'Kayıtlı',
     enrollWithCoins: 'coin ile kayıt ol',
+    joinZoom: 'Zoom\'a Katıl',
     description: 'Açıklama',
     details: 'Detaylar',
     teacher: 'Öğretmen',
