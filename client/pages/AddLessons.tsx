@@ -32,6 +32,11 @@ export default function AddLessons() {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [createdCourse, setCreatedCourse] = useState<any>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [selectedCertificate, setSelectedCertificate] = useState<File | null>(null);
+  const [isUploadingCertificate, setIsUploadingCertificate] = useState(false);
 
   useEffect(() => {
     // Check if course data exists
@@ -162,11 +167,10 @@ export default function AddLessons() {
       const response = await apis.course.add_course(coursePayload);
       console.log("Course response:", response);
       if (response.status === 200 || response.status === 201) {
+        // Store created course data
+        setCreatedCourse(response.data);
         // Clear session storage
         sessionStorage.removeItem("courseData");
-        
-        // Navigate back to courses
-        navigate("/courses");
       } else {
         alert("Kurs oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.");
       }
@@ -184,6 +188,383 @@ export default function AddLessons() {
     try { return localStorage.getItem("zoom.connected") === "true"; } catch { return false; }
   })();
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedImage(e.target.files[0]);
+    }
+  };
+
+  const handleCertificateSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedCertificate(e.target.files[0]);
+    }
+  };
+
+  const handleUploadImage = async () => {
+    if (!selectedImage || !createdCourse?.id) {
+      alert("Lütfen bir görsel seçin");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      const response = await apis.course.upload_course_file(
+        createdCourse.id,
+        selectedImage,
+        'image'
+      );
+
+      if (response.status === 200) {
+        // Update course data with new image URL
+        setCreatedCourse({
+          ...createdCourse,
+          image_url: response.data.image_url,
+        });
+        setSelectedImage(null);
+        alert("Kurs fotoğrafı başarıyla yüklendi!");
+      } else {
+        alert("Fotoğraf yüklenirken bir hata oluştu. Lütfen tekrar deneyin.");
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("Fotoğraf yüklenirken bir hata oluştu. Lütfen tekrar deneyin.");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleUploadCertificate = async () => {
+    if (!selectedCertificate || !createdCourse?.id) {
+      alert("Lütfen bir sertifika dosyası seçin");
+      return;
+    }
+
+    setIsUploadingCertificate(true);
+    try {
+      const response = await apis.course.upload_course_file(
+        createdCourse.id,
+        selectedCertificate,
+        'certificate'
+      );
+
+      console.log("Certificate upload response:", response);
+
+      if (response.status === 200 || response.status === 201) {
+        // Update course data with new certificate URL
+        // API returns image_url for both image and certificate
+        setCreatedCourse({
+          ...createdCourse,
+          certificate_url: response.data?.image_url || response.data?.certificate_url,
+        });
+        setSelectedCertificate(null);
+        alert("Sertifika başarıyla yüklendi!");
+      } else {
+        console.error("Upload failed:", response);
+        const errorMessage = response.data?.error?.message || 
+                           response.data?.message || 
+                           response.data?.error ||
+                           `HTTP ${response.status}: ${response.statusText}`;
+        alert(`Sertifika yüklenirken bir hata oluştu: ${errorMessage}`);
+      }
+    } catch (error) {
+      console.error("Error uploading certificate:", error);
+      alert("Sertifika yüklenirken bir hata oluştu. Lütfen tekrar deneyin.");
+    } finally {
+      setIsUploadingCertificate(false);
+    }
+  };
+
+  // Show success page if course is created
+  if (createdCourse) {
+    // Filter out teacher's sensitive information
+    const { teacher, ...courseData } = createdCourse;
+    const teacherDisplay = teacher ? {
+      name: `${teacher.first_name} ${teacher.last_name}`,
+      email: teacher.email,
+    } : null;
+    
+    return (
+      <AppLayout>
+        <div className="container mx-auto py-6">
+          <div className="max-w-5xl mx-auto">
+            {/* Success Header */}
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 dark:bg-green-900 rounded-full mb-4">
+                <svg className="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h1 className="text-3xl font-bold mb-2">Kurs Başarıyla Oluşturuldu!</h1>
+              <p className="text-muted-foreground">Kursunuz hazır, şimdi fotoğraf ve sertifika ekleyebilirsiniz.</p>
+            </div>
+
+            {/* Course Information Card */}
+            <div className="bg-card rounded-lg border shadow-sm p-8 mb-6">
+              <h2 className="text-2xl font-bold mb-6">Kurs Bilgileri</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-semibold text-muted-foreground block mb-1">Kurs Başlığı</label>
+                    <p className="text-lg font-medium">{courseData.title}</p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-semibold text-muted-foreground block mb-1">Açıklama</label>
+                    <p className="text-base text-muted-foreground">{courseData.description}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-semibold text-muted-foreground block mb-1">Seviye</label>
+                    <p className="text-base capitalize">{courseData.level}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-muted-foreground block mb-1">Toplam Süre</label>
+                    <p className="text-base">{courseData.duration} dakika</p>
+                  </div>
+                  {teacherDisplay && (
+                    <div>
+                      <label className="text-sm font-semibold text-muted-foreground block mb-1">Öğretmen</label>
+                      <p className="text-base">{teacherDisplay.name}</p>
+                      <p className="text-sm text-muted-foreground">{teacherDisplay.email}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {courseData.labels && courseData.labels.length > 0 && (
+                <div className="mt-6 pt-6 border-t">
+                  <label className="text-sm font-semibold text-muted-foreground mb-2 block">Etiketler</label>
+                  <div className="flex flex-wrap gap-2">
+                    {courseData.labels.map((label: any) => (
+                      <span key={label.id} className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
+                        {label.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* File Upload Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {/* Image Upload Section */}
+              <div className="bg-card rounded-lg border shadow-sm p-6">
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Upload className="h-5 w-5" />
+                  Kurs Fotoğrafı
+                </h2>
+                
+                {courseData.image_url ? (
+                  <div className="space-y-4">
+                    <div className="relative w-full aspect-video rounded-lg overflow-hidden border">
+                      <img 
+                        src={courseData.image_url} 
+                        alt={courseData.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground text-center">Kurs fotoğrafı yüklendi.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageSelect}
+                        className="hidden"
+                        id="course-image-upload"
+                      />
+                      <label
+                        htmlFor="course-image-upload"
+                        className="cursor-pointer flex flex-col items-center gap-2"
+                      >
+                        <Upload className="h-8 w-8 text-muted-foreground" />
+                        <p className="text-sm font-medium">
+                          {selectedImage ? selectedImage.name : "Kurs fotoğrafı seçin"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          PNG, JPG, GIF
+                        </p>
+                      </label>
+                    </div>
+
+                    {selectedImage && (
+                      <div className="space-y-3">
+                        <div className="relative w-full aspect-video rounded-lg overflow-hidden border">
+                          <img
+                            src={URL.createObjectURL(selectedImage)}
+                            alt="Preview"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <Button
+                          onClick={handleUploadImage}
+                          disabled={isUploadingImage}
+                          className="w-full"
+                        >
+                          {isUploadingImage ? "Yükleniyor..." : "Fotoğrafı Yükle"}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Certificate Upload Section */}
+              <div className="bg-card rounded-lg border shadow-sm p-6">
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Award className="h-5 w-5" />
+                  Sertifika
+                </h2>
+                
+                {courseData.certificate_url ? (
+                  <div className="space-y-4">
+                    <div className="relative w-full aspect-video rounded-lg overflow-hidden border bg-muted flex items-center justify-center">
+                      <div className="text-center">
+                        <Award className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-sm font-medium">Sertifika yüklendi</p>
+                        <a
+                          href={courseData.certificate_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-primary hover:underline mt-2 inline-block"
+                        >
+                          Sertifikayı Görüntüle
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx,image/*"
+                        onChange={handleCertificateSelect}
+                        className="hidden"
+                        id="certificate-upload"
+                      />
+                      <label
+                        htmlFor="certificate-upload"
+                        className="cursor-pointer flex flex-col items-center gap-2"
+                      >
+                        <Award className="h-8 w-8 text-muted-foreground" />
+                        <p className="text-sm font-medium">
+                          {selectedCertificate ? selectedCertificate.name : "Sertifika dosyası seçin"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          PDF, DOC, DOCX, Resim
+                        </p>
+                      </label>
+                    </div>
+
+                    {selectedCertificate && (
+                      <div className="space-y-3">
+                        <div className="p-4 bg-muted rounded-lg">
+                          <p className="text-sm font-medium">{selectedCertificate.name}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {(selectedCertificate.size / 1024).toFixed(2)} KB
+                          </p>
+                        </div>
+                        <Button
+                          onClick={handleUploadCertificate}
+                          disabled={isUploadingCertificate}
+                          className="w-full"
+                        >
+                          {isUploadingCertificate ? "Yükleniyor..." : "Sertifikayı Yükle"}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Lessons Section */}
+            {courseData.lessons && courseData.lessons.length > 0 && (
+              <div className="bg-card rounded-lg border shadow-sm p-8 mb-6">
+                <h2 className="text-2xl font-bold mb-6">Dersler ({courseData.lessons.length})</h2>
+                <div className="space-y-3">
+                  {courseData.lessons.map((lesson: any, index: number) => (
+                    <div key={lesson.id} className="border rounded-lg p-4 hover:bg-muted/50 transition">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                              {index + 1}
+                            </span>
+                            <div>
+                              <p className="font-semibold text-lg">{lesson.title}</p>
+                              <p className="text-sm text-muted-foreground">{lesson.content}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-4 w-4" />
+                              {lesson.duration} dakika
+                            </span>
+                            {lesson.zoom_start_time && (
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-4 w-4" />
+                                {new Date(lesson.zoom_start_time).toLocaleDateString('tr-TR', {
+                                  day: 'numeric',
+                                  month: 'long',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {lesson.zoom_join_url && (
+                          <a
+                            href={lesson.zoom_join_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium whitespace-nowrap"
+                          >
+                            Zoom'a Katıl
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-4">
+              <Button
+                variant="outline"
+                onClick={() => navigate("/courses")}
+                className="flex-1"
+                size="lg"
+              >
+                Kurslara Dön
+              </Button>
+              <Button
+                onClick={() => {
+                  setCreatedCourse(null);
+                  setLessons([]);
+                  navigate("/courses/add");
+                }}
+                className="flex-1"
+                size="lg"
+              >
+                Yeni Kurs Ekle
+              </Button>
+            </div>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>

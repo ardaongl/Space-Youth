@@ -29,8 +29,14 @@ api.interceptors.request.use(
     }
 
     if (!headers.has('Accept')) headers.set('Accept', 'application/json');
-    if (!headers.has('Content-Type'))
+    
+    // Don't set Content-Type for FormData, axios will set it automatically with boundary
+    // Also remove Content-Type if it exists for FormData to let axios handle it
+    if (config.data instanceof FormData) {
+      headers.delete('Content-Type');
+    } else if (!headers.has('Content-Type')) {
       headers.set('Content-Type', 'application/json');
+    }
 
     config.headers = headers;
     return config;

@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { BookmarkedContent, EnrolledContent } from "@/store/slices/bookmarksSlic
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAppSelector } from "@/store";
+import { apis } from "@/services";
 
 export default function CourseDetail() {
   const { slug } = useParams();
@@ -25,43 +27,118 @@ export default function CourseDetail() {
   const { addBookmark, removeBookmark, isBookmarked, addEnrollment, isEnrolled } = useBookmarks();
   const { toast } = useToast();
 
-  // Mock course data - in real app, fetch from API
-  const courseData = {
-    id: `course-${slug}`,
-    title: slug ? slug.replace(/-/g, " ") : "Workshop Facilitation",
-    description: "Workshops are powerful tools for tackling complex problems and driving innovative solutions. This course equips you with the skills to effectively facilitate workshops that inspire collaboration, enhance teamwork, and generate breakthrough ideas. Throughout the course, you'll explore common challenges teams face and learn how to overcome them.",
-    price: 250, // coin value
-    teacherId: "1", // instructor id for navigation
-    teacherName: "Colin Michael Pace",
-    duration: "4 hours",
-    level: "Advanced",
-    rating: "4.6",
-    certification: true,
-    lessonsCount: 15,
-    examsCount: 3,
-    teacherPhotos: [
-      "/image.png",
-      "/image.png",
-      "/image.png"
-    ],
-    teacherVideos: [
-      { thumbnail: "/image.png", title: "Introduction to Workshop Facilitation" },
-      { thumbnail: "/image.png", title: "Advanced Techniques" }
-    ],
-    participants: [
-      { id: 1, name: "Ahmet Yılmaz", email: "ahmet@example.com" },
-      { id: 2, name: "Ayşe Demir", email: "ayse@example.com" },
-      { id: 3, name: "Mehmet Kaya", email: "mehmet@example.com" },
-      { id: 4, name: "Fatma Özkan", email: "fatma@example.com" },
-      { id: 5, name: "Ali Çelik", email: "ali@example.com" },
-      { id: 6, name: "Zeynep Arslan", email: "zeynep@example.com" },
-      { id: 7, name: "Can Yıldız", email: "can@example.com" },
-      { id: 8, name: "Elif Korkmaz", email: "elif@example.com" }
-    ]
+  const [courseData, setCourseData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Find course ID from slug by fetching courses list
+  useEffect(() => {
+    const fetchCourseData = async () => {
+      try {
+        setLoading(true);
+        console.log('🔍 CourseDetail: Fetching course data for slug:', slug);
+        
+        // First, get all courses to find the one matching the slug
+        const coursesResponse = await apis.course.get_courses();
+        
+        if (coursesResponse.status === 200 && coursesResponse.data) {
+          console.log('📚 All courses fetched:', coursesResponse.data.length);
+          
+          // Find course by matching slug (title -> slug conversion)
+          const matchingCourse = coursesResponse.data.find((course: any) => {
+            const courseSlug = course.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+            return courseSlug === slug;
+          });
+
+          if (matchingCourse) {
+            console.log('✅ Found matching course:', matchingCourse.id, matchingCourse.title);
+            
+            // Now fetch full course details
+            const courseResponse = await apis.course.get_course(matchingCourse.id.toString());
+            
+            if (courseResponse.status === 200 && courseResponse.data) {
+              console.log('✅ Course details fetched successfully');
+              setCourseData(courseResponse.data);
+            } else {
+              console.error('❌ Failed to fetch course details:', courseResponse);
+              setError('Kurs detayları yüklenemedi');
+            }
+          } else {
+            console.error('❌ No course found for slug:', slug);
+            setError('Kurs bulunamadı');
+          }
+        } else {
+          console.error('❌ Failed to fetch courses:', coursesResponse);
+          setError('Kurslar yüklenemedi');
+        }
+      } catch (err) {
+        console.error('❌ Error in fetchCourseData:', err);
+        setError('Bir hata oluştu');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (slug) {
+      fetchCourseData();
+    }
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <AppLayout>
+        <div className="container mx-auto py-6">
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">{t('common.loading') || 'Yükleniyor...'}</p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (error || !courseData) {
+    return (
+      <AppLayout>
+        <div className="container mx-auto py-6">
+          <div className="text-center py-12">
+            <p className="text-destructive">{error || 'Kurs bulunamadı'}</p>
+            <Button onClick={() => navigate('/courses')} className="mt-4">
+              {t('common.back')}
+            </Button>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  // Transform API data to match component expectations
+  const transformedCourseData = {
+    id: courseData.id?.toString() || `course-${slug}`,
+    title: courseData.title || 'Untitled Course',
+    description: courseData.description || '',
+    price: courseData.points || 250,
+    teacherId: courseData.teacher?.id || '',
+    teacherName: courseData.teacher 
+      ? `${courseData.teacher.first_name || ''} ${courseData.teacher.last_name || ''}`.trim()
+      : 'Unknown Teacher',
+    duration: courseData.duration 
+      ? `${courseData.duration} dakika`
+      : 'N/A',
+    level: courseData.level || 'N/A',
+    rating: courseData.points?.toString() || '0',
+    certification: !!courseData.certificate_url,
+    lessonsCount: courseData.lessons?.length || 0,
+    examsCount: 0, // API'de exams yok şimdilik
+    image_url: courseData.image_url,
+    certificate_url: courseData.certificate_url,
+    lessons: courseData.lessons || [],
+    labels: courseData.labels || [],
+    teacher: courseData.teacher,
+    participants: [] // TODO: API'den participants endpoint'i eklendiğinde
   };
 
-  const bookmarked = isBookmarked(courseData.id);
-  const enrolled = isEnrolled(courseData.id);
+  const bookmarked = isBookmarked(transformedCourseData.id);
+  const enrolled = isEnrolled(transformedCourseData.id);
   
   // Mock data for enrolled content
   const enrolledContent = {
@@ -78,28 +155,28 @@ export default function CourseDetail() {
 
   const handleSave = () => {
     if (bookmarked) {
-      removeBookmark(courseData.id);
+      removeBookmark(transformedCourseData.id);
       toast({
         title: t('bookmarks.removedFromBookmarks'),
-        description: `${courseData.title} ${t('bookmarks.removedFromBookmarks')}.`,
+        description: `${transformedCourseData.title} ${t('bookmarks.removedFromBookmarks')}.`,
       });
     } else {
       const bookmarkItem: BookmarkedContent = {
-        id: courseData.id,
-        title: courseData.title,
-        author: courseData.teacherName,
-        level: courseData.level,
-        rating: courseData.rating,
-        time: courseData.duration,
+        id: transformedCourseData.id,
+        title: transformedCourseData.title,
+        author: transformedCourseData.teacherName,
+        level: transformedCourseData.level,
+        rating: transformedCourseData.rating,
+        time: transformedCourseData.duration,
         type: "course",
         slug: slug || "",
         bookmarkedAt: Date.now(),
-        description: courseData.description
+        description: transformedCourseData.description
       };
       addBookmark(bookmarkItem);
       toast({
         title: t('bookmarks.addedToBookmarks'),
-        description: `${courseData.title} ${t('bookmarks.addedToBookmarks')}.`,
+        description: `${transformedCourseData.title} ${t('bookmarks.addedToBookmarks')}.`,
       });
     }
   };
@@ -114,23 +191,23 @@ export default function CourseDetail() {
     }
     
     const enrollmentItem: EnrolledContent = {
-      id: courseData.id,
-      title: courseData.title,
-      author: courseData.teacherName,
-      level: courseData.level,
-      rating: courseData.rating,
-      time: courseData.duration,
+      id: transformedCourseData.id,
+      title: transformedCourseData.title,
+      author: transformedCourseData.teacherName,
+      level: transformedCourseData.level,
+      rating: transformedCourseData.rating,
+      time: transformedCourseData.duration,
       type: "course",
       slug: slug || "",
       bookmarkedAt: Date.now(),
       enrolledAt: Date.now(),
       progress: 0,
-      description: courseData.description
+      description: transformedCourseData.description
     };
     addEnrollment(enrollmentItem);
     toast({
       title: t('courses.enrolledSuccessfully'),
-      description: t('courses.enrolledSuccessfullyDescription', { title: courseData.title }),
+      description: t('courses.enrolledSuccessfullyDescription', { title: transformedCourseData.title }),
     });
   };
 
@@ -152,7 +229,7 @@ export default function CourseDetail() {
           <div>
             {/* Course Header */}
             <div className="space-y-4">
-              <h1 className="text-4xl font-bold tracking-tight capitalize">{courseData.title}</h1>
+              <h1 className="text-4xl font-bold tracking-tight">{transformedCourseData.title}</h1>
               
               {/* Price and Actions */}
               <div className="flex items-center justify-between flex-wrap gap-4">
@@ -192,7 +269,7 @@ export default function CourseDetail() {
                       ) : (
                         <>
                           <Coins className="h-5 w-5" />
-                          {courseData.price} {t('courseDetail.enrollWithCoins')}
+                          {transformedCourseData.price} {t('courseDetail.enrollWithCoins')}
                         </>
                       )}
                     </Button>
@@ -204,7 +281,7 @@ export default function CourseDetail() {
               <div className="mt-8">
                 <h2 className="text-2xl font-semibold mb-4">{t('courseDetail.description')}</h2>
                 <p className="text-muted-foreground leading-7">
-                  {courseData.description}
+                  {transformedCourseData.description}
                 </p>
               </div>
 
@@ -214,12 +291,12 @@ export default function CourseDetail() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div 
                     className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted transition-colors group"
-                    onClick={() => navigate(`/instructor/${courseData.teacherId}`)}
+                    onClick={() => transformedCourseData.teacherId && navigate(`/instructor/${transformedCourseData.teacherId}`)}
                   >
                     <BookOpen className="h-5 w-5 text-primary flex-shrink-0" />
                     <div>
                       <p className="text-sm font-medium">{t('courseDetail.teacher')}</p>
-                      <p className="text-sm text-muted-foreground group-hover:text-primary transition-colors">{courseData.teacherName}</p>
+                      <p className="text-sm text-muted-foreground group-hover:text-primary transition-colors">{transformedCourseData.teacherName}</p>
                     </div>
                   </div>
                   
@@ -227,7 +304,7 @@ export default function CourseDetail() {
                     <Clock className="h-5 w-5 text-primary flex-shrink-0" />
                     <div>
                       <p className="text-sm font-medium">{t('courseDetail.duration')}</p>
-                      <p className="text-sm text-muted-foreground">{courseData.duration}</p>
+                      <p className="text-sm text-muted-foreground">{transformedCourseData.duration}</p>
                     </div>
                   </div>
                   
@@ -236,7 +313,7 @@ export default function CourseDetail() {
                     <div>
                       <p className="text-sm font-medium">{t('courseDetail.certificate')}</p>
                       <p className="text-sm text-muted-foreground">
-                        {courseData.certification ? t('courseDetail.certified') : t('courseDetail.nonCertified')}
+                        {transformedCourseData.certification ? t('courseDetail.certified') : t('courseDetail.nonCertified')}
                       </p>
                     </div>
                   </div>
@@ -246,10 +323,27 @@ export default function CourseDetail() {
                     <div>
                       <p className="text-sm font-medium">{t('courseDetail.content')}</p>
                       <p className="text-sm text-muted-foreground">
-                        {courseData.lessonsCount} {t('courseDetail.lessons')}, {courseData.examsCount} {t('courseDetail.exams')}
+                        {transformedCourseData.lessonsCount} {t('courseDetail.lessons')}, {transformedCourseData.examsCount} {t('courseDetail.exams')}
                       </p>
                     </div>
                   </div>
+                  
+                  {/* Labels */}
+                  {transformedCourseData.labels && transformedCourseData.labels.length > 0 && (
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                      <BookOpen className="h-5 w-5 text-primary flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium">Etiketler</p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {transformedCourseData.labels.map((label: any) => (
+                            <span key={label.id} className="text-xs px-2 py-1 bg-primary/10 text-primary rounded">
+                              {label.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -274,83 +368,105 @@ export default function CourseDetail() {
             </div>
           </div>
 
-          {/* Right Sidebar - Teacher Photos & Videos */}
+          {/* Right Sidebar - Course Image & Lessons */}
           <div className="space-y-6">
             {/* Course Photo */}
-            <div className="rounded-lg border overflow-hidden bg-muted">
-              <img 
-                src={courseData.teacherPhotos[0]} 
-                alt="Course photo"
-                className="w-full aspect-video object-cover"
-              />
-            </div>
-
-            {/* Course Videos */}
-            {courseData.teacherVideos.length === 1 ? (
-              // Single video - display directly
-              <div className="rounded-lg border bg-card p-6">
-                <div className="group cursor-pointer">
-                  <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
-                    <img 
-                      src={courseData.teacherVideos[0].thumbnail} 
-                      alt={courseData.teacherVideos[0].title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/50 transition">
-                      <Play className="h-12 w-12 text-white" />
-                    </div>
-                  </div>
-                  <p className="text-sm font-medium mt-2">{courseData.teacherVideos[0].title}</p>
-                </div>
+            {transformedCourseData.image_url ? (
+              <div className="rounded-lg border overflow-hidden bg-muted">
+                <img 
+                  src={transformedCourseData.image_url} 
+                  alt={transformedCourseData.title}
+                  className="w-full aspect-video object-cover"
+                />
               </div>
             ) : (
-              // Multiple videos - display as carousel
-              <div className="rounded-lg border bg-card p-6">
-                <Carousel className="w-full">
-                  <CarouselContent>
-                    {courseData.teacherVideos.map((video, index) => (
-                      <CarouselItem key={index}>
-                        <div className="group cursor-pointer">
-                          <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
-                            <img 
-                              src={video.thumbnail} 
-                              alt={video.title}
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/50 transition">
-                              <Play className="h-12 w-12 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium mt-2">{video.title}</p>
-                        </div>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <CarouselPrevious className="left-2" />
-                  <CarouselNext className="right-2" />
-                </Carousel>
+              <div className="rounded-lg border overflow-hidden bg-muted aspect-video flex items-center justify-center">
+                <p className="text-muted-foreground">Kurs fotoğrafı yok</p>
               </div>
             )}
 
+            {/* Course Lessons */}
+            {transformedCourseData.lessons && transformedCourseData.lessons.length > 0 ? (
+              transformedCourseData.lessons.length === 1 ? (
+                // Single lesson - display directly
+                <div className="rounded-lg border bg-card p-6">
+                  <h3 className="text-lg font-semibold mb-4">Dersler</h3>
+                  <div className="space-y-3">
+                    <div className="p-4 border rounded-lg hover:bg-muted/50 transition">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium">{transformedCourseData.lessons[0].title}</p>
+                          <p className="text-sm text-muted-foreground mt-1">{transformedCourseData.lessons[0].content}</p>
+                          <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {transformedCourseData.lessons[0].duration} dakika
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Multiple lessons - display as list
+                <div className="rounded-lg border bg-card p-6">
+                  <h3 className="text-lg font-semibold mb-4">Dersler ({transformedCourseData.lessons.length})</h3>
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {transformedCourseData.lessons.map((lesson: any, index: number) => (
+                      <div key={lesson.id || index} className="p-4 border rounded-lg hover:bg-muted/50 transition">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-xs font-semibold text-primary">{index + 1}.</span>
+                              <p className="font-medium">{lesson.title}</p>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{lesson.content}</p>
+                            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {lesson.duration} dakika
+                              </span>
+                              {lesson.zoom_join_url && (
+                                <a
+                                  href={lesson.zoom_join_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:underline flex items-center gap-1"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  Zoom
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            ) : null}
+
             {/* Participants List - Only for Admin and Teachers */}
-            {canViewParticipants && (
+            {canViewParticipants && transformedCourseData.participants && transformedCourseData.participants.length > 0 && (
               <div className="rounded-lg border bg-card p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <Users className="h-5 w-5 text-primary" />
                   <h3 className="text-lg font-semibold">Kurs Katılımcıları</h3>
-                  <span className="text-sm text-muted-foreground">({courseData.participants.length})</span>
+                  <span className="text-sm text-muted-foreground">({transformedCourseData.participants.length})</span>
                 </div>
                 <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {courseData.participants.map((participant) => (
+                  {transformedCourseData.participants.map((participant: any) => (
                     <div key={participant.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                         <span className="text-sm font-semibold text-primary">
-                          {participant.name.split(' ').map(n => n[0]).join('')}
+                          {participant.name?.split(' ').map((n: string) => n[0]).join('') || 'U'}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{participant.name}</p>
-                        <p className="text-xs text-muted-foreground truncate">{participant.email}</p>
+                        <p className="text-sm font-medium truncate">{participant.name || 'Unknown'}</p>
+                        <p className="text-xs text-muted-foreground truncate">{participant.email || ''}</p>
                       </div>
                     </div>
                   ))}
