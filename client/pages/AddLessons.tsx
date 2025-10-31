@@ -175,28 +175,58 @@ export default function AddLessons() {
             <div className="space-y-6">
               {/* Lesson Title */}
               <div>
-                <label className="block text-sm font-semibold mb-2">
-                  {t('lessons.lessonTitle')} <span className="text-red-500">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold">
+                    {t('lessons.lessonTitle')} <span className="text-red-500">*</span>
+                  </label>
+                  <span className={`text-xs ${
+                    currentLesson.title.length > 100 
+                      ? 'text-red-500' 
+                      : 'text-muted-foreground'
+                  }`}>
+                    {currentLesson.title.length}/100
+                  </span>
+                </div>
                 <Input
                   type="text"
                   value={currentLesson.title}
-                  onChange={(e) => setCurrentLesson({ ...currentLesson, title: e.target.value })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value.length <= 100) {
+                      setCurrentLesson({ ...currentLesson, title: value });
+                    }
+                  }}
                   placeholder={t('lessons.enterLessonTitle')}
+                  maxLength={100}
                   className="w-full"
                 />
               </div>
 
               {/* Lesson Description */}
               <div>
-                <label className="block text-sm font-semibold mb-2">
-                  {t('lessons.lessonDescription')} <span className="text-red-500">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold">
+                    {t('lessons.lessonDescription')} <span className="text-red-500">*</span>
+                  </label>
+                  <span className={`text-xs ${
+                    currentLesson.description.length > 500 
+                      ? 'text-red-500' 
+                      : 'text-muted-foreground'
+                  }`}>
+                    {currentLesson.description.length}/500
+                  </span>
+                </div>
                 <textarea
                   value={currentLesson.description}
-                  onChange={(e) => setCurrentLesson({ ...currentLesson, description: e.target.value })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value.length <= 500) {
+                      setCurrentLesson({ ...currentLesson, description: value });
+                    }
+                  }}
                   placeholder={t('lessons.enterLessonDescription')}
                   rows={4}
+                  maxLength={500}
                   className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 />
               </div>
@@ -210,11 +240,26 @@ export default function AddLessons() {
                   <div className="relative">
                     <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      type="text"
+                      type="number"
+                      min="0"
+                      max="999"
                       value={currentLesson.duration}
-                      onChange={(e) => setCurrentLesson({ ...currentLesson, duration: e.target.value })}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Sadece pozitif sayıları kabul et ve maksimum 3 haneli
+                        if (value === '' || (/^\d+$/.test(value) && value.length <= 3)) {
+                          setCurrentLesson({ ...currentLesson, duration: value });
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        // e, E, +, -, . karakterlerini engelle
+                        if (e.key === 'e' || e.key === 'E' || e.key === '+' || e.key === '-' || e.key === '.') {
+                          e.preventDefault();
+                        }
+                      }}
                       placeholder={t('lessons.enterLessonDuration')}
                       className="pl-10"
+                      maxLength={3}
                     />
                   </div>
                 </div>
@@ -323,54 +368,6 @@ export default function AddLessons() {
               )}
             </div>
 
-            {/* Certificate Upload */}
-            <div className="bg-card rounded-lg border shadow-sm p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Award className="h-5 w-5" />
-                {t('lessons.certificateUpload')}
-              </h3>
-              
-              {!certificateFile ? (
-                <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={handleCertificateUpload}
-                    className="hidden"
-                    id="certificate-upload"
-                  />
-                  <label
-                    htmlFor="certificate-upload"
-                    className="cursor-pointer flex flex-col items-center gap-2"
-                  >
-                    <Award className="h-10 w-10 text-muted-foreground" />
-                    <p className="text-sm font-medium">{t('lessons.uploadCertificate')}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {t('lessons.certificateFormats')}
-                    </p>
-                  </label>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Award className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">{certificateFile.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {(certificateFile.size / 1024).toFixed(2)} KB
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleRemoveCertificate}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
 
             {/* Zoom Info and Save Button */}
             <div className="space-y-3">
