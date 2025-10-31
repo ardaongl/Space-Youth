@@ -1,10 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Upload, X, Image as ImageIcon, Video } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { apis } from "@/services";
+
+interface Label {
+  id: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export default function AddCourse() {
   const navigate = useNavigate();
@@ -14,6 +23,35 @@ export default function AddCourse() {
   const [achievements, setAchievements] = useState<string[]>([""]);
   const [photos, setPhotos] = useState<File[]>([]);
   const [videos, setVideos] = useState<File[]>([]);
+  const [labels, setLabels] = useState<Label[]>([]);
+  const [selectedLabels, setSelectedLabels] = useState<number[]>([]);
+  const [loadingLabels, setLoadingLabels] = useState(false);
+
+  useEffect(() => {
+    const fetchLabels = async () => {
+      setLoadingLabels(true);
+      try {
+        const response = await apis.label.get_labels();
+        console.log(response);
+        if (response.status === 200 && response.data) {
+          setLabels(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching labels:", error);
+      } finally {
+        setLoadingLabels(false);
+      }
+    };
+    fetchLabels();
+  }, []);
+
+  const handleLabelToggle = (labelId: number) => {
+    setSelectedLabels(prev => 
+      prev.includes(labelId)
+        ? prev.filter(id => id !== labelId)
+        : [...prev, labelId]
+    );
+  };
 
   const handleAddAchievement = () => {
     setAchievements([...achievements, ""]);
@@ -58,6 +96,7 @@ export default function AddCourse() {
       achievements: achievements.filter(a => a.trim() !== ""),
       photos,
       videos,
+      labels: selectedLabels,
     };
     
     // Store in sessionStorage for now
@@ -121,142 +160,34 @@ export default function AddCourse() {
                 />
               </div>
 
-              {/* Achievements */}
+              {/* Labels Selection */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  {t('courses.achievements')}
+                  {t('courses.labels') || 'Etiketler'}
                 </label>
-                <div className="space-y-3">
-                  {achievements.map((achievement, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        type="text"
-                        value={achievement}
-                        onChange={(e) => handleAchievementChange(index, e.target.value)}
-                        placeholder={t('courses.achievement', { number: index + 1 })}
-                        className="flex-1"
-                      />
-                      {achievements.length > 1 && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleRemoveAchievement(index)}
+                {loadingLabels ? (
+                  <p className="text-muted-foreground text-sm">{t('common.loading') || 'Yükleniyor...'}</p>
+                ) : labels.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">{t('courses.noLabels') || 'Etiket bulunamadı'}</p>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4 border border-input rounded-md bg-background">
+                    {labels.map((label) => (
+                      <div key={label.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`label-${label.id}`}
+                          checked={selectedLabels.includes(label.id)}
+                          onCheckedChange={() => handleLabelToggle(label.id)}
+                        />
+                        <label
+                          htmlFor={`label-${label.id}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                         >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAddAchievement}
-                    className="w-full"
-                  >
-                    + {t('courses.addAchievement')}
-                  </Button>
-                </div>
-              </div>
-
-              {/* File Upload - Photo and Video side by side */}
-              <div>
-                <label className="block text-sm font-semibold mb-2">
-                  {t('courses.addFiles')}
-                </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Photo Upload */}
-                  <div>
-                    <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handlePhotoUpload}
-                        className="hidden"
-                        id="photo-upload"
-                      />
-                      <label
-                        htmlFor="photo-upload"
-                        className="cursor-pointer flex flex-col items-center gap-2"
-                      >
-                        <ImageIcon className="h-10 w-10 text-muted-foreground" />
-                        <p className="text-sm font-medium">{t('courses.uploadPhotos')}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {t('courses.photoFormats')}
-                        </p>
-                      </label>
-                    </div>
-
-                    {photos.length > 0 && (
-                      <div className="mt-4 grid grid-cols-2 gap-3">
-                        {photos.map((photo, index) => (
-                          <div key={index} className="relative group">
-                            <img
-                              src={URL.createObjectURL(photo)}
-                              alt={`Photo ${index + 1}`}
-                              className="w-full aspect-video object-cover rounded-lg"
-                            />
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition h-6 w-6"
-                              onClick={() => handleRemovePhoto(index)}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
+                          {label.name}
+                        </label>
                       </div>
-                    )}
+                    ))}
                   </div>
-
-                  {/* Video Upload */}
-                  <div>
-                    <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                      <input
-                        type="file"
-                        accept="video/*"
-                        multiple
-                        onChange={handleVideoUpload}
-                        className="hidden"
-                        id="video-upload"
-                      />
-                      <label
-                        htmlFor="video-upload"
-                        className="cursor-pointer flex flex-col items-center gap-2"
-                      >
-                        <Video className="h-10 w-10 text-muted-foreground" />
-                        <p className="text-sm font-medium">{t('courses.uploadVideos')}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {t('courses.videoFormats')}
-                        </p>
-                      </label>
-                    </div>
-
-                    {videos.length > 0 && (
-                      <div className="mt-4 space-y-2">
-                        {videos.map((video, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between p-3 bg-muted rounded-lg"
-                          >
-                            <div className="flex items-center gap-3">
-                              <Video className="h-5 w-5 text-muted-foreground" />
-                              <span className="text-sm font-medium">{video.name}</span>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleRemoveVideo(index)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Action Buttons */}

@@ -20,13 +20,28 @@ export class CourseAPI {
         }
     }
 
-    add_course = async (payload: {title: string, description: string, full_description: string, category: string, duration: string}) => {
+    add_course = async (payload: {
+        title: string;
+        description: string;
+        level: string;
+        labels?: number[];
+        lessons?: Array<{
+            title: string;
+            content: string;
+            video_url: string;
+            order: number;
+            duration: number;
+            start_time: string;
+        }>;
+    }) => {
         try {
             const response = await api.post(`/api/courses`, 
                 {
                     title: payload.title,
                     description: payload.description,
-                    full_description: payload.full_description
+                    level: payload.level,
+                    labels: payload.labels,
+                    lessons: payload.lessons
                 }, {requiresAuth: true, validateStatus: s => s < 500})
             return response;
         } catch (error) {

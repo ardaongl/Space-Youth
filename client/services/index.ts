@@ -4,6 +4,7 @@ import { UserAPI } from "./modules/user";
 import { StudentAPI } from "./modules/student";
 import { PersonalityAPI } from "./modules/personality";
 import { CharacterAPI } from "./modules/character";
+import { LabelAPI } from "./modules/label";
 export class API {
   user: UserAPI;
   course: CourseAPI;
@@ -11,6 +12,7 @@ export class API {
   student: StudentAPI;
   personality: PersonalityAPI;
   character: CharacterAPI;
+  label: LabelAPI;
   constructor() {
     this.user = new UserAPI();
     this.course = new CourseAPI();
@@ -18,6 +20,7 @@ export class API {
     this.student = new StudentAPI()
     this.personality = new PersonalityAPI()
     this.character = new CharacterAPI()
+    this.label = new LabelAPI()
   }
 }
 

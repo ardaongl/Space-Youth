@@ -235,60 +235,6 @@ export default function AddLessons() {
                 </div>
               </div>
 
-              {/* File Upload */}
-              <div>
-                <label className="block text-sm font-semibold mb-2">
-                  {t('lessons.addFiles')}
-                </label>
-                <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                  <input
-                    type="file"
-                    multiple
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    id="lesson-file-upload"
-                  />
-                  <label
-                    htmlFor="lesson-file-upload"
-                    className="cursor-pointer flex flex-col items-center gap-2"
-                  >
-                    <Upload className="h-10 w-10 text-muted-foreground" />
-                    <p className="text-sm font-medium">{t('lessons.uploadFiles')}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {t('lessons.fileFormats')}
-                    </p>
-                  </label>
-                </div>
-
-                {currentLesson.files.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    {currentLesson.files.map((file, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 bg-muted rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-5 w-5 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm font-medium">{file.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {(file.size / 1024).toFixed(2)} KB
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleRemoveFile(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
               {/* Add/Update Lesson Button */}
               <Button
                 onClick={handleAddLesson}
