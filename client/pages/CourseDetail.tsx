@@ -111,6 +111,22 @@ export default function CourseDetail() {
     );
   }
 
+  // Helper function to build full image URL
+  const buildImageUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    const baseUrl = import.meta.env.VITE_BASE_URL || '';
+    // If URL already starts with http:// or https://, return as is
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    // If URL starts with /, it's already a path, just prepend base URL
+    if (url.startsWith('/')) {
+      return `${baseUrl}${url}`;
+    }
+    // Otherwise, add / between base URL and path
+    return `${baseUrl}/${url}`;
+  };
+
   // Transform API data to match component expectations
   const transformedCourseData = {
     id: courseData.id?.toString() || `course-${slug}`,
@@ -129,8 +145,8 @@ export default function CourseDetail() {
     certification: !!courseData.certificate_url,
     lessonsCount: courseData.lessons?.length || 0,
     examsCount: 0, // API'de exams yok şimdilik
-    image_url: courseData.image_url,
-    certificate_url: courseData.certificate_url,
+    image_url: buildImageUrl(courseData.image_url),
+    certificate_url: buildImageUrl(courseData.certificate_url),
     lessons: courseData.lessons || [],
     labels: courseData.labels || [],
     teacher: courseData.teacher,

@@ -215,10 +215,19 @@ export default function AddLessons() {
       );
 
       if (response.status === 200) {
+        // Build full URL for the uploaded image
+        const baseUrl = import.meta.env.VITE_BASE_URL || '';
+        const imageUrl = response.data.image_url;
+        const fullImageUrl = imageUrl 
+          ? (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))
+            ? imageUrl
+            : (imageUrl.startsWith('/') ? `${baseUrl}${imageUrl}` : `${baseUrl}/${imageUrl}`)
+          : null;
+        
         // Update course data with new image URL
         setCreatedCourse({
           ...createdCourse,
-          image_url: response.data.image_url,
+          image_url: fullImageUrl,
         });
         setSelectedImage(null);
         alert("Kurs fotoğrafı başarıyla yüklendi!");
@@ -250,11 +259,20 @@ export default function AddLessons() {
       console.log("Certificate upload response:", response);
 
       if (response.status === 200 || response.status === 201) {
+        // Build full URL for the uploaded certificate
+        const baseUrl = import.meta.env.VITE_BASE_URL || '';
+        const certUrl = response.data?.image_url || response.data?.certificate_url;
+        const fullCertUrl = certUrl 
+          ? (certUrl.startsWith('http://') || certUrl.startsWith('https://'))
+            ? certUrl
+            : (certUrl.startsWith('/') ? `${baseUrl}${certUrl}` : `${baseUrl}/${certUrl}`)
+          : null;
+        
         // Update course data with new certificate URL
         // API returns image_url for both image and certificate
         setCreatedCourse({
           ...createdCourse,
-          certificate_url: response.data?.image_url || response.data?.certificate_url,
+          certificate_url: fullCertUrl,
         });
         setSelectedCertificate(null);
         alert("Sertifika başarıyla yüklendi!");
@@ -274,10 +292,31 @@ export default function AddLessons() {
     }
   };
 
+  // Helper function to build full image URL
+  const buildImageUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    const baseUrl = import.meta.env.VITE_BASE_URL || '';
+    // If URL already starts with http:// or https://, return as is
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    // If URL starts with /, it's already a path, just prepend base URL
+    if (url.startsWith('/')) {
+      return `${baseUrl}${url}`;
+    }
+    // Otherwise, add / between base URL and path
+    return `${baseUrl}/${url}`;
+  };
+
   // Show success page if course is created
   if (createdCourse) {
     // Filter out teacher's sensitive information
     const { teacher, ...courseData } = createdCourse;
+    
+    // Build full URLs for images
+    courseData.image_url = buildImageUrl(courseData.image_url);
+    courseData.certificate_url = buildImageUrl(courseData.certificate_url);
+    
     const teacherDisplay = teacher ? {
       name: `${teacher.first_name} ${teacher.last_name}`,
       email: teacher.email,

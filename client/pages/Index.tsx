@@ -132,6 +132,22 @@ export default function Courses() {
   const [showFilters, setShowFilters] = useState(false)
   const { toast } = useToast();
 
+  // Helper function to build full image URL
+  const buildImageUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    const baseUrl = import.meta.env.VITE_BASE_URL || '';
+    // If URL already starts with http:// or https://, return as is
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    // If URL starts with /, it's already a path, just prepend base URL
+    if (url.startsWith('/')) {
+      return `${baseUrl}${url}`;
+    }
+    // Otherwise, add / between base URL and path
+    return `${baseUrl}/${url}`;
+  };
+
   const handleGetCourses = async () => {
     try {
       const response = await apis.course.get_courses();
@@ -247,7 +263,7 @@ export default function Courses() {
                 rating={`${course.points} ${t('common.points')}`}
                 time={timeString}
                 popular={course.points > 100}
-                imageUrl={course.image_url}
+                imageUrl={buildImageUrl(course.image_url)}
               />
             );
           })}
