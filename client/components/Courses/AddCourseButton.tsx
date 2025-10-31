@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { canSeeAddCourse } from "@/utils/roles";
+import { isTeacher } from "@/utils/roles";
 import { Plus } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAppSelector } from "@/store";
@@ -10,9 +10,9 @@ export default function AddCourseButton() {
   const { t } = useLanguage();
   
   const user = useAppSelector(state => state.user.user)
-  const role = user.role;
+  const role = user?.role;
 
-  if (!canSeeAddCourse(role)) {
+  if (!isTeacher(role)) {
     return null;
   }
 

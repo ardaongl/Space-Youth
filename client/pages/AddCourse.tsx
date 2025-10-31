@@ -4,6 +4,13 @@ import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ArrowLeft, Upload, X, Image as ImageIcon, Video } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { apis } from "@/services";
@@ -26,6 +33,7 @@ export default function AddCourse() {
   const [labels, setLabels] = useState<Label[]>([]);
   const [selectedLabels, setSelectedLabels] = useState<number[]>([]);
   const [loadingLabels, setLoadingLabels] = useState(false);
+  const [level, setLevel] = useState<string>("");
 
   useEffect(() => {
     const fetchLabels = async () => {
@@ -92,7 +100,9 @@ export default function AddCourse() {
     // Store course data in session/state and navigate to lessons page
     const courseData = {
       name: courseName,
+      title: courseName,
       description: courseDescription,
+      level: level,
       achievements: achievements.filter(a => a.trim() !== ""),
       photos,
       videos,
@@ -109,7 +119,7 @@ export default function AddCourse() {
     navigate("/courses/add/lessons");
   };
 
-  const isValid = courseName.trim() !== "" && courseDescription.trim() !== "";
+  const isValid = courseName.trim() !== "" && courseDescription.trim() !== "" && level !== "";
 
   return (
     <AppLayout>
@@ -158,6 +168,23 @@ export default function AddCourse() {
                   rows={6}
                   className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 />
+              </div>
+
+              {/* Level Selection */}
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  {t('courses.level') || 'Seviye'} <span className="text-red-500">*</span>
+                </label>
+                <Select value={level} onValueChange={setLevel}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={t('courses.selectLevel') || 'Seviye seçin'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="easy">{t('courses.levelEasy') || 'Kolay'}</SelectItem>
+                    <SelectItem value="medium">{t('courses.levelMedium') || 'Orta'}</SelectItem>
+                    <SelectItem value="hard">{t('courses.levelHard') || 'Zor'}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Labels Selection */}

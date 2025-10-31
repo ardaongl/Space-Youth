@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Plus, Upload, X, FileText, Calendar, Clock, Award } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { apis } from "@/services";
 
 interface Lesson {
   id: string;
@@ -30,6 +31,7 @@ export default function AddLessons() {
   const [isEditing, setIsEditing] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     // Check if course data exists
@@ -104,7 +106,7 @@ export default function AddLessons() {
     setLessons(lessons.filter((_, i) => i !== index));
   };
 
-  const handleSaveAllLessons = () => {
+  const handleSaveAllLessons = async () => {
     if (lessons.length === 0) {
       alert("En az bir ders eklemelisiniz");
       return;
@@ -119,25 +121,61 @@ export default function AddLessons() {
 
     const courseData = JSON.parse(courseDataStr);
     
-    // Combine course data with lessons
-    const fullCourseData = {
-      ...courseData,
-      lessons: lessons.map(lesson => ({
-        ...lesson,
-        fileNames: lesson.files.map(f => f.name),
-      })),
-      certificateFile: certificateFile,
-      certificateFileName: certificateFile?.name,
-    };
-
-    console.log("Complete course data:", fullCourseData);
-    // TODO: Send to API
-
-    // Clear session storage
-    sessionStorage.removeItem("courseData");
+    setIsCreating(true);
     
-    // Navigate back to courses
-    navigate("/courses");
+    try {
+      // Prepare lessons data for API
+      const lessonsData = lessons.map((lesson, index) => {
+        // Convert date to ISO 8601 format (date-time)
+        let startTime: string;
+        if (lesson.date) {
+          // If date is provided, convert it to ISO format
+          // Date input returns YYYY-MM-DD format, we need to add time component
+          const date = new Date(lesson.date);
+          // Set time to start of day (00:00:00) if no time is specified
+          date.setHours(0, 0, 0, 0);
+          startTime = date.toISOString();
+        } else {
+          // If no date, use current date/time
+          startTime = new Date().toISOString();
+        }
+
+        return {
+          title: lesson.title,
+          content: lesson.description,
+          video_url: "", // TODO: Video URL handling if needed
+          order: index + 1,
+          duration: lesson.duration ? parseInt(lesson.duration) || 0 : 0,
+          start_time: startTime,
+        };
+      });
+
+      // Prepare course payload
+      const coursePayload = {
+        title: courseData.title || courseData.name,
+        description: courseData.description,
+        level: courseData.level,
+        labels: courseData.labels || [],
+        lessons: lessonsData,
+      };
+
+      const response = await apis.course.add_course(coursePayload);
+      console.log("Course response:", response);
+      if (response.status === 200 || response.status === 201) {
+        // Clear session storage
+        sessionStorage.removeItem("courseData");
+        
+        // Navigate back to courses
+        navigate("/courses");
+      } else {
+        alert("Kurs oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.");
+      }
+    } catch (error) {
+      console.error("Error creating course:", error);
+      alert("Kurs oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.");
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const isCurrentLessonValid = currentLesson.title.trim() !== "" && currentLesson.description.trim() !== "";
@@ -384,11 +422,11 @@ export default function AddLessons() {
               
               <Button
                 onClick={handleSaveAllLessons}
-                disabled={lessons.length === 0}
+                disabled={lessons.length === 0 || isCreating}
                 className="w-full"
                 size="lg"
               >
-                {t('lessons.saveAllLessons')}
+                {isCreating ? "Oluşturuluyor..." : "Kurs Oluştur"}
               </Button>
             </div>
           </div>

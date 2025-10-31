@@ -35,7 +35,7 @@ export class CourseAPI {
         }>;
     }) => {
         try {
-            const response = await api.post(`/api/courses`, 
+            const response = await api.post(`/api/course`, 
                 {
                     title: payload.title,
                     description: payload.description,
