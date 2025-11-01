@@ -106,4 +106,15 @@ export class CourseAPI {
             return error;
         }
     }
+
+    attend_course = async (courseId: number) => {
+        try {
+            const response = await api.get(`/api/course/attend`, {requiresAuth: true, validateStatus: s => s < 500, params: { courseId }})
+            console.log('Attend course response:', response);
+            return response;
+        } catch (error) {
+            console.error('Attend course error:', error);
+            return error;
+        }
+    }
 }

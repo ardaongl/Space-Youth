@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { CheckCircle2, Clock, ShieldCheck, BookOpen, ListChecks, ArrowLeft, Bookmark, BookmarkCheck, Coins, Play, Users, Video, FileText, Download, ExternalLink, Copy } from "lucide-react";
+import { Clock, ShieldCheck, BookOpen, ListChecks, ArrowLeft, Bookmark, BookmarkCheck, Coins, Users, Video, ExternalLink, Copy } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { isAdmin, isTeacher } from "@/utils/roles";
 import { useBookmarks } from "@/hooks/useBookmarks";
@@ -30,6 +29,7 @@ export default function CourseDetail() {
   const [courseData, setCourseData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEnrolling, setIsEnrolling] = useState(false);
 
   // Find course ID from slug by fetching courses list
   useEffect(() => {
@@ -133,6 +133,7 @@ export default function CourseDetail() {
     title: courseData.title || 'Untitled Course',
     description: courseData.description || '',
     price: courseData.points || 250,
+    points: courseData.points || 0,
     teacherId: courseData.teacher?.id || '',
     teacherName: courseData.teacher 
       ? `${courseData.teacher.first_name || ''} ${courseData.teacher.last_name || ''}`.trim()
@@ -146,28 +147,77 @@ export default function CourseDetail() {
     lessonsCount: courseData.lessons?.length || 0,
     examsCount: 0, // API'de exams yok şimdilik
     image_url: buildImageUrl(courseData.image_url),
+    video_url: buildImageUrl(courseData.video_url),
     certificate_url: buildImageUrl(courseData.certificate_url),
     lessons: courseData.lessons || [],
     labels: courseData.labels || [],
     teacher: courseData.teacher,
+    students: courseData.students || [],
     participants: [] // TODO: API'den participants endpoint'i eklendiğinde
   };
 
   const bookmarked = isBookmarked(transformedCourseData.id);
-  const enrolled = isEnrolled(transformedCourseData.id);
+  // Check if current user is enrolled by checking students array
+  const isUserEnrolled = user.user?.id && transformedCourseData.students.some((student: any) => student.id === user.user.id);
+  const enrolled = isUserEnrolled;
   
-  // Mock data for enrolled content
-  const enrolledContent = {
-    zoomLink: "https://zoom.us/j/123456789?pwd=abcdefghijklmnop",
-    zoomPassword: "123456",
-    courseMaterials: [
-      { id: 1, title: "Introduction to Workshop Facilitation", type: "video", duration: "15 min" },
-      { id: 2, title: "Advanced Techniques", type: "video", duration: "25 min" },
-      { id: 3, title: "Workshop Templates", type: "pdf", size: "2.3 MB" },
-      { id: 4, title: "Best Practices Guide", type: "pdf", size: "1.8 MB" },
-      { id: 5, title: "Interactive Exercises", type: "doc", size: "850 KB" }
-    ]
+  // Find the lesson with the closest date (today or next upcoming)
+  const getNextLesson = () => {
+    if (!transformedCourseData.lessons || transformedCourseData.lessons.length === 0) {
+      return null;
+    }
+
+    const now = new Date();
+
+    // Filter lessons that have zoom_start_time and zoom link
+    const lessonsWithDate = transformedCourseData.lessons
+      .filter((lesson: any) => {
+        return lesson.zoom_start_time && lesson.zoom_join_url;
+      })
+      .map((lesson: any) => {
+        const lessonDate = new Date(lesson.zoom_start_time);
+        return {
+          ...lesson,
+          dateObj: lessonDate,
+        };
+      });
+
+    if (lessonsWithDate.length === 0) {
+      return null;
+    }
+
+    // Find today's lesson first (same day), otherwise find the next upcoming lesson
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(now);
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const todayLesson = lessonsWithDate.find((lesson: any) => {
+      return lesson.dateObj >= todayStart && lesson.dateObj <= todayEnd;
+    });
+
+    if (todayLesson) {
+      return todayLesson;
+    }
+
+    // Find the next upcoming lesson
+    const upcomingLessons = lessonsWithDate.filter((lesson: any) => {
+      return lesson.dateObj >= now;
+    });
+
+    if (upcomingLessons.length === 0) {
+      return null;
+    }
+
+    // Sort by date and return the closest one
+    upcomingLessons.sort((a: any, b: any) => {
+      return a.dateObj.getTime() - b.dateObj.getTime();
+    });
+
+    return upcomingLessons[0];
   };
+
+  const nextLesson = getNextLesson();
 
   const handleSave = () => {
     if (bookmarked) {
@@ -197,7 +247,7 @@ export default function CourseDetail() {
     }
   };
 
-  const handleEnroll = () => {
+  const handleEnroll = async () => {
     if (enrolled) {
       toast({
         title: t('courses.alreadyEnrolled'),
@@ -206,25 +256,77 @@ export default function CourseDetail() {
       return;
     }
     
-    const enrollmentItem: EnrolledContent = {
-      id: transformedCourseData.id,
-      title: transformedCourseData.title,
-      author: transformedCourseData.teacherName,
-      level: transformedCourseData.level,
-      rating: transformedCourseData.rating,
-      time: transformedCourseData.duration,
-      type: "course",
-      slug: slug || "",
-      bookmarkedAt: Date.now(),
-      enrolledAt: Date.now(),
-      progress: 0,
-      description: transformedCourseData.description
-    };
-    addEnrollment(enrollmentItem);
-    toast({
-      title: t('courses.enrolledSuccessfully'),
-      description: t('courses.enrolledSuccessfullyDescription', { title: transformedCourseData.title }),
-    });
+    if (isEnrolling) return; // Prevent multiple clicks
+    
+    try {
+      setIsEnrolling(true);
+      const courseId = parseInt(transformedCourseData.id);
+      if (isNaN(courseId)) {
+        toast({
+          title: 'Hata',
+          description: 'Geçersiz kurs ID',
+          variant: 'destructive',
+        });
+        setIsEnrolling(false);
+        return;
+      }
+
+      const response = await apis.course.attend_course(courseId);
+      
+      if (response.status === 200 || response.status === 201) {
+        // Update course data to refresh students list
+        const coursesResponse = await apis.course.get_courses();
+        if (coursesResponse.status === 200 && coursesResponse.data) {
+          const matchingCourse = coursesResponse.data.find((course: any) => {
+            const courseSlug = course.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+            return courseSlug === slug;
+          });
+
+          if (matchingCourse) {
+            const courseResponse = await apis.course.get_course(matchingCourse.id.toString());
+            if (courseResponse.status === 200 && courseResponse.data) {
+              setCourseData(courseResponse.data);
+            }
+          }
+        }
+
+        const enrollmentItem: EnrolledContent = {
+          id: transformedCourseData.id,
+          title: transformedCourseData.title,
+          author: transformedCourseData.teacherName,
+          level: transformedCourseData.level,
+          rating: transformedCourseData.rating,
+          time: transformedCourseData.duration,
+          type: "course",
+          slug: slug || "",
+          bookmarkedAt: Date.now(),
+          enrolledAt: Date.now(),
+          progress: 0,
+          description: transformedCourseData.description
+        };
+        addEnrollment(enrollmentItem);
+        
+        toast({
+          title: t('courses.enrolledSuccessfully'),
+          description: t('courses.enrolledSuccessfullyDescription', { title: transformedCourseData.title }),
+        });
+      } else {
+        toast({
+          title: 'Hata',
+          description: response.data?.message || 'Kursa kayıt olunurken bir hata oluştu',
+          variant: 'destructive',
+        });
+      }
+    } catch (error: any) {
+      console.error('Enroll error:', error);
+      toast({
+        title: 'Hata',
+        description: error?.response?.data?.message || 'Kursa kayıt olunurken bir hata oluştu',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsEnrolling(false);
+    }
   };
 
   return (
@@ -276,29 +378,23 @@ export default function CourseDetail() {
                   {canJoinCourse && (
                     <Button 
                       size="lg" 
-                      className="gap-2 px-8 py-3 text-lg font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105" 
+                      className="gap-2 px-8 py-3 text-lg font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100" 
                       onClick={handleEnroll}
-                      disabled={enrolled}
+                      disabled={enrolled || isEnrolling}
                     >
                       {enrolled ? (
-                        t('courseDetail.enrolled')
+                        "Bu kursa kayıtlısınız"
+                      ) : isEnrolling ? (
+                        "Kayıt olunuyor..."
                       ) : (
                         <>
                           <Coins className="h-5 w-5" />
-                          {transformedCourseData.price} {t('courseDetail.enrollWithCoins')}
+                          {transformedCourseData.points} {t('courseDetail.enrollWithCoins')}
                         </>
                       )}
                     </Button>
                   )}
                 </div>
-              </div>
-
-              {/* Description */}
-              <div className="mt-8">
-                <h2 className="text-2xl font-semibold mb-4">{t('courseDetail.description')}</h2>
-                <p className="text-muted-foreground leading-7">
-                  {transformedCourseData.description}
-                </p>
               </div>
 
               {/* Details Section */}
@@ -363,31 +459,33 @@ export default function CourseDetail() {
                 </div>
               </div>
 
-              {/* Skills Section */}
-              <div className="mt-8">
-                <h2 className="text-2xl font-semibold mb-4">{t('courseDetail.skillsYouWillGain')}</h2>
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
-                    <p className="leading-7"><span className="font-semibold">{t('courseDetail.skills.designWorkshops')}</span></p>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
-                    <p className="leading-7"><span className="font-semibold">{t('courseDetail.skills.brainstorming')}</span></p>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
-                    <p className="leading-7"><span className="font-semibold">{t('courseDetail.skills.remoteWorkshops')}</span></p>
-                  </li>
-                </ul>
-              </div>
+              {/* Description Section */}
+              {transformedCourseData.description && (
+                <div className="mt-8">
+                  <h2 className="text-2xl font-semibold mb-4">{t('courseDetail.description')}</h2>
+                  <p className="text-muted-foreground leading-7">
+                    {transformedCourseData.description}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Right Sidebar - Course Image & Lessons */}
           <div className="space-y-6">
-            {/* Course Photo */}
-            {transformedCourseData.image_url ? (
+            {/* Course Video or Image */}
+            {transformedCourseData.video_url ? (
+              <div className="rounded-lg border overflow-hidden bg-muted">
+                <video 
+                  src={transformedCourseData.video_url} 
+                  controls
+                  className="w-full aspect-video object-cover"
+                  poster={transformedCourseData.image_url || undefined}
+                >
+                  Tarayıcınız video oynatmayı desteklemiyor.
+                </video>
+              </div>
+            ) : transformedCourseData.image_url ? (
               <div className="rounded-lg border overflow-hidden bg-muted">
                 <img 
                   src={transformedCourseData.image_url} 
@@ -397,7 +495,7 @@ export default function CourseDetail() {
               </div>
             ) : (
               <div className="rounded-lg border overflow-hidden bg-muted aspect-video flex items-center justify-center">
-                <p className="text-muted-foreground">Kurs fotoğrafı yok</p>
+                <p className="text-muted-foreground">Kurs içeriği yok</p>
               </div>
             )}
 
@@ -476,6 +574,34 @@ export default function CourseDetail() {
               )
             ) : null}
 
+            {/* Students List - Show enrolled students */}
+            {transformedCourseData.students && transformedCourseData.students.length > 0 && (
+              <div className="rounded-lg border bg-card p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Users className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-semibold">Kursa Kayıtlı Öğrenciler</h3>
+                  <span className="text-sm text-muted-foreground">({transformedCourseData.students.length})</span>
+                </div>
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {transformedCourseData.students.map((student: any) => (
+                    <div key={student.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-sm font-semibold text-primary">
+                          {student.first_name?.[0]?.toUpperCase() || ''}{student.last_name?.[0]?.toUpperCase() || 'U'}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {student.first_name || ''} {student.last_name || ''}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">{student.email || ''}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Participants List - Only for Admin and Teachers */}
             {canViewParticipants && transformedCourseData.participants && transformedCourseData.participants.length > 0 && (
               <div className="rounded-lg border bg-card p-6">
@@ -503,98 +629,59 @@ export default function CourseDetail() {
             )}
 
             {/* Enrolled Content - Only for enrolled students */}
-            {enrolled && !canViewParticipants && (
-              <div className="space-y-6">
-                {/* Zoom Link Section */}
-                <div className="rounded-lg border bg-card p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Video className="h-5 w-5 text-primary" />
-                    <h3 className="text-lg font-semibold">Canlı Eğitim</h3>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div className="p-4 bg-muted/50 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">Zoom Linki</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            navigator.clipboard.writeText(enrolledContent.zoomLink);
+            {enrolled && !canViewParticipants && nextLesson && (
+              <div className="rounded-lg border bg-card p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Video className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-semibold">Canlı Eğitim</h3>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <div className="mb-2">
+                      <p className="text-sm font-medium mb-1">{nextLesson.title}</p>
+                      {nextLesson.content && (
+                        <p className="text-xs text-muted-foreground">{nextLesson.content}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">Zoom Linki</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          if (nextLesson.zoom_join_url) {
+                            navigator.clipboard.writeText(nextLesson.zoom_join_url);
                             toast({
                               title: "Link kopyalandı",
                               description: "Zoom linki panoya kopyalandı.",
                             });
-                          }}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          value={enrolledContent.zoomLink}
-                          readOnly
-                          className="flex-1"
-                        />
-                        <Button
-                          onClick={() => window.open(enrolledContent.zoomLink, '_blank')}
-                          size="sm"
-                        >
-                          <ExternalLink className="h-4 w-4 mr-1" />
-                          Katıl
-                        </Button>
-                      </div>
-                      <div className="mt-2 text-sm text-muted-foreground">
-                        Şifre: <span className="font-mono">{enrolledContent.zoomPassword}</span>
-                      </div>
+                          }
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
                     </div>
-                  </div>
-                </div>
-
-                {/* Course Materials Section */}
-                <div className="rounded-lg border bg-card p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <FileText className="h-5 w-5 text-primary" />
-                    <h3 className="text-lg font-semibold">Eğitim İçerikleri</h3>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {enrolledContent.courseMaterials.map((material) => (
-                      <div key={material.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center gap-3">
-                          {material.type === 'video' ? (
-                            <Video className="h-5 w-5 text-red-500" />
-                          ) : (
-                            <FileText className="h-5 w-5 text-blue-500" />
-                          )}
-                          <div>
-                            <p className="text-sm font-medium">{material.title}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {material.type === 'video' ? material.duration : material.size}
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            // Mock download/view action
-                            console.log(`Opening ${material.title}`);
-                            toast({
-                              title: "İçerik açılıyor",
-                              description: `${material.title} açılıyor...`,
-                            });
-                          }}
-                        >
-                          {material.type === 'video' ? (
-                            <Play className="h-4 w-4 mr-1" />
-                          ) : (
-                            <Download className="h-4 w-4 mr-1" />
-                          )}
-                          {material.type === 'video' ? 'İzle' : 'İndir'}
-                        </Button>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={nextLesson.zoom_join_url || ''}
+                        readOnly
+                        className="flex-1"
+                      />
+                      <Button
+                        onClick={() => nextLesson.zoom_join_url && window.open(nextLesson.zoom_join_url, '_blank')}
+                        size="sm"
+                        disabled={!nextLesson.zoom_join_url}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-1" />
+                        Katıl
+                      </Button>
+                    </div>
+                    {nextLesson.zoom_password && (
+                      <div className="mt-2 text-sm text-muted-foreground">
+                        Şifre: <span className="font-mono">{nextLesson.zoom_password}</span>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>
