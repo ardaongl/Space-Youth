@@ -72,4 +72,13 @@ export class StudentAPI {
         }
     }
 
+    get_student_details = async () => {
+        try {
+            const response = await api.get("/api/student/details", {requiresAuth: true, validateStatus: s => s < 500})
+            return response;
+        } catch (error) {
+            return error;
+        }
+    }
+
 }

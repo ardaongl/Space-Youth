@@ -14,12 +14,40 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { isTeacher, isStudent } from "@/utils/roles";
 import { useAppSelector } from "@/store";
+import { apis } from "@/services";
 
 type OnboardingData = {
   phase1: any;
   phase2: { q1: string; q2: string; q3: string; q4: string };
   phase3: any;
   phase4?: any;
+};
+
+type StudentDetailsResponse = {
+  student: {
+    id: string;
+    status: string;
+    school?: string;
+    department?: string;
+    cv_url?: string;
+    questions_and_answers: string;
+    phases: Record<string, any>;
+  };
+  character: {
+    id: string;
+    name: string;
+    details: string;
+    image_url: string;
+    created_at: string;
+    updated_at: string;
+  };
+  personality: {
+    id: string;
+    name: string;
+    type: string;
+    short_description: string;
+    long_description: string;
+  };
 };
 
 function useOnboardingScores() {
@@ -72,8 +100,11 @@ export function Profile() {
   const [zoomConnected, setZoomConnected] = React.useState<boolean>(() => {
     try { return localStorage.getItem("zoom.connected") === "true"; } catch { return false; }
   });
+  const [studentDetails, setStudentDetails] = React.useState<StudentDetailsResponse | null>(null);
+  const [loadingDetails, setLoadingDetails] = React.useState(false);
 
   const isTeacherUser = isTeacher(user.user?.role);
+  const isStudentUser = isStudent(user.user?.role);
   React.useEffect(() => {
     try {
       const raw = localStorage.getItem("onboarding.data");
@@ -81,8 +112,33 @@ export function Profile() {
     } catch {}
   }, []);
 
+  React.useEffect(() => {
+    const fetchStudentDetails = async () => {
+      if (!isStudentUser) return;
+      
+      setLoadingDetails(true);
+      try {
+        const response = await apis.student.get_student_details();
+        if (response?.data) {
+          setStudentDetails(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch student details:", error);
+      } finally {
+        setLoadingDetails(false);
+      }
+    };
+
+    fetchStudentDetails();
+  }, [isStudentUser]);
+
   const similarity = 78; // placeholder similarity score
-  const primaryArchetype = {
+  const primaryArchetype = studentDetails?.personality ? {
+    code: studentDetails.personality.type.toLowerCase(),
+    name: studentDetails.personality.name,
+    tr: studentDetails.personality.type,
+    color: "bg-amber-500",
+  } : {
     code: "innovative-visionary",
     name: "Innovative Visionary",
     tr: "Yenilikçi Vizyoner",
@@ -148,7 +204,6 @@ export function Profile() {
     ]
   };
 
-  // If user is a teacher, show instructor profile
   if (isTeacherUser) {
     return (
       <AppLayout>
@@ -327,7 +382,9 @@ export function Profile() {
                         {primaryArchetype.name} • {primaryArchetype.tr}
                       </span>
                     </div>
-                    <p className="text-sm sm:text-base leading-relaxed">{t('profile.personalityDescription')}</p>
+                    <p className="text-sm sm:text-base leading-relaxed">
+                      {studentDetails?.personality?.short_description || t('profile.personalityDescription')}
+                    </p>
                   </div>
 
                   {/* Right: Visual column (image background + similarity block pinned bottom-right) */}
@@ -335,13 +392,23 @@ export function Profile() {
                     {/* Only the right half carries the background image */}
                     <div className="absolute inset-0 pointer-events-none">
                       <div className="absolute inset-0 from-background/70 via-background/40 to-transparent" />
-                      <div className="absolute bottom-0 right-0 w-56 h-56 sm:w-72 sm:h-72 lg:w-96 lg:h-96 bg-[url('/ElonMusk.png')] bg-no-repeat bg-contain  translate-x-6 translate-y-4" />
+                      {studentDetails?.character?.image_url ? (
+                        <div className="absolute bottom-0 right-0 w-56 h-56 sm:w-72 sm:h-72 lg:w-96 lg:h-96 translate-x-6 translate-y-4">
+                          <img 
+                            src={studentDetails.character.image_url} 
+                            alt={studentDetails.character.name}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <div className="absolute bottom-0 right-0 w-56 h-56 sm:w-72 sm:h-72 lg:w-96 lg:h-96 bg-[url('/ElonMusk.png')] bg-no-repeat bg-contain translate-x-6 translate-y-4" />
+                      )}
                     </div>
 
                     {/* Similarity block anchored bottom-right inside the right column */}
                     <div className="absolute bottom-3 right-3 left-3 lg:left-auto lg:w-[360px] flex flex-col items-end gap-2 lg:gap-3">
                       <div className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap">
-                        <span className="font-semibold text-white">Elon Musk</span>
+                        <span className="font-semibold text-white">{studentDetails?.character?.name || "Elon Musk"}</span>
                         <Tooltip>
                           <TooltipTrigger aria-label={t('profile.matchCalculation')}><Info className="h-4 w-4 text-muted-foreground text-white" /></TooltipTrigger>
                           <TooltipContent>
@@ -367,8 +434,62 @@ export function Profile() {
               </div>
             </div>
 
+            {/* Character and Personality Section */}
+            {studentDetails && (
+              <div className="space-y-6">
+                {/* Character Card */}
+                {studentDetails.character && (
+                  <Card className="p-6">
+                    <div className="flex flex-col md:flex-row gap-6">
+                      {studentDetails.character.image_url && (
+                        <div className="flex-shrink-0">
+                          <img 
+                            src={studentDetails.character.image_url} 
+                            alt={studentDetails.character.name}
+                            className="w-32 h-32 rounded-lg object-cover border"
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <h3 className="text-xl font-semibold mb-2">{studentDetails.character.name}</h3>
+                        {studentDetails.character.details && (
+                          <p className="text-muted-foreground leading-relaxed">{studentDetails.character.details}</p>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                )}
+
+                {/* Personality Card */}
+                {studentDetails.personality && (
+                  <Card className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="text-xl font-semibold mb-1">{studentDetails.personality.name}</h3>
+                        <Badge variant="secondary" className="mt-1">{studentDetails.personality.type}</Badge>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="font-medium mb-2">{t('profile.shortDescription')}</h4>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {studentDetails.personality.short_description}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium mb-2">{t('profile.detailedDescription')}</h4>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {studentDetails.personality.long_description}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                )}
+              </div>
+            )}
+
             {/* Tabs Section */}
-            <div className="bg-card border rounded-lg p-4">
+            {/* <div className="bg-card border rounded-lg p-4">
               <Tabs defaultValue="overview" className="w-full">
                 <div className="overflow-x-auto">
                   <TabsList className="min-w-max">
@@ -380,17 +501,17 @@ export function Profile() {
                   </TabsList>
                 </div>
 
-                {/* Overview */}
+        
                 <TabsContent value="overview">
                   <div className="grid gap-4 md:grid-cols-3">
-                    {/* AI Summary */}
+          
                     <div className="md:col-span-2 border rounded-lg p-4">
                       <h3 className="font-semibold mb-2">{t('profile.aiSummary')}</h3>
                       <p className="mb-2">{t('profile.aiSummary1')}</p>
                       <p className="mb-2">{t('profile.aiSummary2')}</p>
                       <p className="text-muted-foreground">{t('profile.aiSummary3')}</p>
                     </div>
-                    {/* Feature Chips */}
+                
                     <div className="border rounded-lg p-4">
                       <h3 className="font-semibold mb-3">{t('profile.mainFeatures')}</h3>
                       <div className="flex flex-wrap gap-2">
@@ -418,7 +539,7 @@ export function Profile() {
                   </div>
                 </TabsContent>
 
-                {/* Strengths */}
+           
                 <TabsContent value="strengths">
                   <div className="grid md:grid-cols-2 gap-4">
                     {[
@@ -442,7 +563,7 @@ export function Profile() {
                   </div>
                 </TabsContent>
 
-                {/* Growth */}
+      
                 <TabsContent value="growth">
                   <div className="grid md:grid-cols-3 gap-4">
                     {[
@@ -459,7 +580,7 @@ export function Profile() {
                   </div>
                 </TabsContent>
 
-                {/* Evidence */}
+             
                 <TabsContent value="evidence">
                   <div className="space-y-3">
                     {(
@@ -506,7 +627,7 @@ export function Profile() {
                   </div>
                 </TabsContent>
 
-                {/* Workshops */}
+           
                 <TabsContent value="workshops">
                   <div className="space-y-4">
                     <div className="text-sm text-muted-foreground">{t('profile.workshopsMatch')}</div>
@@ -533,6 +654,8 @@ export function Profile() {
                 </TabsContent>
               </Tabs>
             </div>
+            
+            */}
 
             </div>
           

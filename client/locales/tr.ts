@@ -551,6 +551,8 @@ export const tr = {
     preview: 'Önizleme',
     watchAgain: 'Tekrar İzle',
     certificate: 'Sertifika',
+    shortDescription: 'Kısa Açıklama',
+    detailedDescription: 'Detaylı Açıklama',
     editCourse: 'Kurs Düzenle',
     editCourseInfo: 'Kurs bilgilerini ve fiyatlandırmayı düzenleyin',
     courseName: 'Kursun Adı',
