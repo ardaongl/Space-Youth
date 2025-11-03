@@ -70,9 +70,12 @@ export class TaskAPI {
         }
     }
 
-    admin_approve_task = async (task_id: string, approve: boolean) => {
+    admin_approve_task = async (submission_id: string, approve: boolean) => {
         try {
-            const response = await api.post(`/api/task/approve/${task_id}`, {approve: approve}, {requiresAuth: true, validateStatus: s => s < 500})
+            const response = await api.post(`/api/task/approve`, {
+                id: submission_id,
+                approve: approve
+            }, {requiresAuth: true, validateStatus: s => s < 500})
             return response;
         } catch (error) {
             return error;
