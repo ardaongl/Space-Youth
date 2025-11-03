@@ -60,5 +60,23 @@ export class TaskAPI {
             return error;
         }
     }
-    
+
+    get_completed_tasks = async (task_id: string) => {
+        try {
+            const response = await api.get(`/api/task/completed/${task_id}`, {requiresAuth: true, validateStatus: s => s < 500})
+            return response;
+        } catch (error) {
+            return error;
+        }
+    }
+
+    admin_approve_task = async (task_id: string, approve: boolean) => {
+        try {
+            const response = await api.post(`/api/task/approve/${task_id}`, {approve: approve}, {requiresAuth: true, validateStatus: s => s < 500})
+            return response;
+        } catch (error) {
+            return error;
+        }   
+    }
+
 }

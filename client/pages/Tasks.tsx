@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -21,24 +21,75 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Filter, Plus, Pencil, Trash2, MoreHorizontal } from "lucide-react";
+import { Search, Filter, Pencil, Trash2, MoreHorizontal } from "lucide-react";
 import { TaskStatus } from "@/data/tasks";
-import { useTasks } from "@/context/TasksContext";
+import { Task } from "@/data/tasks";
 
 import { useLanguage } from "@/context/LanguageContext";
 import { isAdmin, isTeacher } from "@/utils/roles";
 import { cn } from "@/lib/utils";
-import { AddTaskModal } from "@/components/tasks/AddTaskModal";
 import { useAppSelector } from "@/store";
+import { apis } from "@/services";
+
+// API'den gelen Task interface'i
+interface ApiTask {
+  id?: number;
+  name: string;
+  description: string;
+  point: number;
+  achivements: string;
+  image_url: string;
+  level: string;
+}
 
 export default function Tasks() {
   const user = useAppSelector(state => state.user);
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { tasks } = useTasks();
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<TaskStatus[]>([]);
-  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+
+  // API'den görevleri çek
+  useEffect(() => {
+    const fetchTasks = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await apis.task.get_tasks();
+        if (response.status === 200 && response.data) {
+          // API'den gelen veriyi UI'da kullanılan Task formatına map et
+          const mappedTasks: Task[] = response.data.map((apiTask: ApiTask) => ({
+            id: apiTask.id || 0,
+            title: apiTask.name,
+            description: apiTask.description,
+            duration: "",
+            level: apiTask.level,
+            type: "",
+            category: "UX" as const,
+            href: `/tasks/${apiTask.id}`,
+            icon: null,
+            coins: apiTask.point,
+            status: "To Do" as TaskStatus,
+            deadline: "",
+            image: apiTask.image_url || undefined,
+            completionCount: 0,
+          }));
+          setTasks(mappedTasks);
+        }
+      } catch (err: any) {
+        console.error("Error fetching tasks:", err);
+        setError(err.response?.data?.error?.message || "Görevler getirilirken bir hata oluştu.");
+        setTasks([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, []);
 
   const filteredTasks = tasks.filter((task) => {
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
@@ -80,21 +131,51 @@ export default function Tasks() {
     }
   };
 
-  const handleTaskClick = (taskHref: string) => {
-    const taskId = taskHref.split('/').pop();
+  const handleTaskClick = (taskId: number) => {
     navigate(`/tasks/${taskId}`);
   };
 
-  const handleEditTask = (taskId: number, e: React.MouseEvent) => {
+  const handleEditTask = async (taskId: number, e: React.MouseEvent) => {
     e.stopPropagation();
     console.log("Edit task:", taskId);
-    // TODO: Implement edit functionality
+    // TODO: Implement edit functionality - navigate to edit page or open modal
   };
 
-  const handleDeleteTask = (taskId: number, e: React.MouseEvent) => {
+  const handleDeleteTask = async (taskId: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log("Delete task:", taskId);
-    // TODO: Implement delete functionality
+    if (!confirm("Bu görevi silmek istediğinizden emin misiniz?")) {
+      return;
+    }
+    
+    try {
+      const deleteResponse = await apis.task.admin_delete_task(taskId.toString());
+      if (deleteResponse.status === 200 || deleteResponse.status === 204) {
+        // Görevleri yeniden yükle
+        const fetchResponse = await apis.task.get_tasks();
+        if (fetchResponse.status === 200 && fetchResponse.data) {
+          const mappedTasks: Task[] = fetchResponse.data.map((apiTask: ApiTask) => ({
+            id: apiTask.id || 0,
+            title: apiTask.name,
+            description: apiTask.description,
+            duration: "",
+            level: apiTask.level,
+            type: "",
+            category: "UX" as const,
+            href: `/tasks/${apiTask.id}`,
+            icon: null,
+            coins: apiTask.point,
+            status: "To Do" as TaskStatus,
+            deadline: "",
+            image: apiTask.image_url || undefined,
+            completionCount: 0,
+          }));
+          setTasks(mappedTasks);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error deleting task:", error);
+      alert("Görev silinirken bir hata oluştu");
+    }
   };
 
   const toggleStatusFilter = (status: TaskStatus) => {
@@ -156,55 +237,46 @@ export default function Tasks() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              {/* Admin: Add New Task Button */}
-              {adminUser && (
-                <Button className="gap-2" onClick={() => setIsAddTaskModalOpen(true)}>
-                  <Plus className="h-4 w-4" />
-                  {t('tasks.addTask')}
-                </Button>
-              )}
             </div>
           </div>
 
-          {/* Add Task Modal */}
-          <AddTaskModal
-            open={isAddTaskModalOpen}
-            onOpenChange={setIsAddTaskModalOpen}
-            onTaskAdded={() => {
-              // Reload tasks or refresh the page
-              console.log("Task added successfully");
-            }}
-          />
-
           {/* Tasks Table */}
           <div className="rounded-lg border bg-card">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('tasks.taskName')}</TableHead>
-                  <TableHead>{t('tasks.coinValue')}</TableHead>
-                  <TableHead>{canManageTasks ? t('tasks.completedStudents') : t('tasks.status')}</TableHead>
-                  {canManageTasks && <TableHead className="text-right">{t('tasks.actions')}</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTasks.length === 0 ? (
+            {loading ? (
+              <div className="p-8 text-center text-muted-foreground">
+                {t('common.loading') || "Yükleniyor..."}
+              </div>
+            ) : error ? (
+              <div className="p-8 text-center text-red-600">
+                {error}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell
-                      colSpan={adminUser ? 4 : 3}
-                      className="h-24 text-center text-muted-foreground"
-                    >
-                      {t('tasks.noTasksFound')}
-                    </TableCell>
+                    <TableHead>{t('tasks.taskName')}</TableHead>
+                    <TableHead>{t('tasks.coinValue')}</TableHead>
+                    <TableHead>{canManageTasks ? t('tasks.completedStudents') : t('tasks.status')}</TableHead>
+                    {canManageTasks && <TableHead className="text-right">{t('tasks.actions')}</TableHead>}
                   </TableRow>
-                ) : (
-                  filteredTasks.map((task) => (
-                    <TableRow
-                      key={task.id}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleTaskClick(task.href)}
-                    >
+                </TableHeader>
+                <TableBody>
+                  {filteredTasks.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={adminUser ? 4 : 3}
+                        className="h-24 text-center text-muted-foreground"
+                      >
+                        {t('tasks.noTasksFound')}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredTasks.map((task) => (
+                      <TableRow
+                        key={task.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleTaskClick(task.id)}
+                      >
                       <TableCell className="font-medium">{task.title}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
@@ -262,11 +334,12 @@ export default function Tasks() {
                           </DropdownMenu>
                         </TableCell>
                       )}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </div>
       </div>

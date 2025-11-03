@@ -1,101 +1,237 @@
 import { useParams, useNavigate } from "react-router-dom";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Clock, Coins, Calendar, CheckCircle2, ArrowLeft, Users, FileText, CheckCircle, Clock3, XCircle, Edit, Trash2, MoreHorizontal } from "lucide-react";
-import { useTasks } from "@/context/TasksContext";
-import { useTaskSubmissions } from "@/context/TaskSubmissionsContext";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 import { isTeacher, isAdmin } from "@/utils/roles";
 import { useAppSelector } from "@/store";
+import { apis } from "@/services";
+import { Task, TaskStatus } from "@/data/tasks";
+
+// API'den gelen Task interface'i
+interface ApiTask {
+  id?: number;
+  name: string;
+  description: string;
+  point: number;
+  achivements: string;
+  image_url: string;
+  level: string;
+}
+
+// Task'a achivements eklemek için genişletilmiş interface
+interface TaskWithAchievements extends Task {
+  achivements?: string;
+}
+
+// API'den gelen submission interface'i
+interface ApiSubmission {
+  id: string;
+  description: string;
+  file_url: string;
+  file_name: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  task: {
+    id: string;
+    name: string;
+    point: number;
+    description: string;
+    image_url: string;
+    level: string;
+    achivements: string;
+  };
+  user: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    [key: string]: any;
+  };
+}
+
+// UI'da kullanılan submission interface'i
+interface Submission {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  status: "completed" | "pending" | "rejected";
+  submittedAt: string;
+  files: { name: string; url: string }[];
+  comment: string;
+}
 
 export default function TaskDetail() {
   const user = useAppSelector(state => state.user);
   const navigate = useNavigate();
   const { taskId } = useParams();
   const { t } = useLanguage();
-
-  const { tasks, updateTaskStatus } = useTasks();
-  const { addSubmission } = useTaskSubmissions();
+  
+  const [task, setTask] = useState<TaskWithAchievements | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   
   const isTeacherUser = isTeacher(user.user?.role);
   const isAdminUser = isAdmin(user.user?.role);
   const canViewSubmissions = isTeacherUser || isAdminUser;
   const canManageTasks = isTeacherUser || isAdminUser;
-  
-  const task = tasks.find(t => t.href.split('/').pop() === taskId);
 
-  // Mock data for task submissions
-  const taskSubmissions = [
-    {
-      id: 1,
-      userId: 1,
-      userName: "Ahmet Yılmaz",
-      userEmail: "ahmet@example.com",
-      status: "completed",
-      submittedAt: "2024-01-15T10:30:00Z",
-      files: ["project_report.pdf", "presentation.pptx"],
-      comment: "Görevi başarıyla tamamladım. Rapor ve sunum dosyalarını ekliyorum."
-    },
-    {
-      id: 2,
-      userId: 2,
-      userName: "Ayşe Demir",
-      userEmail: "ayse@example.com",
-      status: "pending",
-      submittedAt: "2024-01-16T14:20:00Z",
-      files: ["task_solution.zip"],
-      comment: "Görev çözümümü gönderiyorum. İncelemenizi bekliyorum."
-    },
-    {
-      id: 3,
-      userId: 3,
-      userName: "Mehmet Kaya",
-      userEmail: "mehmet@example.com",
-      status: "completed",
-      submittedAt: "2024-01-14T09:15:00Z",
-      files: ["final_project.pdf", "code_repository.zip"],
-      comment: "Proje tamamlandı. Kod ve dokümantasyon hazır."
-    },
-    {
-      id: 4,
-      userId: 4,
-      userName: "Fatma Özkan",
-      userEmail: "fatma@example.com",
-      status: "pending",
-      submittedAt: "2024-01-17T16:45:00Z",
-      files: ["submission.pdf"],
-      comment: "Görev teslimim. Lütfen değerlendirin."
-    }
-  ];
+  // API'den görevi çek
+  useEffect(() => {
+    const fetchTask = async () => {
+      if (!taskId) return;
+      
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await apis.task.get_task(taskId);
+        if (response.status === 200 && response.data) {
+          const apiTask: ApiTask = response.data;
+          // API'den gelen veriyi UI'da kullanılan Task formatına map et
+          const mappedTask: TaskWithAchievements = {
+            id: apiTask.id || 0,
+            title: apiTask.name,
+            description: apiTask.description,
+            duration: "",
+            level: apiTask.level,
+            type: "",
+            category: "UX" as const,
+            href: `/tasks/${apiTask.id}`,
+            icon: null,
+            coins: apiTask.point,
+            status: "To Do" as TaskStatus,
+            deadline: "",
+            image: apiTask.image_url || undefined,
+            completionCount: 0,
+            achivements: apiTask.achivements,
+          };
+          setTask(mappedTask);
+        } else {
+          setError("Görev bulunamadı");
+        }
+      } catch (err: any) {
+        console.error("Error fetching task:", err);
+        setError(err.response?.data?.error?.message || "Görev getirilirken bir hata oluştu.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const [submissions, setSubmissions] = React.useState(taskSubmissions);
+    fetchTask();
+  }, [taskId]);
+
+  // API'den submission'ları çek (sadece admin/teacher için)
+  useEffect(() => {
+    const fetchSubmissions = async () => {
+      if (!taskId || !canViewSubmissions) return;
+      
+      setLoadingSubmissions(true);
+      try {
+        const response = await apis.task.get_completed_tasks(taskId);
+        if (response.status === 200 && response.data) {
+          // API'den gelen veriyi UI formatına map et
+          const mappedSubmissions: Submission[] = response.data.map((apiSub: ApiSubmission) => ({
+            id: apiSub.id,
+            userId: apiSub.user.id,
+            userName: `${apiSub.user.first_name} ${apiSub.user.last_name}`,
+            userEmail: apiSub.user.email,
+            status: apiSub.status === "APPROVED" ? "completed" as const :
+                    apiSub.status === "REJECTED" ? "rejected" as const :
+                    "pending" as const,
+            submittedAt: new Date().toISOString(), // API'den gelmiyorsa şimdilik
+            files: [{
+              name: apiSub.file_name,
+              url: apiSub.file_url
+            }],
+            comment: apiSub.description || "",
+          }));
+          setSubmissions(mappedSubmissions);
+        }
+      } catch (err: any) {
+        console.error("Error fetching submissions:", err);
+        setSubmissions([]);
+      } finally {
+        setLoadingSubmissions(false);
+      }
+    };
+
+    fetchSubmissions();
+  }, [taskId, canViewSubmissions]);
   
   const completedSubmissions = submissions.filter(sub => sub.status === "completed");
   const pendingSubmissions = submissions.filter(sub => sub.status === "pending");
   const rejectedSubmissions = submissions.filter(sub => sub.status === "rejected");
 
-  const handleApproveSubmission = (submissionId: number) => {
-    setSubmissions(prev => 
-      prev.map(sub => 
-        sub.id === submissionId 
-          ? { ...sub, status: "completed" as const }
-          : sub
-      )
-    );
+  const handleApproveSubmission = async (submissionId: string) => {
+    try {
+      const response = await apis.task.admin_approve_task(submissionId, true);
+      if (response.status === 200 || response.status === 201) {
+        // Submission'ları yeniden yükle
+        if (taskId) {
+          const fetchResponse = await apis.task.get_completed_tasks(taskId);
+          if (fetchResponse.status === 200 && fetchResponse.data) {
+            const mappedSubmissions: Submission[] = fetchResponse.data.map((apiSub: ApiSubmission) => ({
+              id: apiSub.id,
+              userId: apiSub.user.id,
+              userName: `${apiSub.user.first_name} ${apiSub.user.last_name}`,
+              userEmail: apiSub.user.email,
+              status: apiSub.status === "APPROVED" ? "completed" as const :
+                      apiSub.status === "REJECTED" ? "rejected" as const :
+                      "pending" as const,
+              submittedAt: new Date().toISOString(),
+              files: [{
+                name: apiSub.file_name,
+                url: apiSub.file_url
+              }],
+              comment: apiSub.description || "",
+            }));
+            setSubmissions(mappedSubmissions);
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error("Error approving submission:", error);
+      alert("Teslim onaylanırken bir hata oluştu");
+    }
   };
 
-  const handleRejectSubmission = (submissionId: number) => {
-    setSubmissions(prev => 
-      prev.map(sub => 
-        sub.id === submissionId 
-          ? { ...sub, status: "rejected" as const }
-          : sub
-      )
-    );
+  const handleRejectSubmission = async (submissionId: string) => {
+    try {
+      const response = await apis.task.admin_approve_task(submissionId, false);
+      if (response.status === 200 || response.status === 201) {
+        // Submission'ları yeniden yükle
+        if (taskId) {
+          const fetchResponse = await apis.task.get_completed_tasks(taskId);
+          if (fetchResponse.status === 200 && fetchResponse.data) {
+            const mappedSubmissions: Submission[] = fetchResponse.data.map((apiSub: ApiSubmission) => ({
+              id: apiSub.id,
+              userId: apiSub.user.id,
+              userName: `${apiSub.user.first_name} ${apiSub.user.last_name}`,
+              userEmail: apiSub.user.email,
+              status: apiSub.status === "APPROVED" ? "completed" as const :
+                      apiSub.status === "REJECTED" ? "rejected" as const :
+                      "pending" as const,
+              submittedAt: new Date().toISOString(),
+              files: [{
+                name: apiSub.file_name,
+                url: apiSub.file_url
+              }],
+              comment: apiSub.description || "",
+            }));
+            setSubmissions(mappedSubmissions);
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error("Error rejecting submission:", error);
+      alert("Teslim reddedilirken bir hata oluştu");
+    }
   };
 
   const handleEditTask = () => {
@@ -103,21 +239,42 @@ export default function TaskDetail() {
     navigate(`/tasks/${taskId}/edit`);
   };
 
-  const handleDeleteTask = () => {
-    if (window.confirm('Bu görevi silmek istediğinizden emin misiniz?')) {
-      // Delete task logic
-      console.log('Deleting task:', taskId);
-      // In real app, this would call an API to delete the task
-      navigate('/tasks');
+  const handleDeleteTask = async () => {
+    if (!taskId || !window.confirm('Bu görevi silmek istediğinizden emin misiniz?')) {
+      return;
+    }
+    
+    try {
+      const response = await apis.task.admin_delete_task(taskId);
+      if (response.status === 200 || response.status === 204) {
+        navigate('/tasks');
+      } else {
+        alert("Görev silinirken bir hata oluştu");
+      }
+    } catch (error: any) {
+      console.error("Error deleting task:", error);
+      alert("Görev silinirken bir hata oluştu");
     }
   };
 
-  if (!task) {
+  if (loading) {
     return (
       <AppLayout>
         <div className="container mx-auto py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">{t('tasks.taskNotFound')}</h1>
+            <p className="text-muted-foreground">Yükleniyor...</p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (error || !task) {
+    return (
+      <AppLayout>
+        <div className="container mx-auto py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">{error || t('tasks.taskNotFound')}</h1>
             <Button onClick={() => navigate('/tasks')}>{t('tasks.backToTasks')}</Button>
           </div>
         </div>
@@ -275,20 +432,26 @@ export default function TaskDetail() {
 
                   <div>
                     <h3 className="text-xl font-semibold mb-3">What you'll achieve</h3>
-                    <ul className="space-y-2 text-muted-foreground">
-                      <li className="flex items-start gap-3">
-                        <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
-                        <span>Develop essential {task.category} skills through hands-on practice</span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
-                        <span>Build portfolio-ready work that showcases your abilities</span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
-                        <span>Earn {task.coins} coins upon successful completion</span>
-                      </li>
-                    </ul>
+                    {task.achivements ? (
+                      <div className="text-muted-foreground whitespace-pre-line">
+                        {task.achivements}
+                      </div>
+                    ) : (
+                      <ul className="space-y-2 text-muted-foreground">
+                        <li className="flex items-start gap-3">
+                          <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
+                          <span>Develop essential {task.category} skills through hands-on practice</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
+                          <span>Build portfolio-ready work that showcases your abilities</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
+                          <span>Earn {task.coins} coins upon successful completion</span>
+                        </li>
+                      </ul>
+                    )}
                   </div>
                 </div>
 
@@ -352,6 +515,9 @@ export default function TaskDetail() {
                 <div className="flex items-center gap-2 mb-6">
                   <Users className="h-5 w-5 text-primary" />
                   <h2 className="text-xl font-semibold">Görev Teslimleri</h2>
+                  {loadingSubmissions && (
+                    <span className="text-sm text-muted-foreground">(Yükleniyor...)</span>
+                  )}
                 </div>
 
                 {/* Statistics */}
@@ -415,13 +581,12 @@ export default function TaskDetail() {
                                       size="sm"
                                       className="text-xs h-8"
                                       onClick={() => {
-                                        // Mock file download/view action
-                                        console.log(`Opening file: ${file}`);
-                                        // In real app, this would open/download the file
+                                        // Dosyayı yeni sekmede aç
+                                        window.open(file.url, '_blank');
                                       }}
                                     >
                                       <FileText className="h-3 w-3 mr-1" />
-                                      {file}
+                                      {file.name}
                                     </Button>
                                   ))}
                                 </div>
@@ -497,13 +662,12 @@ export default function TaskDetail() {
                                       size="sm"
                                       className="text-xs h-8"
                                       onClick={() => {
-                                        // Mock file download/view action
-                                        console.log(`Opening file: ${file}`);
-                                        // In real app, this would open/download the file
+                                        // Dosyayı yeni sekmede aç
+                                        window.open(file.url, '_blank');
                                       }}
                                     >
                                       <FileText className="h-3 w-3 mr-1" />
-                                      {file}
+                                      {file.name}
                                     </Button>
                                   ))}
                                 </div>
@@ -566,13 +730,12 @@ export default function TaskDetail() {
                                       size="sm"
                                       className="text-xs h-8"
                                       onClick={() => {
-                                        // Mock file download/view action
-                                        console.log(`Opening file: ${file}`);
-                                        // In real app, this would open/download the file
+                                        // Dosyayı yeni sekmede aç
+                                        window.open(file.url, '_blank');
                                       }}
                                     >
                                       <FileText className="h-3 w-3 mr-1" />
-                                      {file}
+                                      {file.name}
                                     </Button>
                                   ))}
                                 </div>
