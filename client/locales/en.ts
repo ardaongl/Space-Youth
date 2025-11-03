@@ -52,6 +52,12 @@ export const en = {
     locale: 'en',
   },
 
+  // Error messages
+  error: {
+    submitFailed: 'Submission Failed',
+    submitFailedDesc: 'An error occurred while submitting your application. Please try again.'
+  },
+
   // Navigation
   navigation: {
     home: 'Home',
@@ -1033,7 +1039,9 @@ export const en = {
     retake: 'Retake',
     finishAndStart: 'Finish and Start',
     cancel: 'Cancel',
-    back: 'Back'
+    back: 'Back',
+    submitSuccess: 'Application Submitted Successfully',
+    submitSuccessDesc: 'Your application has been received and is now under review.'
   },
 
   // Course Detail

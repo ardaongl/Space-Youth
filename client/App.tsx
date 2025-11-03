@@ -57,7 +57,8 @@ import RoleSwitcher from "./components/dev/RoleSwitcher";
 import { store, useAppSelector } from "./store";
 import { apis } from "./services";
 import { IUserRoles, STUDENT_STATUS } from "./types/user/user";
-import { clearUser } from "./store/slices/userSlice";
+import { clearUser, setUser } from "./store/slices/userSlice";
+import { setStudent } from "./store/slices/studentSlice";
 import { useToast } from "./hooks/use-toast";
 
 const queryClient = new QueryClient();
@@ -144,17 +145,50 @@ const AppContent = () => {
     try {
       const response = await apis.student.set_student_answers(payload);
       if(response.status == 200){
-        setTimeout(() => {
-          navigate("/login");
-        }, 1500);
+        // Refresh user and student data to get updated status
+        const userResponse: any = await apis.user.get_user();
+        if (userResponse && userResponse.data) {
+          // Update user
+          if (userResponse.data.id) {
+            const updatedUser = {
+              id: userResponse.data.id,
+              name: userResponse.data.first_name,
+              email: userResponse.data.email,
+              role: userResponse.data.role
+            };
+            dispatch(setUser(updatedUser));
+          }
+          
+          // Update student
+          if (userResponse.data.student) {
+            const updatedStudent = {
+              id: userResponse.data.student.id,
+              status: userResponse.data.student.status,
+              questions_and_answers: userResponse.data.student.questions_and_answers
+            };
+            dispatch(setStudent(updatedStudent));
+          }
+        }
+        
+        toast({
+          title: t('testWizard.submitSuccess'),
+          description: t('testWizard.submitSuccessDesc'),
+        });
       }else{
         toast({
-          title: t('success.created'),
+          title: t('error.submitFailed'),
+          description: t('error.submitFailedDesc'),
+          variant: "destructive"
         })
       }
 
     } catch (error) {
       console.error("Failed to save onboarding data:", error);
+      toast({
+        title: t('error.submitFailed'),
+        description: t('error.submitFailedDesc'),
+        variant: "destructive"
+      });
     }
   };
   

@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
-import { useAppSelector } from "@/store";
 
 type Phase1Form = {
   school: string;
@@ -49,8 +48,6 @@ export default function TestWizard({
 }) {
   const { t } = useLanguage();
   const [step, setStep] = useState(1);
-  
-  const user = useAppSelector(state => state.user.user)
 
   const [phase1, setPhase1] = useState<Phase1Form>({
     school: "",
@@ -88,24 +85,17 @@ export default function TestWizard({
         phase1.age,
         phase1.department,
       ];
-      console.log(required.every((v) => String(v || "").trim().length > 0));
-      
       return required.every((v) => String(v || "").trim().length > 0);
     }
     if (step === 2) {
-      console.log();
-      const flag = phase2.q1 !== "" && phase2.q2 !== "" && phase2.q3 !== "" && phase2.q4 !== "";
-      console.log(flag);
-      return flag
+      return phase2.q1 !== "" && phase2.q2 !== "" && phase2.q3 !== "" && phase2.q4 !== "";
     }
     if (step === 3) {
-      const flag = [phase3.a1, phase3.a2, phase3.a3, phase3.a4, phase3.a5].every((v) => v.trim().length > 0);
-      console.log(flag);
-      return flag;
+      return [phase3.a1, phase3.a2, phase3.a3, phase3.a4, phase3.a5].every((v) => v.trim().length > 0);
     }
     if (step === 4) {
-      const flag = phase4.answers;
-      return flag;
+      // Phase 4 is always valid - optional video questions
+      return true;
     }
     return false;
   }, [step, phase1, phase2, phase3, phase4]);

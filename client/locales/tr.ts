@@ -52,6 +52,12 @@ export const tr = {
     locale: 'tr',
   },
 
+  // Error messages
+  error: {
+    submitFailed: 'Gönderme Başarısız',
+    submitFailedDesc: 'Başvurunuz gönderilirken bir hata oluştu. Lütfen tekrar deneyin.'
+  },
+
   // Navigation
   navigation: {
     home: 'Ana Sayfa',
@@ -1034,7 +1040,9 @@ export const tr = {
     retake: 'Yeniden Çek',
     finishAndStart: 'Bitir ve Başla',
     cancel: 'İptal',
-    back: 'Geri'
+    back: 'Geri',
+    submitSuccess: 'Başvuru Başarıyla Gönderildi',
+    submitSuccessDesc: 'Başvurunuz alınmıştır ve şu anda değerlendirme aşamasındadır.'
   },
 
   // Course Detail
