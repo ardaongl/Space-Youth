@@ -119,8 +119,17 @@ export function Profile() {
       setLoadingDetails(true);
       try {
         const response = await apis.student.get_student_details();
+        console.log("response => ", response);
+        console.log("response.data => ", response?.data);
+        
         if (response?.data) {
-          setStudentDetails(response.data);
+          // Ensure the data structure matches our expected format
+          const data = response.data;
+          if (data.character || data.personality || data.student) {
+            setStudentDetails(data as StudentDetailsResponse);
+          } else {
+            console.warn("Unexpected response structure:", data);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch student details:", error);
@@ -306,57 +315,55 @@ export function Profile() {
     <AppLayout>
       <div className="min-h-screen bg-background">
         {/* Top Status Bar */}
-        <div className="flex justify-center pt-4 pb-2">
+        <div className="flex justify-center pt-6 pb-4">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-full text-sm">
             <div className="h-2 w-2 bg-green-500 rounded-full"></div>
             {t('profile.availableForWork')}
           </div>
         </div>
 
-        {/* Header Section */}
-        <div className="relative mb-6">
-          {/* Cover Image Placeholder */}
-          <div className="h-48 bg-muted/30 rounded-lg mx-8 mb-4 flex flex-col items-center justify-center text-center">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-8 w-6 bg-muted rounded"></div>
-              <div className="h-8 w-6 bg-primary/20 rounded relative">
-                <div className="absolute inset-1 bg-primary/40 rounded"></div>
+        {/* Profile Header Section */}
+        <div className="max-w-7xl mx-auto px-8 mb-8">
+          <Card className="p-6 lg:p-8">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+              {/* Profile Picture */}
+              <div className="flex-shrink-0">
+                <div className="h-24 w-24 rounded-full bg-gradient-to-br from-primary to-indigo-500 text-white grid place-items-center text-2xl font-bold border-4 border-background shadow-lg">
+                  {user.user?.name?.charAt(0).toUpperCase() || 'S'}
+                </div>
+              </div>
+
+              {/* User Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
+                      {user.user?.name || t('profile.user')}
+                    </h1>
+                    <p className="text-muted-foreground text-lg">
+                      {studentDetails?.student?.department || 'Full-Stack Developer'}
+                    </p>
+                    {studentDetails?.student?.school && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {studentDetails.student.school}
+                      </p>
+                    )}
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-3">
+                    <Button 
+                      className="bg-primary hover:bg-primary/90"
+                      onClick={() => navigate('/settings')}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      {t('profile.editProfile')}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
-            <p className="text-muted-foreground text-sm mb-2">{t('profile.addCoverImage')}</p>
-            <Button variant="link" className="text-blue-600 p-0 h-auto">{t('profile.uploadFile')}</Button>
-          </div>
-
-          {/* Profile Picture - İsmin tam üstünde, merkezi 'C' harfi ile hizalı */}
-          <div className="absolute left-44 -bottom-8">
-            <div className="h-24 w-24 rounded-full bg-gradient-to-br from-primary to-indigo-500 text-white grid place-items-center text-2xl font-bold border-4 border-background">
-              S
-            </div>
-          </div>
-        </div>
-
-        {/* User Info Section - Profil fotoğrafının sağında */}
-        <div className="ml-40 mb-6 pt-8">
-          <div className="flex items-start justify-between max-w-6xl">
-            {/* Sol taraf - İsim ve unvan */}
-            <div className="ml-8">
-              <h1 className="text-2xl font-bold text-foreground mb-1">{user.user.name}</h1>
-              <p className="text-muted-foreground mb-4">Full-Stack Developer</p>
-            </div>
-            
-            {/* Sağ taraf - Aksiyon butonları */}
-            <div className="flex items-center gap-3 mr-8">
-              <Button 
-                className="bg-primary hover:bg-primary/90"
-                onClick={() => navigate('/settings')}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                {t('profile.editProfile')}
-              </Button>
-            </div>
-          </div>
-
-
+          </Card>
         </div>
 
 
@@ -434,7 +441,17 @@ export function Profile() {
             </div>
 
             {/* Character and Personality Section */}
-            {studentDetails && (
+            {loadingDetails ? (
+              <div className="space-y-6">
+                <Card className="p-6">
+                  <div className="animate-pulse">
+                    <div className="h-6 bg-muted rounded w-1/3 mb-4"></div>
+                    <div className="h-4 bg-muted rounded w-full mb-2"></div>
+                    <div className="h-4 bg-muted rounded w-2/3"></div>
+                  </div>
+                </Card>
+              </div>
+            ) : studentDetails && (studentDetails.character || studentDetails.personality) ? (
               <div className="space-y-6">
                 {/* Character Card */}
                 {studentDetails.character && (
@@ -444,15 +461,22 @@ export function Profile() {
                         <div className="flex-shrink-0">
                           <img 
                             src={studentDetails.character.image_url} 
-                            alt={studentDetails.character.name}
+                            alt={studentDetails.character.name || "Character"}
                             className="w-32 h-32 rounded-lg object-cover border"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
                           />
                         </div>
                       )}
                       <div className="flex-1">
-                        <h3 className="text-xl font-semibold mb-2">{studentDetails.character.name}</h3>
+                        <h3 className="text-xl font-semibold mb-2">
+                          {studentDetails.character.name || t('profile.character')}
+                        </h3>
                         {studentDetails.character.details && (
-                          <p className="text-muted-foreground leading-relaxed">{studentDetails.character.details}</p>
+                          <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
+                            {studentDetails.character.details}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -464,28 +488,38 @@ export function Profile() {
                   <Card className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <h3 className="text-xl font-semibold mb-1">{studentDetails.personality.name}</h3>
-                        <Badge variant="secondary" className="mt-1">{studentDetails.personality.type}</Badge>
+                        <h3 className="text-xl font-semibold mb-1">
+                          {studentDetails.personality.name || t('profile.personality')}
+                        </h3>
+                        {studentDetails.personality.type && (
+                          <Badge variant="secondary" className="mt-1">
+                            {studentDetails.personality.type}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <div>
-                        <h4 className="font-medium mb-2">{t('profile.shortDescription')}</h4>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {studentDetails.personality.short_description}
-                        </p>
-                      </div>
-                      <div>
-                        <h4 className="font-medium mb-2">{t('profile.detailedDescription')}</h4>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {studentDetails.personality.long_description}
-                        </p>
-                      </div>
+                      {studentDetails.personality.short_description && (
+                        <div>
+                          <h4 className="font-medium mb-2">{t('profile.shortDescription')}</h4>
+                          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                            {studentDetails.personality.short_description}
+                          </p>
+                        </div>
+                      )}
+                      {studentDetails.personality.long_description && (
+                        <div>
+                          <h4 className="font-medium mb-2">{t('profile.detailedDescription')}</h4>
+                          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                            {studentDetails.personality.long_description}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </Card>
                 )}
               </div>
-            )}
+            ) : null}
 
             {/* Tabs Section */}
             {/* <div className="bg-card border rounded-lg p-4">

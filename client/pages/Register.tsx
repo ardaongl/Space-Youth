@@ -198,7 +198,7 @@ export default function Register() {
 
           {/* Register Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
+            <div className="space-y-2 w-full">
               <Label htmlFor="name">{t('auth.firstName')}</Label>
               <Input
                 id="firstname"
@@ -213,7 +213,7 @@ export default function Register() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 w-full">
               <Label htmlFor="name">{t('auth.lastName')}</Label>
               <Input
                 id="lastname"
@@ -230,7 +230,7 @@ export default function Register() {
             
 
             {/* Role Toggle: Student (off) / Teacher (on) */}
-            <div className="flex items-center justify-between rounded-md border px-3 py-3">
+            <div className="flex items-center justify-between rounded-md border px-3 py-3 w-full">
               <div className="space-y-0.5">
                 <Label htmlFor="roleSwitch" className="text-sm font-medium">
                   Öğretmen olarak kaydol
@@ -247,7 +247,7 @@ export default function Register() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 w-full">
               <Label htmlFor="email">{t('auth.email')}</Label>
               <Input
                 id="email"
@@ -262,7 +262,7 @@ export default function Register() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 w-full">
               <Label htmlFor="password">{t('auth.password')}</Label>
               <div className="relative">
                 <Input
@@ -313,7 +313,7 @@ export default function Register() {
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 w-full">
               <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
               <div className="relative">
                 <Input
@@ -354,7 +354,7 @@ export default function Register() {
             </div>
 
             {/* Terms and Conditions */}
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3 w-full">
               <Checkbox
                 id="terms"
                 checked={acceptTerms}

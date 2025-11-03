@@ -163,7 +163,7 @@ export default function Login() {
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
+            <div className="space-y-2 w-full">
               <Label htmlFor="email">E-posta</Label>
               <Input
                 id="email"
@@ -178,7 +178,7 @@ export default function Login() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 w-full">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Şifre</Label>
                 <Link 
