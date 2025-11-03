@@ -50,9 +50,13 @@ interface Answer {
 }
 
 interface Task {
-  id: number;
-  title: string;
+  id?: number;
+  name: string;
   description: string;
+  point: number;
+  achivements: string;
+  image_url: string;
+  level: string;
 }
 
 interface Character {
@@ -92,6 +96,7 @@ const AdminPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editState, setEditState] = useState<EditState | null>(null);
+  const [isTaskFormOpen, setIsTaskFormOpen] = useState<boolean>(false);
 
   const user = useAppSelector(state => state.user.user)
   const token = useAppSelector(state => state.user.token);
@@ -151,9 +156,30 @@ const AdminPage: React.FC = () => {
     }
   }
 
+  const fetchTasks = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await apis.task.get_tasks();
+      if (response.status === 200) {
+        setTasks(response.data || []);
+      }
+    } catch (error: any) {
+      console.error(error);
+      setError(
+        error.response?.data?.error?.message ||
+        "Görevler getirilirken bir hata oluştu."
+      );
+      setTasks([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (selectedTab === "students" || selectedTab === "answers") fetchStudents();
     if (selectedTab === "characters") fetchCharacters();
+    if (selectedTab === "tasks") fetchTasks();
   }, [selectedTab]);
 
   const filteredStudents = students.filter(
@@ -165,19 +191,46 @@ const AdminPage: React.FC = () => {
       (s.students.department && s.students.department.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const handleAddTask = (e: FormEvent<HTMLFormElement>) => {
+  const handleAddTask = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const target = e.target as typeof e.target & {
-      title: { value: string };
+      name: { value: string };
       description: { value: string };
+      point: { value: string };
+      achivements: { value: string };
+      image_url: { value: string };
+      level: { value: string };
     };
-    const newTask: Task = {
-      id: tasks.length ? Math.max(...tasks.map((t) => t.id)) + 1 : 1,
-      title: target.title.value,
+    
+    const payload = {
+      name: target.name.value,
       description: target.description.value,
+      point: parseInt(target.point.value) || 0,
+      achivements: target.achivements.value,
+      image_url: target.image_url.value,
+      level: target.level.value,
     };
-    setTasks([...tasks, newTask]);
-    e.currentTarget.reset();
+
+    try {
+      const response = await apis.task.admin_add_task(payload);
+      if (response.status === 200 || response.status === 201) {
+        // Reset form before closing
+        if (e.currentTarget) {
+          e.currentTarget.reset();
+        }
+        // Refresh tasks list after successful addition
+        fetchTasks();
+        // Close form after a short delay to ensure reset completes
+        setTimeout(() => {
+          setIsTaskFormOpen(false);
+        }, 100);
+      } else {
+        alert("Görev eklenirken bir hata oluştu");
+      }
+    } catch (error: any) {
+      console.error("Error adding task:", error);
+      alert("Görev eklenirken bir hata oluştu");
+    }
   };
 
   const handleAddPersonality = async (e: FormEvent<HTMLFormElement>) => {
@@ -261,7 +314,7 @@ const AdminPage: React.FC = () => {
   };
 
   /** Drawer içi form alanı güncelleme (controlled) */
-  const onEditChange = (field: string, value: string | File) => {
+  const onEditChange = (field: string, value: string | File | number) => {
     if (!editState) return;
     setEditState({
       ...editState,
@@ -274,7 +327,27 @@ const AdminPage: React.FC = () => {
 
     if (editState.entity === "task") {
       const item = editState.data as Task;
-      setTasks((prev) => prev.map((t) => (t.id === item.id ? item : t)));
+      if (item.id) {
+        try {
+          const payload = {
+            name: item.name,
+            description: item.description,
+            point: item.point,
+            achivements: item.achivements,
+            image_url: item.image_url,
+            level: item.level,
+          };
+          const response = await apis.task.admin_update_task(item.id.toString(), payload);
+          if (response.status === 200 || response.status === 201) {
+            fetchTasks();
+          } else {
+            alert("Görev güncellenirken bir hata oluştu");
+          }
+        } catch (error) {
+          console.error("Error updating task:", error);
+          alert("Görev güncellenirken bir hata oluştu");
+        }
+      }
     }
     if (editState.entity === "personality") {
       const item = editState.data as IPersonality;
@@ -320,11 +393,11 @@ const AdminPage: React.FC = () => {
       return (
         <>
           <h3>Görev Düzenle</h3>
-          <label>Başlık</label>
+          <label>Ad</label>
           <input
-            value={d.title}
-            onChange={(e) => onEditChange("title", e.target.value)}
-            placeholder="Görev başlığı"
+            value={d.name}
+            onChange={(e) => onEditChange("name", e.target.value)}
+            placeholder="Görev adı"
           />
           <label>Açıklama</label>
           <textarea
@@ -332,6 +405,32 @@ const AdminPage: React.FC = () => {
             onChange={(e) => onEditChange("description", e.target.value)}
             placeholder="Görev açıklaması"
             rows={4}
+          />
+          <label>Puan</label>
+          <input
+            type="number"
+            value={d.point}
+            onChange={(e) => onEditChange("point", parseInt(e.target.value) || 0)}
+            placeholder="Puan"
+          />
+          <label>Başarılar</label>
+          <input
+            value={d.achivements}
+            onChange={(e) => onEditChange("achivements", e.target.value)}
+            placeholder="Başarılar"
+          />
+          <label>Görsel URL</label>
+          <input
+            type="url"
+            value={d.image_url}
+            onChange={(e) => onEditChange("image_url", e.target.value)}
+            placeholder="Görsel URL"
+          />
+          <label>Seviye</label>
+          <input
+            value={d.level}
+            onChange={(e) => onEditChange("level", e.target.value)}
+            placeholder="Seviye"
           />
         </>
       );
@@ -813,51 +912,347 @@ const AdminPage: React.FC = () => {
         {/* Görevler */}
         {selectedTab === "tasks" && (
           <div>
-            <h3 style={{ fontWeight: "bold", color: "#2c3e50" }}>Görevler</h3>
-            <form onSubmit={handleAddTask}>
-              <input name="title" placeholder="Görev başlığı" required />
-              <input name="description" placeholder="Görev açıklaması" required />
-              <button type="submit">Görev Ekle</button>
-            </form>
-
-            {tasks.length === 0 ? (
-              <p>Görev bulunmamaktadır.</p>
+            <h3 style={{ fontWeight: "bold", color: "#2c3e50", marginBottom: "24px" }}>
+              Görevler
+            </h3>
+            {loading ? (
+              <p>Yükleniyor...</p>
+            ) : error ? (
+              <p style={{ color: "red" }}>{error}</p>
             ) : (
-              <table className="tasks-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Başlık</th>
-                    <th>Açıklama</th>
-                    <th>İşlem</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tasks.map((task) => (
-                    <tr key={task.id}>
-                      <td>{task.id}</td>
-                      <td>{task.title}</td>
-                      <td>{task.description}</td>
-                      <td>
-                        <button
-                          onClick={() => openEdit("task", task)}
-                          className="edit-btn"
+              <>
+                {/* Modern Form Design - Açılır Kapanır */}
+                <div style={{
+                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  borderRadius: "12px",
+                  padding: "24px",
+                  marginBottom: "32px",
+                  boxShadow: "0 6px 20px rgba(0,0,0,0.1)",
+                  color: "white",
+                  width: "100%"
+                }}>
+                  <div 
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      cursor: "pointer",
+                      marginBottom: isTaskFormOpen ? "20px" : "0"
+                    }}
+                    onClick={() => setIsTaskFormOpen(!isTaskFormOpen)}
+                  >
+                    <h4 style={{ 
+                      margin: "0",
+                      fontSize: "18px", 
+                      fontWeight: "600",
+                      color: "white"
+                    }}>
+                      ✨ Yeni Görev Ekle
+                    </h4>
+                    <span style={{
+                      fontSize: "20px",
+                      transition: "transform 0.3s ease",
+                      transform: isTaskFormOpen ? "rotate(180deg)" : "rotate(0deg)"
+                    }}>
+                      ▼
+                    </span>
+                  </div>
+                  
+                  {isTaskFormOpen && (
+                    <form onSubmit={handleAddTask} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    {/* Görev Adı, Puan ve Seviye yan yana */}
+                    <div style={{ 
+                      display: "grid", 
+                      gridTemplateColumns: "12fr 3fr 5fr", 
+                      gap: "12px",
+                    }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                        <label style={{ 
+                          fontSize: "13px", 
+                          fontWeight: "500", 
+                          color: "rgba(255,255,255,0.9)" 
+                        }}>
+                          Görev Adı *
+                        </label>
+                        <input 
+                          name="name" 
+                          placeholder="Örn: İlk Projenizi Oluşturun" 
+                          required 
+                          style={{
+                            padding: "14px 16px",
+                            borderRadius: "8px",
+                            border: "none",
+                            fontSize: "15px",
+                            backgroundColor: "rgba(255,255,255,0.95)",
+                            color: "#2c3e50",
+                            outline: "none",
+                            transition: "all 0.2s ease",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                            height: "48px",
+                            width: "100%"
+                          }}
+                          onFocus={(e) => e.target.style.backgroundColor = "white"}
+                          onBlur={(e) => e.target.style.backgroundColor = "rgba(255,255,255,0.95)"}
+                        />
+                      </div>
+                      
+                      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                        <label style={{ 
+                          fontSize: "13px", 
+                          fontWeight: "500", 
+                          color: "rgba(255,255,255,0.9)" 
+                        }}>
+                          Puan *
+                        </label>
+                        <input 
+                          name="point" 
+                          type="number" 
+                          placeholder="100" 
+                          required 
+                          style={{
+                            padding: "14px 16px",
+                            borderRadius: "8px",
+                            border: "none",
+                            fontSize: "15px",
+                            backgroundColor: "rgba(255,255,255,0.95)",
+                            color: "#2c3e50",
+                            outline: "none",
+                            transition: "all 0.2s ease",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                            height: "48px",
+                            width: "100%"
+                          }}
+                          onFocus={(e) => e.target.style.backgroundColor = "white"}
+                          onBlur={(e) => e.target.style.backgroundColor = "rgba(255,255,255,0.95)"}
+                        />
+                      </div>
+
+                      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                        <label style={{ 
+                          fontSize: "13px", 
+                          fontWeight: "500", 
+                          color: "rgba(255,255,255,0.9)" 
+                        }}>
+                          Seviye *
+                        </label>
+                        <select 
+                          name="level" 
+                          required 
+                          style={{
+                            padding: "14px 16px",
+                            borderRadius: "8px",
+                            border: "none",
+                            fontSize: "15px",
+                            backgroundColor: "rgba(255,255,255,0.95)",
+                            color: "#2c3e50",
+                            outline: "none",
+                            transition: "all 0.2s ease",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                            height: "48px",
+                            width: "100%",
+                            cursor: "pointer",
+                            appearance: "none",
+                            backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%232c3e50' d='M6 9L1 4h10z'/%3E%3C/svg%3E\")",
+                            backgroundRepeat: "no-repeat",
+                            backgroundPosition: "right 16px center",
+                            paddingRight: "40px"
+                          }}
+                          onFocus={(e) => e.target.style.backgroundColor = "white"}
+                          onBlur={(e) => e.target.style.backgroundColor = "rgba(255,255,255,0.95)"}
                         >
-                          Düzenle
-                        </button>
-                        <button
-                          onClick={() =>
-                            setTasks(tasks.filter((t) => t.id !== task.id))
-                          }
-                          className="delete-btn"
-                        >
-                          Sil
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                          <option value="">Seçin</option>
+                          <option value="beginner">Beginner</option>
+                          <option value="intermediate">Intermediate</option>
+                          <option value="advanced">Advanced</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", width: "100%" }}>
+                      <label style={{ 
+                        fontSize: "13px", 
+                        fontWeight: "500", 
+                        color: "rgba(255,255,255,0.9)" 
+                      }}>
+                        Görev Açıklaması *
+                      </label>
+                      <textarea
+                        name="description" 
+                        placeholder="Görevin detaylı açıklamasını yazın..."
+                        required 
+                        rows={3}
+                        style={{
+                          padding: "14px 16px",
+                          borderRadius: "8px",
+                          border: "none",
+                          fontSize: "15px",
+                          backgroundColor: "rgba(255,255,255,0.95)",
+                          color: "#2c3e50",
+                          outline: "none",
+                          resize: "vertical",
+                          minHeight: "80px",
+                          maxHeight: "150px",
+                          width: "100%",
+                          fontFamily: "inherit",
+                          transition: "all 0.2s ease",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                        }}
+                        onFocus={(e) => e.target.style.backgroundColor = "white"}
+                        onBlur={(e) => e.target.style.backgroundColor = "rgba(255,255,255,0.95)"}
+                      />
+                    </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", width: "100%" }}>
+                      <label style={{ 
+                        fontSize: "13px", 
+                        fontWeight: "500", 
+                        color: "rgba(255,255,255,0.9)" 
+                      }}>
+                        Başarılar *
+                      </label>
+                      <textarea
+                        name="achivements" 
+                        placeholder="Başarılar ve ödüller hakkında detaylı bilgi yazın..."
+                        required 
+                        rows={4}
+                        style={{
+                          padding: "14px 16px",
+                          borderRadius: "8px",
+                          border: "none",
+                          fontSize: "15px",
+                          backgroundColor: "rgba(255,255,255,0.95)",
+                          color: "#2c3e50",
+                          outline: "none",
+                          resize: "vertical",
+                          minHeight: "100px",
+                          maxHeight: "200px",
+                          width: "100%",
+                          fontFamily: "inherit",
+                          transition: "all 0.2s ease",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                        }}
+                        onFocus={(e) => e.target.style.backgroundColor = "white"}
+                        onBlur={(e) => e.target.style.backgroundColor = "rgba(255,255,255,0.95)"}
+                      />
+                    </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", width: "100%" }}>
+                      <label style={{ 
+                        fontSize: "13px", 
+                        fontWeight: "500", 
+                        color: "rgba(255,255,255,0.9)" 
+                      }}>
+                        Görsel URL
+                      </label>
+                      <input 
+                        name="image_url" 
+                        type="url" 
+                        placeholder="https://example.com/image.jpg" 
+                        style={{
+                          padding: "14px 16px",
+                          borderRadius: "8px",
+                          border: "none",
+                          fontSize: "15px",
+                          backgroundColor: "rgba(255,255,255,0.95)",
+                          color: "#2c3e50",
+                          outline: "none",
+                          transition: "all 0.2s ease",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                          height: "48px",
+                          width: "100%"
+                        }}
+                        onFocus={(e) => e.target.style.backgroundColor = "white"}
+                        onBlur={(e) => e.target.style.backgroundColor = "rgba(255,255,255,0.95)"}
+                      />
+                    </div>
+                    
+                    <button 
+                      type="submit" 
+                      style={{
+                        background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "8px",
+                        padding: "14px 24px",
+                        fontSize: "15px",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        transition: "all 0.3s ease",
+                        boxShadow: "0 4px 15px rgba(79, 172, 254, 0.3)",
+                        alignSelf: "flex-start",
+                        minWidth: "160px",
+                        height: "48px",
+                        marginTop: "8px"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                        e.currentTarget.style.boxShadow = "0 6px 20px rgba(79, 172, 254, 0.4)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "translateY(0)";
+                        e.currentTarget.style.boxShadow = "0 4px 15px rgba(79, 172, 254, 0.3)";
+                      }}
+                    >
+                      ✨ Görev Ekle
+                    </button>
+                  </form>
+                  )}
+                </div>
+
+                {tasks.length === 0 ? (
+                  <p>Görev bulunmamaktadır.</p>
+                ) : (
+                  <table className="tasks-table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Ad</th>
+                        <th>Açıklama</th>
+                        <th>Puan</th>
+                        <th>Başarılar</th>
+                        <th>Seviye</th>
+                        <th>İşlem</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tasks.map((task, idx) => (
+                        <tr key={task.id || idx}>
+                          <td>{task.id || "-"}</td>
+                          <td>{task.name}</td>
+                          <td>{task.description}</td>
+                          <td>{task.point}</td>
+                          <td>{task.achivements}</td>
+                          <td>{task.level}</td>
+                          <td>
+                            <button
+                              onClick={() => openEdit("task", task)}
+                              className="edit-btn"
+                            >
+                              Düzenle
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (task.id) {
+                                  try {
+                                    await apis.task.admin_delete_task(task.id.toString());
+                                    fetchTasks();
+                                  } catch (error) {
+                                    console.error("Error deleting task:", error);
+                                    alert("Görev silinirken bir hata oluştu");
+                                  }
+                                }
+                              }}
+                              className="delete-btn"
+                            >
+                              Sil
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </>
             )}
           </div>
         )}
