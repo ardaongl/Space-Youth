@@ -145,7 +145,6 @@ export function Profile() {
     color: "bg-amber-500",
   };
 
-  // Mock instructor data for teachers
   const instructorData = {
     name: "Dr. Ahmet Yılmaz",
     title: "Senior Software Engineer & Instructor",
@@ -735,86 +734,6 @@ export function Profile() {
                   ))}
                 </div>
               </div>
-            {/* Recommended Course Roadmap */}
-            <div className="border rounded-lg p-4 bg-background shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold">{t('profile.recommendedCourseRoadmap')}</h3>
-                <div className="text-sm text-muted-foreground">{t('profile.progress')}: %35</div>
-              </div>
-              <div className="h-2 bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={35}>
-                <div className="h-full bg-indigo-500" style={{ width: "35%" }} />
-              </div>
-              <div className="mt-4 grid gap-4">
-                {[
-                  { 
-                    title: t('profile.designThinkingFundamentals'), 
-                    description: t('profile.designThinkingDescription'),
-                    status: "completed",
-                    duration: t('profile.weeks2'),
-                    level: t('courses.beginner')
-                  },
-                  { 
-                    title: t('profile.rapidPrototyping'), 
-                    description: t('profile.rapidPrototypingDescription'),
-                    status: "in-progress",
-                    duration: t('profile.weeks3'),
-                    level: t('courses.intermediate')
-                  },
-                  { 
-                    title: t('profile.systemsThinking'), 
-                    description: t('profile.systemsThinkingDescription'),
-                    status: "upcoming",
-                    duration: t('profile.weeks2'),
-                    level: t('courses.intermediate')
-                  },
-                  { 
-                    title: t('profile.pitchStorytelling'), 
-                    description: t('profile.pitchStorytellingDescription'),
-                    status: "upcoming",
-                    duration: t('profile.weeks1'),
-                    level: t('courses.beginner')
-                  }
-                ].map((course, i) => (
-                  <div key={i} className="flex items-start gap-4">
-                    <div className={`h-8 w-8 rounded-full grid place-items-center text-sm font-medium ${
-                      course.status === "completed" ? "bg-green-100 text-green-700" :
-                      course.status === "in-progress" ? "bg-blue-100 text-blue-700" :
-                      "bg-muted text-muted-foreground"
-                    }`}>
-                      {course.status === "completed" ? "✓" : i + 1}
-                    </div>
-                    <div className="flex-1 border rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="font-medium">{course.title}</div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span className="bg-muted px-2 py-1 rounded">{course.duration}</span>
-                          <span className="bg-muted px-2 py-1 rounded">{course.level}</span>
-                        </div>
-                      </div>
-                      <div className="text-sm text-muted-foreground mb-3">{course.description}</div>
-                      {course.status === "in-progress" && (
-                        <div className="flex items-center gap-2">
-                          <Button size="sm" className="bg-primary text-white">{t('common.continue')}</Button>
-                          <Button size="sm" variant="outline">{t('common.viewDetails')}</Button>
-                        </div>
-                      )}
-                      {course.status === "upcoming" && (
-                        <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline" disabled>{t('profile.comingSoon')}</Button>
-                          <Button size="sm" variant="ghost">{t('profile.preview')}</Button>
-                        </div>
-                      )}
-                      {course.status === "completed" && (
-                        <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline">{t('profile.watchAgain')}</Button>
-                          <Button size="sm" variant="ghost">{t('profile.certificate')}</Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
             
             {/* Footer - Join Date */}
             <div className="text-center text-sm text-muted-foreground">
