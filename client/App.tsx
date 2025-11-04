@@ -43,6 +43,7 @@ import Callback from "./pages/Callback";
 import Dashboard from "./pages/Dashboard";
 import AdminPage from "./pages/AdminPage";
 import BuyCoins from "./pages/BuyCoins";
+import Teacher from "./pages/Teacher";
 
 import { TokensProvider } from "./context/TokensContext";
 import { DraftsProvider } from "./context/DraftsContext";
@@ -259,6 +260,7 @@ const AppContent = () => {
         <Route path="/settings" element={<Settings />} />
         <Route path="/about" element={<About />} /> 
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/teacher" element={<Teacher />} />
         <Route path="/buy-coins" element={<BuyCoins />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />

@@ -306,6 +306,12 @@ export const en = {
     videoAddErrorRetry: 'An error occurred while adding video. Please try again.',
     videoAddSuccess: 'Video added successfully!',
     addFirstVideo: 'Add First Video',
+    editVideo: 'Edit Video',
+    editVideoDescription: 'Update video information.',
+    updating: 'Updating...',
+    updateVideo: 'Update',
+    videoUpdateError: 'An error occurred while updating video',
+    videoUpdateErrorRetry: 'An error occurred while updating video. Please try again.',
   },
 
   // Workshops

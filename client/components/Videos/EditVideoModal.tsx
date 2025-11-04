@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,14 +13,16 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { apis } from "@/services";
+import { Tutorial } from "@shared/api";
 
-interface AddVideoModalProps {
+interface EditVideoModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onVideoAdded?: () => void;
+  tutorial: Tutorial | null;
+  onVideoUpdated?: () => void;
 }
 
-export function AddVideoModal({ open, onOpenChange, onVideoAdded }: AddVideoModalProps) {
+export function EditVideoModal({ open, onOpenChange, tutorial, onVideoUpdated }: EditVideoModalProps) {
   const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -29,33 +31,38 @@ export function AddVideoModal({ open, onOpenChange, onVideoAdded }: AddVideoModa
     video_url: "",
   });
 
+  useEffect(() => {
+    if (tutorial) {
+      setFormData({
+        title: tutorial.title || "",
+        description: tutorial.description || "",
+        video_url: tutorial.video_url || "",
+      });
+    }
+  }, [tutorial]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!tutorial) return;
+    
     setIsLoading(true);
 
     try {
-      const response = await apis.tutorial.create_tutorial({
+      const response = await apis.tutorial.update_tutorial(tutorial.id, {
         title: formData.title,
         description: formData.description,
         video_url: formData.video_url,
       });
 
       if (response.status !== 200) {
-        throw new Error(t('tutorials.videoAddError'));
+        throw new Error(t('tutorials.videoUpdateError'));
       }
 
-      // Reset form
-      setFormData({
-        title: "",
-        description: "",
-        video_url: "",
-      });
-
       onOpenChange(false);
-      onVideoAdded?.();
+      onVideoUpdated?.();
     } catch (error) {
-      console.error("Video ekleme hatası:", error);
-      alert(t('tutorials.videoAddErrorRetry'));
+      console.error("Video güncelleme hatası:", error);
+      alert(t('tutorials.videoUpdateErrorRetry'));
     } finally {
       setIsLoading(false);
     }
@@ -68,13 +75,15 @@ export function AddVideoModal({ open, onOpenChange, onVideoAdded }: AddVideoModa
     }));
   };
 
+  if (!tutorial) return null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{t('tutorials.addNewVideo')}</DialogTitle>
+          <DialogTitle>{t('tutorials.editVideo')}</DialogTitle>
           <DialogDescription>
-            {t('tutorials.addVideoDescription')}
+            {t('tutorials.editVideoDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -130,10 +139,10 @@ export function AddVideoModal({ open, onOpenChange, onVideoAdded }: AddVideoModa
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t('tutorials.adding')}
+                  {t('tutorials.updating')}
                 </>
               ) : (
-                t('tutorials.addVideo')
+                t('tutorials.updateVideo')
               )}
             </Button>
           </div>
@@ -142,4 +151,3 @@ export function AddVideoModal({ open, onOpenChange, onVideoAdded }: AddVideoModa
     </Dialog>
   );
 }
-

@@ -201,7 +201,7 @@ export function Header() {
               </button>
               <LanguageSwitcher />
               <TokenWallet />
-              <NotificationsPopover />
+              {/*<NotificationsPopover /> */}
               <HoverCard openDelay={0}>
                 <HoverCardTrigger asChild>
                   <div className="cursor-pointer hover:opacity-80 transition-opacity">

@@ -47,7 +47,6 @@ export function Sidebar() {
     { to: "/dashboard", label: t('navigation.dashboard'), icon: Home },
     { to: "/tasks", label: t('navigation.tasks'), icon: ClipboardList },
     { to: "/courses", label: t('navigation.courses'), icon: BookOpen },
-    { to: "/workshops", label: t('navigation.workshops'), icon: Users },
     { to: "/tutorials", label: t('navigation.tutorials'), icon: PencilRuler },
     { to: "/job-board", label: t('navigation.jobBoard'), icon: BriefcaseBusiness },
   ];
@@ -56,6 +55,10 @@ export function Sidebar() {
 
   if(user.user && user.user.role == IUserRoles.ADMIN){
     items.push({ to: "/admin", label: t('admin'), icon: BriefcaseBusiness },)
+  }
+
+  if(user.user && user.user.role == IUserRoles.TEACHER){
+    items.push({ to: "/teacher", label: t('teacher'), icon: BriefcaseBusiness },)
   }
 
   const getRoleLabel = (role: UserRole): string => {

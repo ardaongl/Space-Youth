@@ -47,3 +47,29 @@ export interface VideoListResponse {
 export interface VideoResponse {
   video: Video;
 }
+
+/**
+ * Tutorial interface for backend API
+ */
+export interface Tutorial {
+  id: string;
+  title: string;
+  description: string;
+  video_url: string;
+  created_at?: string;
+  updated_at?: string;
+  teacher_id?: string;
+  teacher_name?: string;
+}
+
+export interface CreateTutorialRequest {
+  title: string;
+  description: string;
+  video_url: string;
+}
+
+export interface UpdateTutorialRequest {
+  title?: string;
+  description?: string;
+  video_url?: string;
+}

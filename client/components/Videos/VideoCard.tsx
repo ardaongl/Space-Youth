@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Video } from "@shared/api";
-import { Eye, Heart, Star, Play, Trash2 } from "lucide-react";
+import { Eye, Heart, Star, Play, Trash2, Edit } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,10 +13,12 @@ import { Badge } from "@/components/ui/badge";
 interface VideoCardProps {
   video: Video;
   canDelete?: boolean;
+  canEdit?: boolean;
   onDelete?: (videoId: string) => void;
+  onEdit?: (video: Video) => void;
 }
 
-export function VideoCard({ video, canDelete = false, onDelete }: VideoCardProps) {
+export function VideoCard({ video, canDelete = false, canEdit = false, onDelete, onEdit }: VideoCardProps) {
   const [showPlayer, setShowPlayer] = useState(false);
 
   // Extract YouTube video ID from URL
@@ -44,6 +46,10 @@ export function VideoCard({ video, canDelete = false, onDelete }: VideoCardProps
     if (window.confirm("Bu videoyu silmek istediğinizden emin misiniz?")) {
       onDelete?.(video.id);
     }
+  };
+
+  const handleEdit = () => {
+    onEdit?.(video);
   };
 
   return (
@@ -88,15 +94,29 @@ export function VideoCard({ video, canDelete = false, onDelete }: VideoCardProps
                 {video.description}
               </div>
             </div>
-            {canDelete && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={handleDelete}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+            {(canEdit || canDelete) && (
+              <div className="flex gap-1">
+                {canEdit && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="hover:bg-primary/10"
+                    onClick={handleEdit}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                )}
+                {canDelete && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={handleDelete}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             )}
           </div>
           

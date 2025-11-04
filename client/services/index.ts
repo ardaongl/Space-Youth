@@ -6,6 +6,7 @@ import { PersonalityAPI } from "./modules/personality";
 import { CharacterAPI } from "./modules/character";
 import { LabelAPI } from "./modules/label";
 import { TaskAPI } from "./modules/task";
+import { TutorialAPI } from "./modules/tutorial";
 export class API {
   user: UserAPI;
   course: CourseAPI;
@@ -15,6 +16,7 @@ export class API {
   character: CharacterAPI;
   label: LabelAPI;
   task: TaskAPI;
+  tutorial: TutorialAPI;
   constructor() {
     this.user = new UserAPI();
     this.course = new CourseAPI();
@@ -24,6 +26,7 @@ export class API {
     this.character = new CharacterAPI()
     this.label = new LabelAPI()
     this.task = new TaskAPI()
+    this.tutorial = new TutorialAPI()
   }
 }
 

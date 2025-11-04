@@ -306,6 +306,12 @@ export const tr = {
     videoAddErrorRetry: 'Video eklenirken bir hata oluştu. Lütfen tekrar deneyin.',
     videoAddSuccess: 'Video başarıyla eklendi!',
     addFirstVideo: 'İlk Videoyu Ekle',
+    editVideo: 'Videoyu Düzenle',
+    editVideoDescription: 'Video bilgilerini güncelleyin.',
+    updating: 'Güncelleniyor...',
+    updateVideo: 'Güncelle',
+    videoUpdateError: 'Video güncellenirken bir hata oluştu',
+    videoUpdateErrorRetry: 'Video güncellenirken bir hata oluştu. Lütfen tekrar deneyin.',
   },
 
   // Workshops
