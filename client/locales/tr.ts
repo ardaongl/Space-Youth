@@ -715,6 +715,7 @@ export const tr = {
   instructor: {
     about: 'Hakkımda',
     myCourses: 'Kurslarım',
+    noCourses: 'Henüz kursunuz bulunmuyor',
   },
 
   // Task Submissions

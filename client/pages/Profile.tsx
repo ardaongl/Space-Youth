@@ -97,9 +97,7 @@ export function Profile() {
   const navigate = useNavigate();
   const scores = useOnboardingScores();
   const [onboarding, setOnboarding] = React.useState<OnboardingData | null>(null);
-  const [zoomConnected, setZoomConnected] = React.useState<boolean>(() => {
-    try { return localStorage.getItem("zoom.connected") === "true"; } catch { return false; }
-  });
+  const [zoomConnected, setZoomConnected] = React.useState<boolean>(false);
   const [studentDetails, setStudentDetails] = React.useState<StudentDetailsResponse | null>(null);
   const [loadingDetails, setLoadingDetails] = React.useState(false);
 
@@ -154,157 +152,199 @@ export function Profile() {
     color: "bg-amber-500",
   };
 
-  const instructorData = {
-    name: "Dr. Ahmet Yılmaz",
-    title: "Senior Software Engineer & Instructor",
-    avatar: "/placeholder.svg",
-    totalCourses: 12,
-    about: "10+ yıllık yazılım geliştirme deneyimi ile modern web teknolojileri konusunda uzman. React, Node.js, TypeScript ve cloud teknolojileri alanında 5000+ öğrenciye eğitim verdim.\n\nPratik projeler ve gerçek dünya deneyimleri ile öğrencilerin kariyerlerinde başarılı olmalarını sağlıyorum. Her kursumda en güncel teknolojileri ve en iyi pratikleri paylaşıyorum.",
-    courses: [
-      {
-        id: 1,
-        title: "React ile Modern Web Geliştirme",
-        thumbnail: "/image.png",
-        level: "Başlangıç",
-        students: 1250,
-        rating: "4.8"
-      },
-      {
-        id: 2,
-        title: "Node.js ve Express.js Masterclass",
-        thumbnail: "/image.png",
-        level: "Orta",
-        students: 980,
-        rating: "4.7"
-      },
-      {
-        id: 3,
-        title: "TypeScript ile Güvenli Kodlama",
-        thumbnail: "/image.png",
-        level: "Orta",
-        students: 750,
-        rating: "4.9"
-      },
-      {
-        id: 4,
-        title: "AWS Cloud Fundamentals",
-        thumbnail: "/image.png",
-        level: "Başlangıç",
-        students: 650,
-        rating: "4.6"
-      },
-      {
-        id: 5,
-        title: "MongoDB ve NoSQL Veritabanları",
-        thumbnail: "/image.png",
-        level: "Orta",
-        students: 420,
-        rating: "4.5"
-      },
-      {
-        id: 6,
-        title: "Docker ve Kubernetes",
-        thumbnail: "/image.png",
-        level: "İleri",
-        students: 380,
-        rating: "4.8"
+  // Teacher profile data
+  const [teacherDetails, setTeacherDetails] = React.useState<{
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    about?: string;
+  } | null>(null);
+  const [teacherCourses, setTeacherCourses] = React.useState<any[]>([]);
+  const [loadingTeacher, setLoadingTeacher] = React.useState(false);
+
+  React.useEffect(() => {
+    const fetchTeacherData = async () => {
+      if (!isTeacherUser) return;
+      
+      setLoadingTeacher(true);
+      try {
+        // Fetch user details
+        const userResponse = await apis.user.get_user();
+        if (userResponse?.data) {
+          setTeacherDetails({
+            first_name: userResponse.data.first_name,
+            last_name: userResponse.data.last_name,
+            email: userResponse.data.email,
+            about: userResponse.data.about || "",
+          });
+        }
+
+        // Fetch teacher's courses
+        const coursesResponse = await apis.course.get_courses();
+        if (coursesResponse?.data && Array.isArray(coursesResponse.data)) {
+          // Filter courses where teacher is the creator (assuming teacher_id matches user.id)
+          const userCourses = coursesResponse.data.filter((course: any) => 
+            course.teacher?.id === user.user?.id || course.teacher_id === user.user?.id
+          );
+          setTeacherCourses(userCourses);
+        }
+      } catch (error) {
+        console.error("Failed to fetch teacher data:", error);
+      } finally {
+        setLoadingTeacher(false);
       }
-    ]
-  };
+    };
+
+    fetchTeacherData();
+  }, [isTeacherUser, user.user?.id]);
 
   if (isTeacherUser) {
+    const teacherName = teacherDetails 
+      ? `${teacherDetails.first_name || ''} ${teacherDetails.last_name || ''}`.trim() || user.user?.name
+      : user.user?.name || t('profile.user');
+    const teacherInitials = teacherDetails 
+      ? `${teacherDetails.first_name?.charAt(0) || ''}${teacherDetails.last_name?.charAt(0) || ''}`.toUpperCase() || user.user?.name?.charAt(0).toUpperCase()
+      : user.user?.name?.charAt(0).toUpperCase() || 'T';
+
     return (
       <AppLayout>
         <div className="container mx-auto py-8 max-w-7xl">
-          {/* Header Card - Similar to Udemy */}
-          <Card className="p-8 mb-8">
-            <div className="flex flex-col md:flex-row gap-8">
-              {/* Avatar */}
-              <div className="flex-shrink-0">
-                <div className="w-32 h-32 rounded-full overflow-hidden bg-muted border-4 border-background shadow-lg">
-                  <img 
-                    src={instructorData.avatar} 
-                    alt={instructorData.name}
-                    className="w-full h-full object-cover"
-                  />
+          {loadingTeacher ? (
+            <div className="space-y-8">
+              <Card className="p-8 mb-8">
+                <div className="animate-pulse">
+                  <div className="h-32 bg-muted rounded w-32 mb-4"></div>
+                  <div className="h-8 bg-muted rounded w-1/3 mb-2"></div>
+                  <div className="h-4 bg-muted rounded w-1/4"></div>
                 </div>
-              </div>
+              </Card>
+              <Card className="p-8 mb-8">
+                <div className="animate-pulse">
+                  <div className="h-6 bg-muted rounded w-1/4 mb-4"></div>
+                  <div className="h-4 bg-muted rounded w-full mb-2"></div>
+                  <div className="h-4 bg-muted rounded w-2/3"></div>
+                </div>
+              </Card>
+            </div>
+          ) : (
+            <>
+              {/* Header Card - Similar to Udemy */}
+              <Card className="p-8 mb-8">
+                <div className="flex flex-col md:flex-row gap-8">
+                  {/* Avatar */}
+                  <div className="flex-shrink-0">
+                    <div className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-primary to-indigo-500 text-white grid place-items-center text-2xl font-bold border-4 border-background shadow-lg">
+                      {teacherInitials}
+                    </div>
+                  </div>
 
-              {/* Info and Actions */}
-              <div className="flex-1 space-y-4">
-                <div>
-                  <h1 className="text-3xl font-bold mb-2">{instructorData.name}</h1>
-                  <p className="text-lg text-muted-foreground">{instructorData.title}</p>
+                  {/* Info and Actions */}
+                  <div className="flex-1 space-y-4">
+                    <div>
+                      <h1 className="text-3xl font-bold mb-2">{teacherName}</h1>
+                      {teacherDetails?.email && (
+                        <p className="text-lg text-muted-foreground">{teacherDetails.email}</p>
+                      )}
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-3">
+                      <Button 
+                        onClick={() => navigate('/settings')}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        <Edit className="h-4 w-4" />
+                        {t('profile.editProfile')}
+                      </Button>
+                      <Button 
+                        onClick={() => navigate('/courses/add')}
+                        className="flex items-center gap-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        {t('courses.addCourse')}
+                      </Button>
+                    </div>
+                  </div>
                 </div>
+              </Card>
+
+              {/* About Section */}
+              {teacherDetails?.about && (
+                <Card className="p-8 mb-8">
+                  <h2 className="text-2xl font-semibold mb-4">{t('instructor.about')}</h2>
+                  <div className="text-muted-foreground leading-relaxed whitespace-pre-line">
+                    {teacherDetails.about}
+                  </div>
+                </Card>
+              )}
+
+              {/* Courses Section */}
+              <Card className="p-8">
+                <h2 className="text-2xl font-semibold mb-6">
+                  {t('instructor.myCourses')} ({teacherCourses.length})
+                </h2>
                 
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-3">
-                  <Button 
-                    onClick={() => navigate('/settings')}
-                    variant="outline"
-                    className="flex items-center gap-2"
-                  >
-                    <Edit className="h-4 w-4" />
-                    {t('profile.editProfile')}
-                  </Button>
-                  <Button 
-                    onClick={() => navigate('/courses/add')}
-                    className="flex items-center gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    {t('courses.addCourse')}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          {/* About Section */}
-          <Card className="p-8 mb-8">
-            <h2 className="text-2xl font-semibold mb-4">{t('instructor.about')}</h2>
-            <div className="text-muted-foreground leading-relaxed whitespace-pre-line">
-              {instructorData.about}
-            </div>
-          </Card>
-
-          {/* Courses Section */}
-          <Card className="p-8">
-            <h2 className="text-2xl font-semibold mb-6">
-              {t('instructor.myCourses')} ({instructorData.totalCourses})
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {instructorData.courses.map((course) => (
-                <div 
-                  key={course.id}
-                  onClick={() => navigate(`/courses/${course.id}`)}
-                  className="cursor-pointer group"
-                >
-                  <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
-                    <div className="aspect-video relative overflow-hidden bg-muted">
-                      <img 
-                        src={course.thumbnail} 
-                        alt={course.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                        {course.title}
-                      </h3>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                        <Badge variant="secondary">{course.level}</Badge>
-                        <span className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          {course.students.toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                  </Card>
-                </div>
-              ))}
-            </div>
-          </Card>
+                {teacherCourses.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {teacherCourses.map((course) => {
+                      const courseSlug = course.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || '';
+                      return (
+                        <div 
+                          key={course.id}
+                          onClick={() => navigate(`/courses/${courseSlug}`)}
+                          className="cursor-pointer group"
+                        >
+                          <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
+                            <div className="aspect-video relative overflow-hidden bg-muted">
+                              {course.image_url ? (
+                                <img 
+                                  src={course.image_url} 
+                                  alt={course.title}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground">
+                                  <Video className="h-12 w-12" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="p-4">
+                              <h3 className="font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                                {course.title}
+                              </h3>
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                                {course.level && (
+                                  <Badge variant="secondary">{course.level}</Badge>
+                                )}
+                                {course.students_count !== undefined && (
+                                  <span className="flex items-center gap-1">
+                                    <Users className="h-3 w-3" />
+                                    {course.students_count.toLocaleString()}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </Card>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <p className="mb-4">{t('instructor.noCourses')}</p>
+                    <Button 
+                      onClick={() => navigate('/courses/add')}
+                      className="flex items-center gap-2 mx-auto"
+                    >
+                      <Plus className="h-4 w-4" />
+                      {t('courses.addCourse')}
+                    </Button>
+                  </div>
+                )}
+              </Card>
+            </>
+          )}
         </div>
       </AppLayout>
     );
