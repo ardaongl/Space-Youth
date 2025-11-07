@@ -61,6 +61,8 @@ import { IUserRoles, STUDENT_STATUS } from "./types/user/user";
 import { clearUser, setUser } from "./store/slices/userSlice";
 import { setStudent } from "./store/slices/studentSlice";
 import { useToast } from "./hooks/use-toast";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { RoleProtectedRoute } from "./components/auth/RoleProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -229,39 +231,168 @@ const AppContent = () => {
   return (
     <>
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Explore />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/about" element={<About />} />
         <Route path="/callback" element={<Callback />} />
         <Route path="/zoom/callback" element={<ZoomCallback />} />
+        
+        {/* Public but content may be restricted */}
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/tasks/:taskId" element={<TaskDetail />} />
-        <Route path="/tasks/:taskId/post" element={<PostProject />} />
-        <Route path="/my-tasks" element={<MyTasks />} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
-        <Route path="/workshops" element={<Workshops />} />
-        <Route path="/events/add" element={<AddEvent />} />
-        <Route path="/events/add/sessions" element={<AddEventSessions />} />
-        <Route path="/events/:slug/edit" element={<EditEvent />} />
-        <Route path="/events/:slug" element={<EventDetail />} />
         <Route path="/courses" element={<Index />} />
-        <Route path="/courses/add" element={<AddCourse />} />
-        <Route path="/courses/add/lessons" element={<AddLessons />} />
-        <Route path="/courses/:slug/edit" element={<EditCourse />} />
         <Route path="/courses/:slug" element={<CourseDetail />} />
+        <Route path="/events/:slug" element={<EventDetail />} />
+        <Route path="/workshops" element={<Workshops />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/practice" element={<Tutorials />} />
         <Route path="/tutorials" element={<Tutorials />} />
-        <Route path="/certifications" element={<Certifications />} />
-        <Route path="/job-board" element={<JobBoard />} />
-        <Route path="/bookmarks" element={<Bookmarks />} />
-        <Route path="/profile" element={<Profile />} />
         <Route path="/instructor/:id" element={<InstructorProfile />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/about" element={<About />} /> 
-        <Route path="/admin" element={<AdminPage />} />
-        <Route path="/teacher" element={<Teacher />} />
-        <Route path="/buy-coins" element={<BuyCoins />} />
+        
+        {/* Protected Routes - Requires Authentication */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tasks/:taskId/post"
+          element={
+            <ProtectedRoute>
+              <PostProject />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-tasks"
+          element={
+            <ProtectedRoute>
+              <MyTasks />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/certifications"
+          element={
+            <ProtectedRoute>
+              <Certifications />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/job-board"
+          element={
+            <ProtectedRoute>
+              <JobBoard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/bookmarks"
+          element={
+            <ProtectedRoute>
+              <Bookmarks />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/buy-coins"
+          element={
+            <ProtectedRoute>
+              <BuyCoins />
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* Role Protected Routes - Teacher & Admin */}
+        <Route
+          path="/courses/add"
+          element={
+            <RoleProtectedRoute allowedRoles={["teacher", "admin"]}>
+              <AddCourse />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/courses/add/lessons"
+          element={
+            <RoleProtectedRoute allowedRoles={["teacher", "admin"]}>
+              <AddLessons />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/courses/:slug/edit"
+          element={
+            <RoleProtectedRoute allowedRoles={["teacher", "admin"]}>
+              <EditCourse />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/events/add"
+          element={
+            <RoleProtectedRoute allowedRoles={["teacher", "admin"]}>
+              <AddEvent />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/events/add/sessions"
+          element={
+            <RoleProtectedRoute allowedRoles={["teacher", "admin"]}>
+              <AddEventSessions />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/events/:slug/edit"
+          element={
+            <RoleProtectedRoute allowedRoles={["teacher", "admin"]}>
+              <EditEvent />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher"
+          element={
+            <RoleProtectedRoute allowedRoles={["teacher", "admin"]}>
+              <Teacher />
+            </RoleProtectedRoute>
+          }
+        />
+        
+        {/* Admin Only Routes */}
+        <Route
+          path="/admin"
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AdminPage />
+            </RoleProtectedRoute>
+          }
+        />
+        
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

@@ -82,6 +82,11 @@ interface EditState {
   data: EditData;
 }
 
+type FeedbackState = {
+  type: "success" | "error";
+  message: string;
+};
+
 const AdminPage: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<
     "students" | "answers" | "tasks" | "personalities" | "characters"
@@ -97,6 +102,8 @@ const AdminPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [editState, setEditState] = useState<EditState | null>(null);
   const [isTaskFormOpen, setIsTaskFormOpen] = useState<boolean>(false);
+  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
+  const [actionFeedback, setActionFeedback] = useState<Record<string, FeedbackState | undefined>>({});
 
   const user = useAppSelector(state => state.user.user)
   const token = useAppSelector(state => state.user.token);
@@ -529,13 +536,53 @@ const AdminPage: React.FC = () => {
     );
   };
 
-  const approve = async ( student_id: string ,approveStatus: string) => {
+  const approve = async (student_id: string, approveStatus: string) => {
+    setActionLoading((prev) => ({ ...prev, [student_id]: true }));
+    setActionFeedback((prev) => ({ ...prev, [student_id]: undefined }));
+
     try {
-      const response = await apis.student.admin_approve_student(student_id, approveStatus)
-    } catch (error) {
-      
+      const response = await apis.student.admin_approve_student(student_id, approveStatus);
+      console.log(response);
+
+      const statusCode = response?.status;
+      const responseMessage = typeof response?.data?.message === "string" ? response.data.message : undefined;
+      const defaultSuccessMessage =
+        approveStatus === "reject"
+          ? "Öğrenci reddedildi."
+          : approveStatus === "ai_approve"
+          ? "Öğrenci yapay zeka ile onaylandı."
+          : "Öğrenci onaylandı.";
+
+      if (statusCode === 200) {
+        setActionFeedback((prev) => ({
+          ...prev,
+          [student_id]: { type: "success", message: responseMessage || defaultSuccessMessage },
+        }));
+        await fetchStudents();
+      } else {
+        setActionFeedback((prev) => ({
+          ...prev,
+          [student_id]: {
+            type: "error",
+            message: responseMessage || "İşlem tamamlanamadı.",
+          },
+        }));
+      }
+    } catch (error: any) {
+      console.error("Error approving student:", error);
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error?.message ||
+        "İşlem sırasında bir hata oluştu.";
+
+      setActionFeedback((prev) => ({
+        ...prev,
+        [student_id]: { type: "error", message: errorMessage },
+      }));
+    } finally {
+      setActionLoading((prev) => ({ ...prev, [student_id]: false }));
     }
-  }
+  };
 
   return (
     <div className="admin-dashboard">
@@ -674,8 +721,11 @@ const AdminPage: React.FC = () => {
                     gap: "16px",
                   }}
                 >
-                  {students.map((s, idx) => (
-                    <details
+                  {students.map((s, idx) => {
+                    const isPending = !!actionLoading[s.id];
+                    const feedback = actionFeedback[s.id];
+                    return (
+                      <details
                       key={s.id || idx}
                       style={{
                         background: "#fff",
@@ -851,12 +901,20 @@ const AdminPage: React.FC = () => {
                             borderRadius: "6px",
                             padding: "8px 14px",
                             fontWeight: "600",
-                            cursor: "pointer",
+                            cursor: isPending ? "not-allowed" : "pointer",
                             boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
                             transition: "0.2s all",
+                            ...(isPending ? { opacity: 0.6 } : {}),
                           }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#27ae60")}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#2ecc71")}
+                          disabled={isPending}
+                          onMouseEnter={(e) => {
+                            if (isPending) return;
+                            e.currentTarget.style.backgroundColor = "#27ae60";
+                          }}
+                          onMouseLeave={(e) => {
+                            if (isPending) return;
+                            e.currentTarget.style.backgroundColor = "#2ecc71";
+                          }}
                           onClick={() => approve( s.id, "approve")}
                         >
                           Onayla
@@ -870,12 +928,20 @@ const AdminPage: React.FC = () => {
                             borderRadius: "6px",
                             padding: "8px 14px",
                             fontWeight: "600",
-                            cursor: "pointer",
+                            cursor: isPending ? "not-allowed" : "pointer",
                             boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
                             transition: "0.2s all",
+                            ...(isPending ? { opacity: 0.6 } : {}),
                           }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2980b9")}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#3498db")}
+                          disabled={isPending}
+                          onMouseEnter={(e) => {
+                            if (isPending) return;
+                            e.currentTarget.style.backgroundColor = "#2980b9";
+                          }}
+                          onMouseLeave={(e) => {
+                            if (isPending) return;
+                            e.currentTarget.style.backgroundColor = "#3498db";
+                          }}
                           onClick={() => approve( s.id, "ai_approve")}
                         >
                           AI ile Onayla
@@ -889,20 +955,41 @@ const AdminPage: React.FC = () => {
                             borderRadius: "6px",
                             padding: "8px 14px",
                             fontWeight: "600",
-                            cursor: "pointer",
+                            cursor: isPending ? "not-allowed" : "pointer",
                             boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
                             transition: "0.2s all",
+                            ...(isPending ? { opacity: 0.6 } : {}),
                           }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#c0392b")}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#e74c3c")}
+                          disabled={isPending}
+                          onMouseEnter={(e) => {
+                            if (isPending) return;
+                            e.currentTarget.style.backgroundColor = "#c0392b";
+                          }}
+                          onMouseLeave={(e) => {
+                            if (isPending) return;
+                            e.currentTarget.style.backgroundColor = "#e74c3c";
+                          }}
                           onClick={() => approve( s.id ,"reject")}
                         >
                           Reddet
                         </button>
                       </div>}
 
-                    </details>
-                  ))}
+                      {feedback && (
+                        <p
+                          style={{
+                            marginTop: "12px",
+                            fontWeight: 600,
+                            color: feedback.type === "success" ? "#27ae60" : "#e74c3c",
+                          }}
+                        >
+                          {feedback.message}
+                        </p>
+                      )}
+
+                      </details>
+                    );
+                  })}
                 </div>
               </>
             )}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,18 +16,32 @@ import { setStudent } from "@/store/slices/studentSlice";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    verification_code: "",
   });
   const [showMockCredentials, setShowMockCredentials] = useState(false);
+  const [showVerificationCode, setShowVerificationCode] = useState(false);
+  const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
   const dispatch = useDispatch();
 
   const auth_token = useAppSelector(state => state.user.token)
   const user = useAppSelector(state => state.user.user);
+  
+  // Get the page user was trying to access before login
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/dashboard";
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (auth_token && user) {
+      navigate(from, { replace: true });
+    }
+  }, [auth_token, user, navigate, from]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -52,20 +66,125 @@ export default function Login() {
     try {
       console.log("formData," ,formData);
       
-      const response = await apis.user.login(formData.email, formData.password)
-      console.log(response);
-      if(response.status != 200){
-        toast({
-          title: "Başarılı!",
-          description: `Giriş başarısız`,
-        });
+      const response = await apis.user.login(
+        formData.email,
+        formData.password,
+        formData.verification_code ? formData.verification_code : undefined
+      )
+      console.log("Login response:", response);
+      
+      // Check if response is an axios error object
+      if (response && typeof response === 'object' && ('isAxiosError' in response || 'code' in response)) {
+        const error = response as any;
+        if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+          toast({
+            title: "Bağlantı Hatası",
+            description: "Backend'e bağlanılamadı. Lütfen backend'in çalıştığından emin olun.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
       }
+      
+      // Check if response has status property (normal axios response)
+      if (!response || typeof response !== 'object' || !('status' in response)) {
+        toast({
+          title: "Hata",
+          description: "Beklenmeyen bir yanıt alındı. Lütfen tekrar deneyin.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      // Check if response status is not 200
+      if(response.status === 401){
+        setShowVerificationCode(false);
+        setVerificationMessage(null);
+        toast({
+          title: "Giriş Başarısız",
+          description: response.data?.error?.message || "Email veya şifre hatalı.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if(response.status === 403){
+        const errorType = response.data?.error?.type;
+        const errorMessage = response.data?.error?.message;
+
+        if ([
+          "VerificationCodeRequired",
+          "VerificationCodeExpired",
+          "InvalidVerificationCode",
+        ].includes(errorType)) {
+          setShowVerificationCode(true);
+          setVerificationMessage(
+            errorMessage || "E-postana gönderilen doğrulama kodunu gir."
+          );
+          if (!formData.verification_code) {
+            setFormData(prev => ({ ...prev, verification_code: "" }));
+          }
+        } else {
+          setShowVerificationCode(false);
+          setVerificationMessage(null);
+        }
+
+        toast({
+          title: "Giriş Başarısız",
+          description:
+            errorMessage || "Giriş için ek doğrulama gerekiyor.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if(response.status === 404){
+        setShowVerificationCode(false);
+        setVerificationMessage(null);
+        toast({
+          title: "Giriş Başarısız",
+          description: response.data?.error?.message || "Kullanıcı bulunamadı.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if(response.status !== 200){
+        setShowVerificationCode(false);
+        setVerificationMessage(null);
+        toast({
+          title: "Giriş Başarısız",
+          description: response.data?.error?.message || "Email veya şifre hatalı.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if response has data and auth_token
+      if (!response.data || !response.data.auth_token) {
+        toast({
+          title: "Hata",
+          description: "Token alınamadı. Lütfen tekrar deneyin.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      setShowVerificationCode(false);
+      setVerificationMessage(null);
       dispatch(setUserToken(response.data.auth_token))
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
       toast({
         title: "Hata",
-        description: "Giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.",
+        description: error?.message || "Giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.",
         variant: "destructive",
       });
     } finally {
@@ -109,16 +228,16 @@ export default function Login() {
                   navigate("/");
                   break;
                 case STUDENT_STATUS.APPROVED:
-                  navigate("/dashboard");
+                  navigate(from);
                   break;
                 default:
-                  navigate("/dashboard");
+                  navigate(from);
               }
             }, 1000);
           } else {
-            // Non-student users go to dashboard
+            // Non-student users redirect to the page they were trying to access
             setTimeout(() => {
-              navigate("/dashboard");
+              navigate(from);
             }, 1000);
           }
 
@@ -213,6 +332,28 @@ export default function Login() {
                 </button>
               </div>
             </div>
+
+            {showVerificationCode && (
+              <div className="space-y-2 w-full">
+                <Label htmlFor="verification_code">Doğrulama Kodu</Label>
+                <Input
+                  id="verification_code"
+                  name="verification_code"
+                  type="text"
+                  placeholder="123456"
+                  value={formData.verification_code}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="h-11"
+                  autoComplete="one-time-code"
+                />
+                {verificationMessage && (
+                  <p className="text-sm text-muted-foreground">
+                    {verificationMessage}
+                  </p>
+                )}
+              </div>
+            )}
 
             <Button 
               type="submit" 

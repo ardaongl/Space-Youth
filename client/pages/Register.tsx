@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,11 +11,21 @@ import { useLanguage } from "@/context/LanguageContext";
 import { apis } from "@/services";
 import RoleSwitcher from "@/components/dev/RoleSwitcher";
 import { Switch } from "@/components/ui/switch";
+import { useAppSelector } from "@/store";
 
 export default function Register() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const auth_token = useAppSelector(state => state.user.token);
+  const user = useAppSelector(state => state.user.user);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (auth_token && user) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [auth_token, user, navigate]);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
