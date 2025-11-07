@@ -24,13 +24,14 @@ import {
 import { User, Shield, Trash2, Mail } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { useToast } from "@/hooks/use-toast";
-import { clearUser } from "@/store/slices/userSlice";
+import { clearUser, setUser } from "@/store/slices/userSlice";
+import { setLanguage as setAppLanguage } from "@/store/slices/languageSlice";
 import { apis } from "@/services";
 
 export default function Settings() {
   const user = useAppSelector(state => state.user);
 
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
   const dispatch = useAppDispatch();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
@@ -41,6 +42,7 @@ export default function Settings() {
     email?: string;
     age?: number;
     gender?: string;
+    language?: string;
   } | undefined;
 
   // URL'den tab parametresini oku
@@ -57,19 +59,214 @@ export default function Settings() {
   const [firstName, setFirstName] = useState(initialNameParts[0] || "");
   const [lastName, setLastName] = useState(initialNameParts.slice(1).join(" ") || "");
   const [age, setAge] = useState(rawUser?.age ? String(rawUser.age) : "");
-  const [gender, setGender] = useState<string>(rawUser?.gender ?? "other");
+  const normalizedGender = rawUser?.gender?.toLowerCase() === "female" ? "female" : "male";
+  const [gender, setGender] = useState<"male" | "female">(normalizedGender);
+  const [savedGender, setSavedGender] = useState<"male" | "female">(normalizedGender);
   const [email, setEmail] = useState(rawUser?.email || "");
+  const initialLanguage = rawUser?.language?.toUpperCase() === "EN" ? "EN" : rawUser?.language?.toUpperCase() === "TR" ? "TR" : (currentLanguage === "en" ? "EN" : "TR");
+  const [preferredLanguage, setPreferredLanguage] = useState<"TR" | "EN">(initialLanguage);
+  const [savedLanguage, setSavedLanguage] = useState<"TR" | "EN">(initialLanguage);
+  const [savedAge, setSavedAge] = useState<number | undefined>(rawUser?.age);
  
   // Security settings
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
 
-  const handleSaveProfile = () => {
-    toast({
-      title: t('settings.profileUpdated'),
-      description: t('settings.profileUpdatedDescription'),
-    });
+  const handleSaveProfile = async () => {
+     const trimmedFirstName = firstName.trim();
+     const trimmedLastName = lastName.trim();
+     const trimmedEmail = email.trim();
+     const existingName = rawUser?.name || "";
+     const [existingFirst, ...existingRest] = existingName.split(" ").filter(Boolean);
+     const existingLast = existingRest.join(" ");
+     const existingEmail = rawUser?.email || "";
+     const existingAge = savedAge;
+     const existingGender = savedGender;
+     const existingLanguage = savedLanguage;
+ 
+     const emailChanged = trimmedEmail && trimmedEmail !== existingEmail;
+
+     const firstNameChanged = trimmedFirstName !== (existingFirst || "");
+     const lastNameChanged = trimmedLastName !== (existingLast || "");
+     const genderChanged = gender !== existingGender;
+     const languageChanged = preferredLanguage !== existingLanguage;
+ 
+    if (!trimmedFirstName || !trimmedLastName) {
+      toast({
+        title: t('auth.error'),
+        description: t('settings.nameRequired'),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!trimmedEmail) {
+      toast({
+        title: t('auth.error'),
+        description: t('settings.emailRequired'),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (age) {
+      const numericAge = Number(age);
+      if (Number.isNaN(numericAge) || numericAge < 0) {
+        toast({
+          title: t('auth.error'),
+          description: t('settings.invalidAge'),
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    const payload: {
+      first_name?: string;
+      last_name?: string;
+      age?: number;
+      gender?: "male" | "female";
+      email?: string;
+      language?: "TR" | "EN";
+    } = {};
+
+    if (firstNameChanged) payload.first_name = trimmedFirstName;
+    if (lastNameChanged) payload.last_name = trimmedLastName;
+    if (age) {
+      const numericAge = Number(age);
+      if (!Number.isNaN(numericAge) && numericAge !== existingAge) {
+        payload.age = numericAge;
+      }
+    }
+    if (genderChanged) payload.gender = gender;
+    if (trimmedEmail && emailChanged) payload.email = trimmedEmail;
+    if (languageChanged) payload.language = preferredLanguage;
+
+    if (Object.keys(payload).length === 0) {
+       toast({
+        title: t('settings.noChanges'),
+      });
+      return;
+    }
+
+    setIsSavingProfile(true);
+
+    try {
+      const response: any = await apis.user.update_user(payload);
+      const status = response?.status ?? response?.response?.status;
+
+      if (status && status >= 200 && status < 300) {
+        toast({
+          title: t('settings.profileUpdated'),
+          description: response?.data?.message || t('settings.profileUpdatedDescription'),
+        });
+
+        if (user.user) {
+          const updatedFirst = trimmedFirstName || existingFirst || "";
+          const updatedLast = trimmedLastName || existingLast || "";
+          const updatedName = [updatedFirst, updatedLast].filter(Boolean).join(" ") || user.user.name;
+          const updatedAge = payload.age !== undefined ? payload.age : existingAge;
+          const updatedGender = gender;
+          const updatedLanguage = languageChanged ? preferredLanguage : existingLanguage;
+ 
+          dispatch(
+            setUser({
+              ...user.user,
+              name: updatedName,
+              email: emailChanged ? trimmedEmail : user.user.email,
+              age: updatedAge ?? null,
+              gender: updatedGender,
+              language: updatedLanguage,
+            })
+          );
+        }
+
+        setFirstName(trimmedFirstName);
+        setLastName(trimmedLastName);
+        setEmail(trimmedEmail);
+        setSavedGender(gender);
+        setSavedLanguage(languageChanged ? preferredLanguage : existingLanguage);
+        setSavedAge(payload.age !== undefined ? payload.age : existingAge);
+
+        if (languageChanged) {
+          dispatch(setAppLanguage(preferredLanguage === "TR" ? "tr" : "en"));
+        }
+
+        if (emailChanged) {
+          setPendingEmail(trimmedEmail);
+          setVerificationCode("");
+          toast({
+            title: t('settings.emailVerificationTitle'),
+            description: t('settings.emailVerificationDescription'),
+          });
+        }
+      } else {
+        const message = response?.data?.message || response?.response?.data?.message;
+        toast({
+          title: t('common.error'),
+          description: message || t('error.submitFailed'),
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      const message = error?.response?.data?.message || error?.message;
+      toast({
+        title: t('common.error'),
+        description: message || t('error.submitFailed'),
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handleVerifyEmail = async () => {
+    if (!pendingEmail) return;
+    if (!verificationCode.trim()) {
+      toast({
+        title: t('auth.error'),
+        description: t('settings.verificationCodeRequired'),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsVerifyingEmail(true);
+
+    try {
+      const response: any = await apis.user.verify_email(pendingEmail, verificationCode.trim());
+      const status = response?.status ?? response?.response?.status;
+
+      if (status && status >= 200 && status < 300) {
+        toast({
+          title: t('settings.emailVerificationSuccess'),
+          description: t('settings.emailVerificationSuccessDescription'),
+        });
+        setPendingEmail(null);
+        setVerificationCode("");
+      } else {
+        const message = response?.data?.message || response?.response?.data?.message;
+        toast({
+          title: t('common.error'),
+          description: message || t('settings.emailVerificationFailed'),
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      const message = error?.response?.data?.message || error?.message;
+      toast({
+        title: t('common.error'),
+        description: message || t('settings.emailVerificationFailed'),
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifyingEmail(false);
+    }
   };
   const handleChangePassword = async () => {
     if (newPassword !== confirmPassword) {
@@ -219,14 +416,26 @@ export default function Settings() {
 
                   <div className="grid gap-2">
                     <Label htmlFor="gender">{t('settings.gender')}</Label>
-                    <Select value={gender} onValueChange={setGender}>
+                    <Select value={gender} onValueChange={(value) => setGender(value as 'male' | 'female')}>
                       <SelectTrigger id="gender">
                         <SelectValue placeholder={t('settings.selectGender')} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="male">{t('settings.genderMale')}</SelectItem>
                         <SelectItem value="female">{t('settings.genderFemale')}</SelectItem>
-                        <SelectItem value="other">{t('settings.genderOther')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="preferred-language">{t('settings.language')}</Label>
+                    <Select value={preferredLanguage} onValueChange={(value) => setPreferredLanguage(value as 'TR' | 'EN')}>
+                      <SelectTrigger id="preferred-language">
+                        <SelectValue placeholder={t('settings.selectLanguage')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="TR">{t('settings.languageTurkish')}</SelectItem>
+                        <SelectItem value="EN">{t('settings.languageEnglish')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -234,7 +443,33 @@ export default function Settings() {
 
                 <Separator />
 
-                <Button onClick={handleSaveProfile}>{t('settings.saveChanges')}</Button>
+                <Button onClick={handleSaveProfile} disabled={isSavingProfile}>
+                  {isSavingProfile ? t('common.loading') : t('settings.saveChanges')}
+                </Button>
+                {pendingEmail && (
+                  <div className="mt-6 rounded-lg border border-dashed p-4 space-y-4">
+                    <div>
+                      <h4 className="text-sm font-semibold">{t('settings.emailVerificationPendingTitle')}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {t('settings.emailVerificationPendingDescription', { email: pendingEmail })}
+                      </p>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="verification-code">{t('settings.verificationCode')}</Label>
+                      <Input
+                        id="verification-code"
+                        value={verificationCode}
+                        onChange={(e) => setVerificationCode(e.target.value)}
+                        placeholder={t('settings.verificationCodePlaceholder')}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button onClick={handleVerifyEmail} disabled={isVerifyingEmail}>
+                        {isVerifyingEmail ? t('common.loading') : t('settings.verifyEmail')}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

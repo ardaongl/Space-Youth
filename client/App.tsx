@@ -54,7 +54,6 @@ import { LanguageProvider, useLanguage } from "./context/LanguageContext";
 import TestWizard, { OnboardingData } from "@/components/onboarding/TestWizard";
 import PendingStatus from "@/components/status/PendingStatus";
 import RejectedStatus from "@/components/status/RejectedStatus";
-import RoleSwitcher from "./components/dev/RoleSwitcher";
 import { store, useAppSelector } from "./store";
 import { apis } from "./services";
 import { IUserRoles, STUDENT_STATUS } from "./types/user/user";
@@ -153,11 +152,19 @@ const AppContent = () => {
         if (userResponse && userResponse.data) {
           // Update user
           if (userResponse.data.id) {
+            const firstName = userResponse.data.first_name || "";
+            const lastName = userResponse.data.last_name || "";
+            const fullName = `${firstName} ${lastName}`.trim() || firstName || lastName || userResponse.data.email;
+            const refreshedGender: "male" | "female" = userResponse.data.gender?.toLowerCase() === "female" ? "female" : "male";
+            const refreshedLanguage: "TR" | "EN" = userResponse.data.language?.toUpperCase() === "EN" ? "EN" : "TR";
             const updatedUser = {
               id: userResponse.data.id,
-              name: userResponse.data.first_name,
+              name: fullName,
               email: userResponse.data.email,
-              role: userResponse.data.role
+              role: userResponse.data.role,
+              age: typeof userResponse.data.age === "number" ? userResponse.data.age : null,
+              gender: refreshedGender,
+              language: refreshedLanguage,
             };
             dispatch(setUser(updatedUser));
           }

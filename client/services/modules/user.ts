@@ -60,4 +60,31 @@ export class UserAPI {
             return error;
         }
     }
+
+    update_user = async (payload: {
+        first_name?: string;
+        last_name?: string;
+        age?: number;
+        gender?: string;
+        email?: string;
+        language?: string;
+    }) => {
+        try {
+            console.log("update_user_payload: ", payload);
+            const response = await api.post("/api/user", payload, {requiresAuth: true, validateStatus: s => s < 500})
+            console.log("update_user_response: ", response);
+            return response;
+        } catch (error) {
+            return error;
+        }
+    }
+
+    verify_email = async (email:string, verification_code: string) => {
+        try {
+            const response = await api.post("/user/verify_email", {email, code: verification_code}, {requiresAuth: true, validateStatus: s => s < 500})
+            return response;
+        } catch (error) {
+            return error;
+        }
+    }
 }

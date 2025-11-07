@@ -199,11 +199,19 @@ export default function Login() {
         const response:any = await apis.user.get_user();
         console.log("user : ", response);
         if(auth_token != ""){
+          const firstName = response.data.first_name || "";
+          const lastName = response.data.last_name || "";
+          const fullName = `${firstName} ${lastName}`.trim() || firstName || lastName || response.data.email;
+          const responseGender: "male" | "female" = response.data.gender?.toLowerCase() === "female" ? "female" : "male";
+          const responseLanguage: "TR" | "EN" = response.data.language?.toUpperCase() === "EN" ? "EN" : "TR";
           const user = {
             id: response.data.id,
-            name: response.data.first_name,
+            name: fullName,
             email: response.data.email,
-            role: response.data.role
+            role: response.data.role,
+            age: typeof response.data.age === "number" ? response.data.age : null,
+            gender: responseGender,
+            language: responseLanguage,
           }
           console.log("user", user);
           

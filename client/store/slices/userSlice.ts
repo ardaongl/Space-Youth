@@ -6,6 +6,9 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  age?: number | null;
+  gender?: "male" | "female";
+  language?: "TR" | "EN";
 }
 
 interface UserState {
