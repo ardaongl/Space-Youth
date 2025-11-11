@@ -1608,7 +1608,7 @@ const AdminPage: React.FC = () => {
                       {/* Görseli şimdilik opsiyonel tutuyoruz */}
                       {c.image_url ? (
                         <img
-                          src={c.image_url}
+                          src={ import.meta.env.VITE_BASE_URL + c.image_url}
                           alt={c.name}
                           className="character-thumb"
                         />
