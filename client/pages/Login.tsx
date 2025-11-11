@@ -212,6 +212,7 @@ export default function Login() {
             age: typeof response.data.age === "number" ? response.data.age : null,
             gender: responseGender,
             language: responseLanguage,
+            points: typeof response.data.points === "number" ? response.data.points : 0,
           }
           console.log("user", user);
           

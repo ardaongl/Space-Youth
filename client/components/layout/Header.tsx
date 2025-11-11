@@ -1,10 +1,7 @@
 import {
-  Search,
-  Bell,
   Coins,
   Menu,
   Home,
-  Bookmark,
   Medal,
   BookOpen,
   ClipboardList,
@@ -37,18 +34,16 @@ import { useAppSelector } from "@/store";
 import { useDispatch } from "react-redux";
 import { clearUser } from "@/store/slices/userSlice";
 
-function TokenWallet() {
+function TokenWallet({ points }: { points?: number | null }) {
   const { tokens } = useTokens();
-  const navigate = useNavigate();
+  const displayBalance =
+    typeof points === "number" && !Number.isNaN(points) ? points : tokens;
   
   return (
-    <button 
-      onClick={() => navigate('/buy-coins')}
-      className="inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm hover:bg-secondary hover:border-amber-500/50 transition-all cursor-pointer"
-    >
+    <div className="inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm bg-background/60">
       <Coins className="h-5 w-5 text-amber-500" />
-      <span className="tabular-nums">{tokens}</span>
-    </button>
+      <span className="tabular-nums">{displayBalance}</span>
+    </div>
   );
 }
 
@@ -143,64 +138,13 @@ export function Header() {
         </div>
         )}
 
-        <div className="flex-1 max-w-xl">
-          <div className="relative group">
-            <label className="relative w-full block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
-              <input
-                className="w-full h-10 rounded-xl border border-border bg-background/50 backdrop-blur-sm px-10 text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary/50 hover:bg-background/80 placeholder:text-muted-foreground"
-                placeholder={t('common.search')}
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
-                  <span className="text-xs">⌘</span>K
-                </kbd>
-              </div>
-            </label>
-            
-            {/* Search suggestions dropdown - appears on focus */}
-            <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-border rounded-xl shadow-lg opacity-0 invisible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200 z-50">
-              <div className="p-2">
-                <div className="text-xs font-medium text-muted-foreground px-2 py-1.5 mb-1">
-                  {t('common.recentSearches')}
-                </div>
-                <div className="space-y-1">
-                  <button className="w-full text-left px-2 py-2 text-sm rounded-lg hover:bg-secondary/50 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <Search className="h-3 w-3 text-muted-foreground" />
-                      <span>React Hooks</span>
-                    </div>
-                  </button>
-                  <button className="w-full text-left px-2 py-2 text-sm rounded-lg hover:bg-secondary/50 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <Search className="h-3 w-3 text-muted-foreground" />
-                      <span>TypeScript</span>
-                    </div>
-                  </button>
-                  <button className="w-full text-left px-2 py-2 text-sm rounded-lg hover:bg-secondary/50 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <Search className="h-3 w-3 text-muted-foreground" />
-                      <span>Design Patterns</span>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <div className="flex-1" />
         {/* Right side buttons - sağ tarafa dayalı */}
         <div className="flex items-center gap-2 ml-auto">
           {user ? (
             <>
-              <button 
-                className="px-3 py-2 rounded-full hover:bg-secondary"
-                onClick={() => navigate('/bookmarks')}
-                aria-label="Bookmarks"
-              >
-                <Bookmark className="h-6 w-6" />
-              </button>
               <LanguageSwitcher />
-              <TokenWallet />
+              <TokenWallet points={user?.points} />
               {/*<NotificationsPopover /> */}
               <HoverCard openDelay={0}>
                 <HoverCardTrigger asChild>
@@ -230,14 +174,6 @@ export function Header() {
                       <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer" onClick={() => navigate('/settings')}>
                         <Settings className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm">{t('navigation.settings')}</span>
-                      </div>
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer" onClick={() => navigate('/bookmarks')}>
-                        <Bookmark className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{t('profile.savedItems')}</span>
-                      </div>
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary cursor-pointer" onClick={() => navigate('/buy-coins')}>
-                        <Coins className="h-4 w-4 text-amber-500" />
-                        <span className="text-sm">{t('profile.buyCoins')}</span>
                       </div>
                     </div>
                     

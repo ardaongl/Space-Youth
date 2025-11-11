@@ -70,6 +70,15 @@ export class TaskAPI {
         }
     }
 
+    get_user_completed_tasks = async () => {
+        try {
+            const response = await api.get("/api/task/user/completed", {requiresAuth: true, validateStatus: s => s < 500});
+            return response;
+        } catch (error) {
+            return error;
+        }
+    }
+
     admin_approve_task = async (submission_id: string, approve: boolean) => {
         try {
             const response = await api.post(`/api/task/approve`, {

@@ -1,9 +1,14 @@
+import { useEffect, useMemo, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { ArrowRight, CheckCircle2, Clock, Bookmark, Bell, Briefcase, GraduationCap, Target, Users, Flame, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { EventCalendar } from "@/components/ui/event-calendar";
 import FeatureSlider from "@/components/ui/FeatureSlider";
 import { useLanguage } from "@/context/LanguageContext";
+import { apis } from "@/services";
+import { useAppSelector } from "@/store";
+import { Video } from "@shared/api";
+import { VideoCard } from "@/components/Videos/VideoCard";
 
 function PrimaryButton({ children }: { children: React.ReactNode }) {
   return (
@@ -19,8 +24,221 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
   );
 }
 
+interface DashboardTask {
+  id?: string | number;
+  title: string;
+  coins: number;
+  level?: string | null;
+  duration?: string | null;
+  description?: string | null;
+  href?: string;
+}
+
+function pickRandom<T>(items: T[], count: number): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, count);
+}
+
 export default function Home() {
   const { t } = useLanguage();
+  const userToken = useAppSelector((state) => state.user.token);
+  const isAuthenticated = Boolean(userToken);
+  const [recommendedTasks, setRecommendedTasks] = useState<DashboardTask[]>([]);
+  const [recommendedTutorialVideos, setRecommendedTutorialVideos] = useState<Video[]>([]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setRecommendedTasks([]);
+      setRecommendedTutorialVideos([]);
+      return;
+    }
+
+    let isMounted = true;
+
+    const fetchRecommendedTasks = async () => {
+      try {
+        const [tasksResponse, completedResponse] = await Promise.all([
+          apis.task.get_tasks(),
+          apis.task.get_user_completed_tasks(),
+        ]);
+
+        if (!isMounted) return;
+
+        if (tasksResponse?.status === 200 && Array.isArray(tasksResponse.data)) {
+          const completedTaskIds = new Set<string>();
+
+          if (completedResponse?.status === 200 && Array.isArray(completedResponse.data)) {
+            completedResponse.data.forEach((item: any) => {
+              const completedId = item?.task?.id;
+              if (completedId) {
+                completedTaskIds.add(completedId);
+              }
+            });
+          }
+
+          const availableTasks = tasksResponse.data.filter((task: any) => task?.id && !completedTaskIds.has(task.id));
+
+          if (availableTasks.length > 0) {
+            const selectedTasks = pickRandom(availableTasks, 2).map((task: any) => ({
+              id: task.id,
+              title: task.name,
+              coins: typeof task.point === "number" ? task.point : Number(task.point) || 0,
+              level: task.level,
+              description: task.description,
+              href: `/tasks/${task.id}`,
+            }));
+            setRecommendedTasks(selectedTasks);
+          } else {
+            setRecommendedTasks([]);
+          }
+        } else {
+          setRecommendedTasks([]);
+        }
+      } catch (error) {
+        if (!isMounted) return;
+        console.error("Failed to load recommended tasks:", error);
+        setRecommendedTasks([]);
+      }
+    };
+
+    fetchRecommendedTasks();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated]);
+
+  const fallbackTasks = useMemo<DashboardTask[]>(() => [
+    { id: "sample-1", title: t('tasks.sampleTask1'), coins: 120, level: "intermediate", duration: `2${t('common.hours')}`, href: "/tasks" },
+    { id: "sample-2", title: t('tasks.sampleTask2'), coins: 100, level: "beginner", duration: `1.5${t('common.hours')}`, href: "/tasks" },
+  ], [t]);
+
+  const tasksToRender = recommendedTasks.length > 0 ? recommendedTasks : fallbackTasks;
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setRecommendedTutorialVideos([]);
+      return;
+    }
+
+    let isMounted = true;
+
+    const tutorialToVideo = (tutorial: any): Video => {
+      const fallbackUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+      return {
+        id: tutorial.id ?? `tutorial-${Math.random().toString(36).slice(2)}`,
+        title: tutorial.title ?? t('tutorials.untitledVideo'),
+        description: tutorial.description ?? "",
+        videoUrl: tutorial.video_url || tutorial.videoUrl || fallbackUrl,
+        duration: tutorial.duration ?? undefined,
+        category: tutorial.category ?? "Tutorial",
+        teacherId: tutorial.teacher_id ?? "",
+        teacherName: tutorial.teacher_name ?? "Space Youth",
+        createdAt: tutorial.created_at ?? new Date().toISOString(),
+        updatedAt: tutorial.updated_at ?? new Date().toISOString(),
+        thumbnailUrl: tutorial.thumbnail_url ?? tutorial.thumbnailUrl ?? undefined,
+        views: tutorial.views ?? 0,
+        likes: tutorial.likes ?? 0,
+      };
+    };
+
+    const fetchRecommendedTutorials = async () => {
+      try {
+        const tutorialsResponse = await apis.tutorial.get_tutorials();
+
+        if (!isMounted) return;
+
+        const tutorialsData = Array.isArray(tutorialsResponse?.data)
+          ? tutorialsResponse.data
+          : Array.isArray(tutorialsResponse?.data?.data)
+            ? tutorialsResponse.data.data
+            : [];
+
+        if (tutorialsResponse?.status === 200 && tutorialsData.length > 0) {
+          const selectedTutorials = pickRandom(tutorialsData, 3).map((tutorial: any) => tutorialToVideo(tutorial));
+          setRecommendedTutorialVideos(selectedTutorials);
+        } else {
+          setRecommendedTutorialVideos([]);
+        }
+      } catch (error) {
+        if (!isMounted) return;
+        console.error("Failed to load recommended tutorials:", error);
+        setRecommendedTutorialVideos([]);
+      }
+    };
+
+    fetchRecommendedTutorials();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated, t]);
+
+  const fallbackTutorialVideos = useMemo<Video[]>(() => [
+    {
+      id: "tutorial-sample-1",
+      title: t('tutorials.reactHooks'),
+      description: t('tutorials.subtitle'),
+      videoUrl: "https://www.youtube.com/watch?v=dpw9EHDh2bM",
+      duration: `30 ${t('common.minutes')}`,
+      category: "Tutorial",
+      teacherId: "space-youth",
+      teacherName: "Space Youth",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      views: 1250,
+      likes: 320,
+    },
+    {
+      id: "tutorial-sample-2",
+      title: "CSS Grid Layout",
+      description: t('tutorials.subtitle'),
+      videoUrl: "https://www.youtube.com/watch?v=EFafSYg-PkI",
+      duration: `45 ${t('common.minutes')}`,
+      category: "Tutorial",
+      teacherId: "space-youth",
+      teacherName: "Space Youth",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      views: 980,
+      likes: 210,
+    },
+    {
+      id: "tutorial-sample-3",
+      title: t('tutorials.typescriptBasics'),
+      description: t('tutorials.subtitle'),
+      videoUrl: "https://www.youtube.com/watch?v=gp5H0Vw39yw",
+      duration: `1 ${t('common.hours')}`,
+      category: "Tutorial",
+      teacherId: "space-youth",
+      teacherName: "Space Youth",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      views: 1420,
+      likes: 275,
+    },
+  ], [t]);
+
+  const tutorialsToRender = recommendedTutorialVideos.length > 0 ? recommendedTutorialVideos : fallbackTutorialVideos;
+
+  const getLevelLabel = (level?: string | null) => {
+    if (!level) return null;
+    const normalized = level.toLowerCase();
+    switch (normalized) {
+      case "beginner":
+        return t('courses.beginner');
+      case "intermediate":
+        return t('courses.intermediate');
+      case "advanced":
+        return t('courses.advanced');
+      default:
+        return level;
+    }
+  };
   
   // Sample events data - replace with actual data from your backend
   const sampleEvents = [
@@ -126,30 +344,43 @@ export default function Home() {
             <Link to="/tasks" className="text-sm sm:text-base text-muted-foreground hover:underline">{t('common.viewAll')}</Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
-            {[
-              { title: t('tasks.sampleTask1'), coins: 120, level: t('tasks.medium'), time: `2${t('common.hours')}` },
-              { title: t('tasks.sampleTask2'), coins: 100, level: t('tasks.beginner'), time: `1.5${t('common.hours')}` },
-            ].map((task, i) => (
-              <Card key={i} className="p-6 sm:p-8 lg:p-12 hover:shadow-lg transition">
+            {tasksToRender.map((task, i) => {
+              const levelLabel = getLevelLabel(task.level);
+              const durationLabel = task.duration;
+              const description = task.description;
+              const coinsLabel = typeof task.coins === "number" && !Number.isNaN(task.coins) ? task.coins : 0;
+              const taskHref = task.href || (task.id ? `/tasks/${task.id}` : "/tasks");
+
+              return (
+              <Card key={task.id ?? i} className="p-6 sm:p-8 lg:p-12 hover:shadow-lg transition">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <h3 className="font-semibold text-sm sm:text-base">{task.title}</h3>
-                    <div className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1 sm:gap-1.5">
-                        <Clock className="h-3 w-3 sm:h-4 sm:w-4" /> {task.time}
-                      </span>
-                      <span>{task.level}</span>
-                    </div>
+                    {(durationLabel || levelLabel) && (
+                      <div className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground">
+                        {durationLabel && (
+                          <span className="flex items-center gap-1 sm:gap-1.5">
+                            <Clock className="h-3 w-3 sm:h-4 sm:w-4" /> {durationLabel}
+                          </span>
+                        )}
+                        {levelLabel && <span>{levelLabel}</span>}
+                      </div>
+                    )}
+                    {description && (
+                      <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground line-clamp-2">
+                        {description}
+                      </p>
+                    )}
                   </div>
                   <div className="text-right">
-                    <div className="text-sm sm:text-base font-semibold text-yellow-600">{task.coins} coins</div>
+                    <div className="text-sm sm:text-base font-semibold text-yellow-600">{coinsLabel} coins</div>
                   </div>
                 </div>
-                <Link to="/tasks" className="mt-3 sm:mt-4 inline-block text-sm sm:text-base text-primary hover:underline font-medium">
+                <Link to={taskHref} className="mt-3 sm:mt-4 inline-block text-sm sm:text-base text-primary hover:underline font-medium">
                   {t('tasks.viewTask')} →
                 </Link>
               </Card>
-            ))}
+            )})}
           </div>
         </section>
 
@@ -178,28 +409,8 @@ export default function Home() {
             <Link to="/tutorials" className="text-sm sm:text-base text-muted-foreground hover:underline">{t('common.viewAll')}</Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full">
-            {[
-              { title: t('tutorials.reactHooks'), duration: `30 ${t('common.minutes')}`, difficulty: t('courses.intermediate') },
-              { title: "CSS Grid Layout", duration: `45 ${t('common.minutes')}`, difficulty: t('courses.beginner') },
-              { title: t('tutorials.typescriptBasics'), duration: `1 ${t('common.hours')}`, difficulty: t('courses.intermediate') },
-            ].map((tutorial, i) => (
-              <Card key={i} className="p-4 sm:p-6 hover:shadow-lg transition">
-                <div className="aspect-video bg-gradient-to-br from-primary/20 to-purple-200 rounded-lg mb-3 sm:mb-4 flex items-center justify-center">
-                  <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-white/80 flex items-center justify-center">
-                    <Bookmark className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-                  </div>
-                </div>
-                <h3 className="font-semibold text-sm sm:text-base">{tutorial.title}</h3>
-                <div className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1 sm:gap-1.5">
-                    <Clock className="h-3 w-3 sm:h-4 sm:w-4" /> {tutorial.duration}
-                  </span>
-                  <span>{tutorial.difficulty}</span>
-                </div>
-                <Link to="/tutorials" className="mt-3 sm:mt-4 inline-block text-sm sm:text-base text-primary hover:underline font-medium">
-                  {t('common.start')} →
-                </Link>
-              </Card>
+            {tutorialsToRender.map((video) => (
+              <VideoCard key={video.id} video={video} />
             ))}
           </div>
         </section>

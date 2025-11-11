@@ -42,7 +42,6 @@ import EditEvent from "./pages/EditEvent";
 import Callback from "./pages/Callback";
 import Dashboard from "./pages/Dashboard";
 import AdminPage from "./pages/AdminPage";
-import BuyCoins from "./pages/BuyCoins";
 import Teacher from "./pages/Teacher";
 
 import { TokensProvider } from "./context/TokensContext";
@@ -165,7 +164,9 @@ const AppContent = () => {
               age: typeof userResponse.data.age === "number" ? userResponse.data.age : null,
               gender: refreshedGender,
               language: refreshedLanguage,
+              points: userResponse.data.points || 0,
             };
+            console.log(updatedUser);
             dispatch(setUser(updatedUser));
           }
           
@@ -323,15 +324,6 @@ const AppContent = () => {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/buy-coins"
-          element={
-            <ProtectedRoute>
-              <BuyCoins />
-            </ProtectedRoute>
-          }
-        />
-        
         {/* Role Protected Routes - Teacher & Admin */}
         <Route
           path="/courses/add"
