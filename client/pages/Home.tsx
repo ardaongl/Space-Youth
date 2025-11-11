@@ -3,7 +3,6 @@ import AppLayout from "@/components/layout/AppLayout";
 import { ArrowRight, CheckCircle2, Clock, Bookmark, Bell, Briefcase, GraduationCap, Target, Users, Flame, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { EventCalendar } from "@/components/ui/event-calendar";
-import FeatureSlider from "@/components/ui/FeatureSlider";
 import { useLanguage } from "@/context/LanguageContext";
 import { apis } from "@/services";
 import { useAppSelector } from "@/store";
@@ -452,11 +451,6 @@ export default function Home() {
   return (
     <AppLayout>
       <div className="py-4 sm:py-6 space-y-8 sm:space-y-12 w-full max-w-full overflow-x-hidden">
-        {/* Feature Slider Section */}
-        <section>
-          <FeatureSlider />
-        </section>
-
         {/* Önerilen Görevler */}
         <section className="w-full">
           <div className="flex items-center justify-between mb-4 sm:mb-5">
@@ -579,37 +573,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Önerilen Workshop'lar */}
-        <section className="w-full">
-          <div className="flex items-center justify-between mb-4 sm:mb-5">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-              <h2 className="text-lg sm:text-xl font-semibold">{t('dashboard.recommendedWorkshops')}</h2>
-            </div>
-            <Link to="/workshops" className="text-sm sm:text-base text-muted-foreground hover:underline">{t('common.viewAll')}</Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full">
-            {[
-              { title: "Design Thinking Workshop", date: t('workshops.october15'), time: "14:00" },
-              { title: t('workshops.agileMethodologies'), date: t('workshops.october20'), time: "16:00" },
-            ].map((workshop, i) => (
-              <Card key={i} className="overflow-hidden hover:shadow-lg transition">
-                <div className="h-32 sm:h-40 lg:h-48 bg-gradient-to-br from-primary/30 to-indigo-300" />
-                <div className="p-4 sm:p-6">
-                  <h3 className="font-semibold text-sm sm:text-base">{workshop.title}</h3>
-                  <div className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground">
-                    <span>{workshop.date}</span>
-                    <span>•</span>
-                    <span>{workshop.time}</span>
-                  </div>
-                  <Link to="/workshops" className="mt-3 sm:mt-4 inline-block text-sm sm:text-base text-primary hover:underline font-medium">
-                    {t('common.viewDetails')} →
-                  </Link>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </section>
       </div>
     </AppLayout>
   );

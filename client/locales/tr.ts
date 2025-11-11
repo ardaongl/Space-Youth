@@ -196,6 +196,15 @@ export const tr = {
     emailVerificationSuccess: 'E-posta Doğrulandı',
     emailVerificationSuccessDescription: 'Yeni e-posta adresiniz başarıyla doğrulandı.',
     emailVerificationFailed: 'E-posta doğrulanamadı.',
+    fetchZoomLink: 'Zoom Linki Al',
+    zoomAuthLink: 'Zoom Yetkilendirme Linki',
+    zoomAuthPlaceholder: 'Linki göstermek için önce isteyin',
+    copyLink: 'Linki Kopyala',
+    zoomLinkReady: 'Zoom linki hazır. Hesabınızı bağlamak için kopyalayıp yeni sekmede açın.',
+    zoomLinkCopied: 'Zoom linki panoya kopyalandı.',
+    zoomLinkCopyFailed: 'Zoom linki kopyalanamadı. Lütfen tekrar deneyin.',
+    zoomLinkFetchFailed: 'Zoom linki alınamadı. Lütfen tekrar deneyin.',
+    zoomLinkEmpty: 'Kopyalanacak bir Zoom linki yok. Önce linki alın.',
   },
 
   // Courses

@@ -19,7 +19,6 @@ import {
   Sun,
   Moon,
   Monitor,
-  Users,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
@@ -94,7 +93,6 @@ export function Header() {
                       { to: "/", label: t('navigation.home'), icon: Home },
                       { to: "/tasks", label: t('navigation.tasks'), icon: ClipboardList },
                       { to: "/courses", label: t('navigation.courses'), icon: BookOpen },
-                      { to: "/workshops", label: t('navigation.workshops'), icon: Users },
                       { to: "/tutorials", label: t('navigation.tutorials'), icon: PencilRuler },
                       { to: "/job-board", label: t('navigation.jobBoard'), icon: BriefcaseBusiness },
                       { to: "/profile", label: t('navigation.profile'), icon: User },

@@ -88,4 +88,16 @@ export class UserAPI {
             return error;
         }
     }
+
+    connect_zoom = async () => {
+        try {
+            const response = await api.get(
+                "/api/zoom/auth",
+                { requiresAuth: true, validateStatus: s => s < 500 }
+            );
+            return response;
+        } catch (error) {
+            return error;
+        }
+    }
 }

@@ -21,12 +21,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Shield, Trash2, Mail } from "lucide-react";
+import { User, Shield, Trash2, Mail, Copy } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { useToast } from "@/hooks/use-toast";
 import { clearUser, setUser } from "@/store/slices/userSlice";
 import { setLanguage as setAppLanguage } from "@/store/slices/languageSlice";
 import { apis } from "@/services";
+import { isTeacher } from "@/utils/roles";
 
 interface LabelOption {
   id: number;
@@ -124,6 +125,8 @@ export default function Settings() {
   const [labelsLoading, setLabelsLoading] = useState(false);
   const [selectedLabelIds, setSelectedLabelIds] = useState<number[]>(userLabelIds);
   const [savedLabelIds, setSavedLabelIds] = useState<number[]>(userLabelIds);
+  const [zoomAuthUrl, setZoomAuthUrl] = useState("");
+  const [isFetchingZoomLink, setIsFetchingZoomLink] = useState(false);
  
   // Security settings
   const [currentPassword, setCurrentPassword] = useState("");
@@ -416,6 +419,74 @@ export default function Settings() {
     }
   };
 
+  const handleConnectZoom = async () => {
+    if (isFetchingZoomLink) return;
+    setIsFetchingZoomLink(true);
+
+    try {
+      const response: any = await apis.user.connect_zoom();
+      const status = response?.status ?? response?.response?.status;
+      const zoomUrl =
+        response?.data?.url ??
+        response?.data?.data?.url ??
+        response?.response?.data?.url;
+
+      if (status && status >= 200 && status < 300 && typeof zoomUrl === "string") {
+        setZoomAuthUrl(zoomUrl);
+        toast({
+          title: t('common.success'),
+          description: t('settings.zoomLinkReady'),
+        });
+        return;
+      }
+
+      const message =
+        response?.data?.message || response?.response?.data?.message || t('settings.zoomLinkFetchFailed');
+
+      toast({
+        title: t('common.error'),
+        description: message,
+        variant: "destructive",
+      });
+    } catch (error: any) {
+      const message = error?.response?.data?.message || error?.message || t('error.submitFailed');
+      toast({
+        title: t('common.error'),
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsFetchingZoomLink(false);
+    }
+  };
+
+  const handleCopyZoomUrl = async () => {
+    if (!zoomAuthUrl) {
+      toast({
+        title: t('common.error'),
+        description: t('settings.zoomLinkEmpty'),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(zoomAuthUrl);
+      toast({
+        title: t('common.success'),
+        description: t('settings.zoomLinkCopied'),
+      });
+    } catch (error) {
+      toast({
+        title: t('common.error'),
+        description: t('settings.zoomLinkCopyFailed'),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const isTeacherUser = isTeacher(user.user?.role);
+
   return (
     <AppLayout>
       <div className="container mx-auto py-8 px-4 max-w-7xl">
@@ -590,6 +661,36 @@ export default function Settings() {
                 )}
               </CardContent>
             </Card>
+
+            {isTeacherUser && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('profile.zoomIntegration')}</CardTitle>
+                  <CardDescription>{t('profile.zoomDescription')}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="zoom-auth-link">{t('settings.zoomAuthLink')}</Label>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <Input
+                        id="zoom-auth-link"
+                        value={zoomAuthUrl}
+                        readOnly
+                        placeholder={t('settings.zoomAuthPlaceholder')}
+                        className="sm:flex-1"
+                      />
+                      <Button type="button" variant="outline" onClick={handleCopyZoomUrl} disabled={!zoomAuthUrl}>
+                        <Copy className="h-4 w-4 mr-2" />
+                        {t('settings.copyLink')}
+                      </Button>
+                    </div>
+                  </div>
+                  <Button onClick={handleConnectZoom} disabled={isFetchingZoomLink}>
+                    {isFetchingZoomLink ? t('common.loading') : t('settings.fetchZoomLink')}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* Security Tab */}

@@ -196,6 +196,15 @@ export const en = {
     emailVerificationSuccess: 'Email Verified',
     emailVerificationSuccessDescription: 'Your new email address has been successfully verified.',
     emailVerificationFailed: 'Email verification failed.',
+    fetchZoomLink: 'Get Zoom Link',
+    zoomAuthLink: 'Zoom Authorization Link',
+    zoomAuthPlaceholder: 'Request the link to display it here',
+    copyLink: 'Copy Link',
+    zoomLinkReady: 'Zoom link is ready. Copy it and open in a new tab to connect your account.',
+    zoomLinkCopied: 'Zoom link copied to clipboard.',
+    zoomLinkCopyFailed: 'Could not copy the Zoom link. Please try again.',
+    zoomLinkFetchFailed: 'Unable to fetch the Zoom link. Please try again.',
+    zoomLinkEmpty: 'There is no Zoom link to copy yet. Fetch the link first.',
   },
 
   // Courses

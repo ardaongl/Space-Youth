@@ -4,11 +4,7 @@ import {
   BookOpen,
   ClipboardList,
   PencilRuler,
-  BadgeCheck,
   BriefcaseBusiness,
-  Trophy,
-  Users,
-  Video,
   Compass,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -16,8 +12,7 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserRole, isStudent } from "@/utils/roles";
-import { Button } from "@/components/ui/button";
-import React, { useEffect } from "react";
+import React from "react";
 import { useAppSelector } from "@/store";
 import { IUserRoles } from "@/types/user/user";
 
@@ -69,40 +64,8 @@ export function Sidebar() {
     };
     return roleLabels[role];
   };
-  const [zoomConnected, setZoomConnected] = React.useState<boolean>(() => {
-    try { return localStorage.getItem("zoom.connected") === "true"; } catch { return false; }
-  });
-
-
   const isAuthenticated = user.user !== null;
   const canAccessPlatform = isAuthenticated;
-
-  // Listen for storage changes to update Zoom connection status
-  React.useEffect(() => {
-    const checkZoomStatus = () => {
-      try {
-        const connected = localStorage.getItem("zoom.connected") === "true";
-        setZoomConnected(connected);
-      } catch {}
-    };
-
-    window.addEventListener("storage", checkZoomStatus);
-    return () => window.removeEventListener("storage", checkZoomStatus);
-  }, []);
-
-  const handleZoomConnect = () => {
-    if (zoomConnected) {
-      try { 
-        localStorage.removeItem("zoom.connected"); 
-        setZoomConnected(false);
-      } catch {}
-    } else {
-      try { 
-        sessionStorage.setItem("zoom.oauth.state", crypto.randomUUID()); 
-      } catch {}
-      window.location.assign("/zoom/callback?code=mock_code&state=" + (sessionStorage.getItem("zoom.oauth.state") || "state"));
-    }
-  };
 
   return (
     <aside className="hidden lg:flex h-screen sticky top-0 flex-col border-r bg-sidebar-background/60 backdrop-blur supports-[backdrop-filter]:bg-sidebar-background/70 w-64 px-2 py-3">
@@ -179,34 +142,6 @@ export function Sidebar() {
           ))}
         </ul>
       </nav>
-
-      {/* Zoom Integration - Only show for teachers and admins */}
-      {canAccessPlatform && user.user && user.user.role && !isStudent(user.user.role) && (
-        <div className="px-2 pb-3 mb-2">
-          <div className="flex items-center justify-between gap-2 px-2">
-            <div className="flex items-center gap-2">
-              <div className="h-9 w-9 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Video className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-sm font-medium">Zoom</span>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              className={cn(
-                "h-8 px-3 text-xs font-medium flex-shrink-0",
-                zoomConnected 
-                  ? "border-green-600 text-green-700 hover:bg-green-50 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-950/30" 
-                  : "border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950/30"
-              )}
-              onClick={handleZoomConnect}
-            >
-              {zoomConnected ? t('zoom.connected') : t('zoom.connect')}
-            </Button>
-          </div>
-        </div>
-      )}
-
       {user.user && canAccessPlatform && (
         <div className="px-2 pb-3 border-t pt-3">
           <div className="flex items-center gap-3 px-2">

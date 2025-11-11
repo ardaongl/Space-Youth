@@ -34,11 +34,6 @@ import About from "./pages/About";
 import Settings from "./pages/Settings";
 import MyTasks from "./pages/MyTasks";
 import Leaderboard from "./pages/Leaderboard";
-import Workshops from "./pages/Workshops";
-import EventDetail from "./pages/EventDetail";
-import AddEvent from "./pages/AddEvent";
-import AddEventSessions from "./pages/AddEventSessions";
-import EditEvent from "./pages/EditEvent";
 import Callback from "./pages/Callback";
 import Dashboard from "./pages/Dashboard";
 import AdminPage from "./pages/AdminPage";
@@ -258,8 +253,6 @@ const AppContent = () => {
         <Route path="/tasks/:taskId" element={<TaskDetail />} />
         <Route path="/courses" element={<Index />} />
         <Route path="/courses/:slug" element={<CourseDetail />} />
-        <Route path="/events/:slug" element={<EventDetail />} />
-        <Route path="/workshops" element={<Workshops />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/practice" element={<Tutorials />} />
         <Route path="/tutorials" element={<Tutorials />} />
@@ -352,30 +345,6 @@ const AppContent = () => {
           element={
             <RoleProtectedRoute allowedRoles={["teacher", "admin"]}>
               <EditCourse />
-            </RoleProtectedRoute>
-          }
-        />
-        <Route
-          path="/events/add"
-          element={
-            <RoleProtectedRoute allowedRoles={["teacher", "admin"]}>
-              <AddEvent />
-            </RoleProtectedRoute>
-          }
-        />
-        <Route
-          path="/events/add/sessions"
-          element={
-            <RoleProtectedRoute allowedRoles={["teacher", "admin"]}>
-              <AddEventSessions />
-            </RoleProtectedRoute>
-          }
-        />
-        <Route
-          path="/events/:slug/edit"
-          element={
-            <RoleProtectedRoute allowedRoles={["teacher", "admin"]}>
-              <EditEvent />
             </RoleProtectedRoute>
           }
         />
