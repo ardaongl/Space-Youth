@@ -117,4 +117,13 @@ export class CourseAPI {
             return error;
         }
     }
+
+    attended_courses = async () => {
+        try {
+            const response = await api.get(`/api/courses/attended`, {requiresAuth: true, validateStatus: s => s < 500})
+            return response;
+        } catch (error) {
+            return error;
+        }
+    }
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { useSearchParams } from "react-router-dom";
@@ -28,6 +28,18 @@ import { clearUser, setUser } from "@/store/slices/userSlice";
 import { setLanguage as setAppLanguage } from "@/store/slices/languageSlice";
 import { apis } from "@/services";
 
+interface LabelOption {
+  id: number;
+  name: string;
+}
+
+const arraysHaveSameItems = (a: number[], b: number[]) => {
+  if (a.length !== b.length) return false;
+  const sortedA = [...a].sort((x, y) => x - y);
+  const sortedB = [...b].sort((x, y) => x - y);
+  return sortedA.every((value, index) => value === sortedB[index]);
+};
+
 export default function Settings() {
   const user = useAppSelector(state => state.user);
 
@@ -43,7 +55,19 @@ export default function Settings() {
     age?: number;
     gender?: string;
     language?: string;
+    labels?: { id: number; name: string }[];
   } | undefined;
+
+  const userLabelOptions = useMemo<LabelOption[]>(
+    () =>
+      Array.isArray(rawUser?.labels)
+        ? rawUser!.labels
+            .filter((label): label is { id: number; name: string } => typeof label?.id === "number" && typeof label?.name === "string")
+            .map((label) => ({ id: label.id, name: label.name }))
+        : [],
+    [rawUser?.labels],
+  );
+  const userLabelIds = useMemo(() => userLabelOptions.map((label) => label.id), [userLabelOptions]);
 
   // URL'den tab parametresini oku
   useEffect(() => {
@@ -52,6 +76,35 @@ export default function Settings() {
       setActiveTab(tab);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const fetchLabels = async () => {
+      setLabelsLoading(true);
+      try {
+        const response = await apis.label.get_labels();
+        if (response?.status === 200 && Array.isArray(response.data)) {
+          const normalized: LabelOption[] = response.data
+            .filter((label: any) => typeof label?.id === "number" && typeof label?.name === "string")
+            .map((label: any) => ({ id: label.id, name: label.name }));
+          setAvailableLabels(normalized);
+        } else {
+          setAvailableLabels([]);
+        }
+      } catch (error) {
+        console.error("Failed to load labels:", error);
+        setAvailableLabels([]);
+      } finally {
+        setLabelsLoading(false);
+      }
+    };
+
+    fetchLabels();
+  }, []);
+
+  useEffect(() => {
+    setSelectedLabelIds(userLabelIds);
+    setSavedLabelIds(userLabelIds);
+  }, [userLabelIds]);
 
   // Profile state
   const initialName = rawUser?.name || "";
@@ -67,6 +120,10 @@ export default function Settings() {
   const [preferredLanguage, setPreferredLanguage] = useState<"TR" | "EN">(initialLanguage);
   const [savedLanguage, setSavedLanguage] = useState<"TR" | "EN">(initialLanguage);
   const [savedAge, setSavedAge] = useState<number | undefined>(rawUser?.age);
+  const [availableLabels, setAvailableLabels] = useState<LabelOption[]>([]);
+  const [labelsLoading, setLabelsLoading] = useState(false);
+  const [selectedLabelIds, setSelectedLabelIds] = useState<number[]>(userLabelIds);
+  const [savedLabelIds, setSavedLabelIds] = useState<number[]>(userLabelIds);
  
   // Security settings
   const [currentPassword, setCurrentPassword] = useState("");
@@ -76,6 +133,12 @@ export default function Settings() {
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
+
+  const toggleLabel = (labelId: number) => {
+    setSelectedLabelIds((prev) =>
+      prev.includes(labelId) ? prev.filter((id) => id !== labelId) : [...prev, labelId],
+    );
+  };
 
   const handleSaveProfile = async () => {
      const trimmedFirstName = firstName.trim();
@@ -91,10 +154,11 @@ export default function Settings() {
  
      const emailChanged = trimmedEmail && trimmedEmail !== existingEmail;
 
-     const firstNameChanged = trimmedFirstName !== (existingFirst || "");
-     const lastNameChanged = trimmedLastName !== (existingLast || "");
-     const genderChanged = gender !== existingGender;
-     const languageChanged = preferredLanguage !== existingLanguage;
+    const firstNameChanged = trimmedFirstName !== (existingFirst || "");
+    const lastNameChanged = trimmedLastName !== (existingLast || "");
+    const genderChanged = gender !== existingGender;
+    const languageChanged = preferredLanguage !== existingLanguage;
+    const labelsChanged = !arraysHaveSameItems(selectedLabelIds, savedLabelIds);
  
     if (!trimmedFirstName || !trimmedLastName) {
       toast({
@@ -133,6 +197,7 @@ export default function Settings() {
       gender?: "male" | "female";
       email?: string;
       language?: "TR" | "EN";
+      labels?: number[];
     } = {};
 
     if (firstNameChanged) payload.first_name = trimmedFirstName;
@@ -146,6 +211,7 @@ export default function Settings() {
     if (genderChanged) payload.gender = gender;
     if (trimmedEmail && emailChanged) payload.email = trimmedEmail;
     if (languageChanged) payload.language = preferredLanguage;
+    if (labelsChanged) payload.labels = selectedLabelIds;
 
     if (Object.keys(payload).length === 0) {
        toast({
@@ -173,6 +239,25 @@ export default function Settings() {
           const updatedAge = payload.age !== undefined ? payload.age : existingAge;
           const updatedGender = gender;
           const updatedLanguage = languageChanged ? preferredLanguage : existingLanguage;
+          const labelNameMap = new Map<number, string>();
+          availableLabels.forEach((label) => {
+            labelNameMap.set(label.id, label.name);
+          });
+          userLabelOptions.forEach((label) => {
+            if (!labelNameMap.has(label.id)) {
+              labelNameMap.set(label.id, label.name);
+            }
+          });
+          const updatedLabels = labelsChanged
+            ? selectedLabelIds
+                .map((id) => {
+                  const name =
+                    labelNameMap.get(id) ||
+                    user.user?.labels?.find((label) => label.id === id)?.name ||
+                    String(id);
+                  return { id, name };
+                })
+            : user.user.labels ?? [];
  
           dispatch(
             setUser({
@@ -182,6 +267,7 @@ export default function Settings() {
               age: updatedAge ?? null,
               gender: updatedGender,
               language: updatedLanguage,
+              labels: updatedLabels,
             })
           );
         }
@@ -192,6 +278,7 @@ export default function Settings() {
         setSavedGender(gender);
         setSavedLanguage(languageChanged ? preferredLanguage : existingLanguage);
         setSavedAge(payload.age !== undefined ? payload.age : existingAge);
+        setSavedLabelIds(selectedLabelIds);
 
         if (languageChanged) {
           dispatch(setAppLanguage(preferredLanguage === "TR" ? "tr" : "en"));
@@ -438,6 +525,37 @@ export default function Settings() {
                         <SelectItem value="EN">{t('settings.languageEnglish')}</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div className="grid gap-2 sm:col-span-2">
+                    <Label>{t('settings.interests')}</Label>
+                    <p className="text-xs text-muted-foreground">{t('settings.interestsDescription')}</p>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {labelsLoading ? (
+                        <span className="text-sm text-muted-foreground">{t('settings.interestsLoading')}</span>
+                      ) : availableLabels.length === 0 ? (
+                        <span className="text-sm text-muted-foreground">{t('settings.interestsEmpty')}</span>
+                      ) : (
+                        availableLabels.map((label) => {
+                          const isSelected = selectedLabelIds.includes(label.id);
+                          return (
+                            <Button
+                              key={label.id}
+                              type="button"
+                              variant={isSelected ? "default" : "outline"}
+                              size="sm"
+                              className="rounded-full"
+                              onClick={() => toggleLabel(label.id)}
+                            >
+                              {label.name}
+                            </Button>
+                          );
+                        })
+                      )}
+                    </div>
+                    {!labelsLoading && availableLabels.length > 0 && selectedLabelIds.length === 0 && (
+                      <p className="text-xs text-muted-foreground">{t('settings.interestsPlaceholder')}</p>
+                    )}
                   </div>
                 </div>
 

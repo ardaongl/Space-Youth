@@ -204,6 +204,11 @@ export default function Login() {
           const fullName = `${firstName} ${lastName}`.trim() || firstName || lastName || response.data.email;
           const responseGender: "male" | "female" = response.data.gender?.toLowerCase() === "female" ? "female" : "male";
           const responseLanguage: "TR" | "EN" = response.data.language?.toUpperCase() === "EN" ? "EN" : "TR";
+          const labels = Array.isArray(response.data.labels)
+            ? response.data.labels
+                .filter((label: any) => typeof label?.id === "number" && typeof label?.name === "string")
+                .map((label: any) => ({ id: label.id, name: label.name }))
+            : [];
           const user = {
             id: response.data.id,
             name: fullName,
@@ -213,6 +218,7 @@ export default function Login() {
             gender: responseGender,
             language: responseLanguage,
             points: typeof response.data.points === "number" ? response.data.points : 0,
+            labels,
           }
           console.log("user", user);
           

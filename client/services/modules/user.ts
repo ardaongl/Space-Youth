@@ -68,6 +68,7 @@ export class UserAPI {
         gender?: string;
         email?: string;
         language?: string;
+        labels?: number[];
     }) => {
         try {
             console.log("update_user_payload: ", payload);

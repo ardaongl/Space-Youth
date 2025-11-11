@@ -1,12 +1,18 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { UserRole } from "@/utils/roles";
 
+export interface UserLabel {
+  id: number;
+  name: string;
+}
+
 export interface User {
   id: string;
   name: string;
   email: string;
   role: UserRole;
   points?: number;
+  labels?: UserLabel[];
   age?: number | null;
   gender?: "male" | "female";
   language?: "TR" | "EN";

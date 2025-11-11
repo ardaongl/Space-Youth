@@ -34,6 +34,24 @@ interface DashboardTask {
   href?: string;
 }
 
+interface DashboardCourse {
+  id: number | string;
+  title: string;
+  description?: string;
+  level?: string | null;
+  duration?: string | null;
+  coins?: number | null;
+  labels: number[];
+  slug: string;
+  href: string;
+}
+
+const createSlug = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
 function pickRandom<T>(items: T[], count: number): T[] {
   const copy = [...items];
   for (let i = copy.length - 1; i > 0; i--) {
@@ -46,14 +64,31 @@ function pickRandom<T>(items: T[], count: number): T[] {
 export default function Home() {
   const { t } = useLanguage();
   const userToken = useAppSelector((state) => state.user.token);
+  const userLabels = useAppSelector((state) => state.user.user?.labels ?? []);
+  const userLabelIds = useMemo(
+    () =>
+      Array.isArray(userLabels)
+        ? userLabels
+            .map((label) => {
+              if (typeof label === "object" && label && "id" in label) {
+                return (label as { id: number }).id;
+              }
+              return null;
+            })
+            .filter((id): id is number => typeof id === "number")
+        : [],
+    [userLabels],
+  );
   const isAuthenticated = Boolean(userToken);
   const [recommendedTasks, setRecommendedTasks] = useState<DashboardTask[]>([]);
   const [recommendedTutorialVideos, setRecommendedTutorialVideos] = useState<Video[]>([]);
+  const [recommendedCourses, setRecommendedCourses] = useState<DashboardCourse[]>([]);
 
   useEffect(() => {
     if (!isAuthenticated) {
       setRecommendedTasks([]);
       setRecommendedTutorialVideos([]);
+      setRecommendedCourses([]);
       return;
     }
 
@@ -118,6 +153,119 @@ export default function Home() {
   ], [t]);
 
   const tasksToRender = recommendedTasks.length > 0 ? recommendedTasks : fallbackTasks;
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setRecommendedCourses([]);
+      return;
+    }
+
+    let isMounted = true;
+
+    const fetchRecommendedCourses = async () => {
+      try {
+        const [coursesResponse, attendedResponse] = await Promise.all([
+          apis.course.get_courses(),
+          apis.course.attended_courses(),
+        ]);
+
+        if (!isMounted) return;
+
+        const allCourses: DashboardCourse[] = Array.isArray(coursesResponse?.data)
+          ? coursesResponse.data
+              .map((course: any) => {
+                const courseId = course?.id ?? course?.course_id;
+                if (typeof courseId !== "number" && typeof courseId !== "string") {
+                  return null;
+                }
+
+                const labels: number[] = Array.isArray(course?.labels)
+                  ? course.labels
+                      .map((label: any) => {
+                        if (typeof label === "number") return label;
+                        if (label && typeof label?.id === "number") return label.id;
+                        return null;
+                      })
+                      .filter((id): id is number => typeof id === "number")
+                  : [];
+
+                const title: string = course?.title ?? course?.name ?? t('courses.sampleTitle');
+                const slugFromApi =
+                  typeof course?.slug === "string" && course.slug.trim().length > 0
+                    ? course.slug.trim()
+                    : createSlug(title);
+                const fallbackSlug =
+                  typeof courseId === "string"
+                    ? courseId
+                    : `course-${courseId}`;
+                const slug = slugFromApi.length > 0 ? slugFromApi : fallbackSlug;
+
+                return {
+                  id: courseId,
+                  title,
+                  description: course?.description ?? "",
+                  level: course?.level ?? "",
+                  duration:
+                    typeof course?.duration === "string"
+                      ? course.duration
+                      : typeof course?.duration === "number"
+                        ? `${course.duration}${t('common.hours')}`
+                        : "",
+                  coins: typeof course?.points === "number" ? course.points : null,
+                  labels,
+                  slug,
+                  href: `/courses/${slug}`,
+                } as DashboardCourse;
+              })
+              .filter((course): course is DashboardCourse => course !== null)
+          : [];
+
+        const attendedIds = new Set<number | string>(
+          Array.isArray(attendedResponse?.data)
+            ? attendedResponse.data
+                .map((course: any) => course?.course_id ?? course?.id ?? course)
+                .filter((id: any) => typeof id === "number" || typeof id === "string")
+            : [],
+        );
+
+        const unAttendedCourses = allCourses.filter((course) => !attendedIds.has(course.id));
+
+        let labelMatchedCourses: DashboardCourse[] = [];
+        if (userLabelIds.length > 0) {
+          labelMatchedCourses = unAttendedCourses.filter((course) =>
+            course.labels.some((labelId) => userLabelIds.includes(labelId)),
+          );
+        }
+
+        const recommendationPool =
+          labelMatchedCourses.length > 0 ? labelMatchedCourses : unAttendedCourses;
+
+        const selectedCourses = pickRandom(recommendationPool, Math.min(4, recommendationPool.length));
+
+        if (selectedCourses.length < 4) {
+          const selectedIds = new Set(selectedCourses.map((course) => course.id));
+          const fallbackPool = unAttendedCourses.filter((course) => !selectedIds.has(course.id));
+          const fallbackSelection = pickRandom(
+            fallbackPool,
+            Math.min(4 - selectedCourses.length, fallbackPool.length),
+          );
+          selectedCourses.push(...fallbackSelection);
+        }
+
+        setRecommendedCourses(selectedCourses.slice(0, 4));
+      } catch (error) {
+        if (!isMounted) return;
+        console.error("Failed to load recommended courses:", error);
+        setRecommendedCourses([]);
+      }
+    };
+
+    fetchRecommendedCourses();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated, userLabelIds, t]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -301,31 +449,6 @@ export default function Home() {
     </aside>
   );
 
-  const CourseCard = ({ popular }: { popular?: boolean }) => (
-    <Card className="p-4 sm:p-6">
-      <div className="relative">
-        {popular && (
-          <span className="absolute left-2 top-2 rounded-full bg-amber-100 text-amber-800 text-[8px] sm:text-[10px] font-semibold px-1.5 sm:px-2 py-0.5 border border-amber-200">{t('courses.popular')}</span>
-        )}
-        <div className="aspect-[5/3] w-full rounded-xl bg-accent grid place-items-center mb-3 sm:mb-4">
-          <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-lg bg-secondary" />
-        </div>
-      </div>
-      <div className="text-[8px] sm:text-[10px] font-semibold tracking-widest text-muted-foreground">{t('courses.courseType').toUpperCase()}</div>
-      <div className="mt-1 text-base sm:text-lg font-semibold">{t('courses.sampleTitle')}</div>
-      <div className="mt-1 text-xs sm:text-sm text-muted-foreground">{t('courses.sampleAuthor')}</div>
-      <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground line-clamp-2">{t('courses.sampleDescription')}</p>
-      <div className="mt-3 sm:mt-4 flex items-center gap-3 sm:gap-6 text-xs sm:text-sm text-muted-foreground">
-        <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3 sm:h-4 sm:w-4 text-primary" /> 4{t('common.hours')}</span>
-        <span className="inline-flex items-center gap-1">{t('courses.advanced')}</span>
-      </div>
-      <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
-        <Link to="/courses/workshop-facilitation" className="rounded-full border px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">{t('courses.viewCourse')}</Link>
-        <button className="rounded-full border px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">{t('courses.markAsRead')}</button>
-      </div>
-    </Card>
-  );
-
   return (
     <AppLayout>
       <div className="py-4 sm:py-6 space-y-8 sm:space-y-12 w-full max-w-full overflow-x-hidden">
@@ -394,8 +517,49 @@ export default function Home() {
             <Link to="/courses" className="text-xs sm:text-sm text-muted-foreground hover:underline">{t('common.viewAll')}</Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full">
-            <CourseCard />
-            <CourseCard popular />
+            {recommendedCourses.length === 0 ? (
+              <Card className="p-6 text-sm text-muted-foreground flex items-center justify-center">
+                {t('courses.noRecommendedCourses') ?? "Önerilen kurs bulunamadı."}
+              </Card>
+            ) : (
+              recommendedCourses.map((course) => (
+              <Card key={course.id} className="p-4 sm:p-6 hover:shadow-lg transition">
+                <div className="relative">
+                  <div className="aspect-[5/3] w-full rounded-xl bg-accent grid place-items-center mb-3 sm:mb-4">
+                    <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-lg bg-secondary" />
+                  </div>
+                </div>
+                <div className="text-[8px] sm:text-[10px] font-semibold tracking-widest text-muted-foreground">
+                  {t('courses.courseType').toUpperCase()}
+                </div>
+                <div className="mt-1 text-base sm:text-lg font-semibold line-clamp-2">{course.title}</div>
+                {course.description && (
+                  <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground line-clamp-2">
+                    {course.description}
+                  </p>
+                )}
+                {(course.level || course.duration) && (
+                  <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-6 text-xs sm:text-sm text-muted-foreground">
+                    {course.duration && (
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-primary" /> {course.duration}
+                      </span>
+                    )}
+                    {course.level && <span className="inline-flex items-center gap-1">{getLevelLabel(course.level)}</span>}
+                  </div>
+                )}
+                {typeof course.coins === "number" && (
+                  <div className="mt-3 text-sm sm:text-base font-semibold text-yellow-600">
+                    {course.coins} coin
+                  </div>
+                )}
+                <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                  <Link to={course.href} className="rounded-full border px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">
+                    {t('courses.viewCourse')}
+                  </Link>
+                </div>
+              </Card>
+            )))}
           </div>
         </section>
 
