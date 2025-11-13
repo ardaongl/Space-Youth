@@ -13,6 +13,7 @@ interface Lesson {
   description: string;
   duration: string;
   date: string;
+  time: string;
   files: File[];
 }
 
@@ -26,6 +27,7 @@ export default function AddLessons() {
     description: "",
     duration: "",
     date: "",
+    time: "",
     files: [],
   });
   const [isEditing, setIsEditing] = useState(false);
@@ -97,6 +99,7 @@ export default function AddLessons() {
       description: "",
       duration: "",
       date: "",
+      time: "",
       files: [],
     });
   };
@@ -134,12 +137,14 @@ export default function AddLessons() {
         // Convert date to ISO 8601 format (date-time)
         let startTime: string;
         if (lesson.date) {
-          // If date is provided, convert it to ISO format
-          // Date input returns YYYY-MM-DD format, we need to add time component
-          const date = new Date(lesson.date);
-          // Set time to start of day (00:00:00) if no time is specified
-          date.setHours(0, 0, 0, 0);
-          startTime = date.toISOString();
+          const timeValue = lesson.time || "00:00";
+          const dateTimeString = `${lesson.date}T${timeValue}`;
+          const date = new Date(dateTimeString);
+          if (Number.isNaN(date.getTime())) {
+            startTime = new Date(lesson.date).toISOString();
+          } else {
+            startTime = date.toISOString();
+          }
         } else {
           // If no date, use current date/time
           startTime = new Date().toISOString();
@@ -690,7 +695,7 @@ export default function AddLessons() {
               </div>
 
               {/* Lesson Duration and Date */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold mb-2">
                     {t('lessons.lessonDuration')}
@@ -732,6 +737,20 @@ export default function AddLessons() {
                       type="date"
                       value={currentLesson.date}
                       onChange={(e) => setCurrentLesson({ ...currentLesson, date: e.target.value })}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">
+                    {t('lessons.lessonTime')}
+                  </label>
+                  <div className="relative">
+                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="time"
+                      value={currentLesson.time}
+                      onChange={(e) => setCurrentLesson({ ...currentLesson, time: e.target.value })}
                       className="pl-10"
                     />
                   </div>
@@ -791,6 +810,12 @@ export default function AddLessons() {
                               <span className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
                                 {new Date(lesson.date).toLocaleDateString('tr-TR')}
+                              </span>
+                            )}
+                            {lesson.time && (
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {lesson.time}
                               </span>
                             )}
                             {lesson.files.length > 0 && (

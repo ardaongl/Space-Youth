@@ -273,6 +273,8 @@ export const en = {
     enterLessonDuration: 'e.g. 45 minutes',
     lessonDate: 'Lesson Date',
     enterLessonDate: 'YYYY-MM-DD',
+    lessonTime: 'Lesson Time',
+    enterLessonTime: 'HH:MM',
     addFiles: 'Add Files',
     uploadFiles: 'Upload Files',
     fileFormats: 'You can upload in PDF, DOC, PPT formats',

@@ -273,6 +273,8 @@ export const tr = {
     enterLessonDuration: 'Örn: 45 dakika',
     lessonDate: 'Ders Tarihi',
     enterLessonDate: 'YYYY-MM-DD',
+    lessonTime: 'Ders Saati',
+    enterLessonTime: 'SS:DD',
     addFiles: 'Dosya Ekle',
     uploadFiles: 'Dosya Yükle',
     fileFormats: 'PDF, DOC, PPT formatlarında yükleyebilirsiniz',
