@@ -1,4 +1,4 @@
-import { Edit, Video, Info, Users, Plus } from "lucide-react";
+import { Edit, Video, Info, Users, Plus, Loader2, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { isTeacher, isStudent } from "@/utils/roles";
 import { useAppSelector } from "@/store";
 import { apis } from "@/services";
+import { useToast } from "@/hooks/use-toast";
 
 type OnboardingData = {
   phase1: any;
@@ -32,6 +33,8 @@ type StudentDetailsResponse = {
     cv_url?: string;
     questions_and_answers: string;
     phases: Record<string, any>;
+    graphic_test_completed?: boolean | null;
+    graphic_test_scores?: string | Record<string, number>;
   };
   character: {
     id: string;
@@ -49,6 +52,39 @@ type StudentDetailsResponse = {
     long_description: string;
   };
 };
+
+type GraphicTestAnswer = "yes" | "no";
+
+function sanitizeGraphicTestScores(raw: string): Record<string, number> | null {
+  if (!raw) return null;
+  let cleaned = raw.trim();
+  if (!cleaned) return null;
+
+  const fenceStart = /^```(?:json)?\s*/i;
+  if (fenceStart.test(cleaned)) {
+    cleaned = cleaned.replace(fenceStart, "");
+  }
+  const fenceEnd = /\s*```$/;
+  if (fenceEnd.test(cleaned)) {
+    cleaned = cleaned.replace(fenceEnd, "");
+  }
+  cleaned = cleaned.trim();
+  if (!cleaned) return null;
+
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (parsed && typeof parsed === "object") {
+      return parsed as Record<string, number>;
+    }
+  } catch (error) {
+    console.warn("sanitizeGraphicTestScores parse error:", error);
+  }
+  return null;
+}
+
+function getRandomScore(min = 55, max = 90) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
 function useOnboardingScores() {
   const { t } = useLanguage();
@@ -95,20 +131,90 @@ export function Profile() {
   const user = useAppSelector(state => state.user);
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const scores = useOnboardingScores();
   const [onboarding, setOnboarding] = React.useState<OnboardingData | null>(null);
   const [zoomConnected, setZoomConnected] = React.useState<boolean>(false);
   const [studentDetails, setStudentDetails] = React.useState<StudentDetailsResponse | null>(null);
   const [loadingDetails, setLoadingDetails] = React.useState(false);
+  const graphicTestQuestions = React.useMemo(
+    () => [
+      { id: "q1", label: t("profile.graphicTestQuestions.q1") },
+      { id: "q2", label: t("profile.graphicTestQuestions.q2") },
+      { id: "q3", label: t("profile.graphicTestQuestions.q3") },
+      { id: "q4", label: t("profile.graphicTestQuestions.q4") },
+      { id: "q5", label: t("profile.graphicTestQuestions.q5") },
+      { id: "q6", label: t("profile.graphicTestQuestions.q6") },
+      { id: "q7", label: t("profile.graphicTestQuestions.q7") },
+      { id: "q8", label: t("profile.graphicTestQuestions.q8") },
+      { id: "q9", label: t("profile.graphicTestQuestions.q9") },
+      { id: "q10", label: t("profile.graphicTestQuestions.q10") },
+    ],
+    [t],
+  );
+  const [graphicTestAnswers, setGraphicTestAnswers] = React.useState<Record<string, GraphicTestAnswer | "">>({});
+  const [graphicTestError, setGraphicTestError] = React.useState<string | null>(null);
+  const [graphicTestSubmitting, setGraphicTestSubmitting] = React.useState(false);
+  const scoreKeyConfigs = React.useMemo(
+    () => [
+      {
+        key: "selfControl" as const,
+        label: t("profile.selfControl"),
+        matchKeys: [t("profile.selfControl"), "Kendini kontrol"],
+      },
+      {
+        key: "reliability" as const,
+        label: t("profile.reliability"),
+        matchKeys: [t("profile.reliability"), "Güvenilirlik"],
+      },
+      {
+        key: "conscientiousness" as const,
+        label: t("profile.conscientiousness"),
+        matchKeys: [t("profile.conscientiousness"), "Vicdanlı Olma"],
+      },
+      {
+        key: "openness" as const,
+        label: t("profile.openness"),
+        matchKeys: [t("profile.openness"), "Yeniliklere açık olma"],
+      },
+      {
+        key: "adaptability" as const,
+        label: t("profile.adaptability"),
+        matchKeys: [t("profile.adaptability"), "Uyum yeteneği"],
+      },
+    ],
+    [t],
+  );
 
   const isTeacherUser = isTeacher(user.user?.role);
   const isStudentUser = isStudent(user.user?.role);
+  const showGraphicTest = Boolean(
+    isStudentUser &&
+      !loadingDetails &&
+      studentDetails?.student &&
+      !studentDetails.student.graphic_test_completed,
+  );
   React.useEffect(() => {
     try {
       const raw = localStorage.getItem("onboarding.data");
       if (raw) setOnboarding(JSON.parse(raw));
     } catch {}
   }, []);
+
+  React.useEffect(() => {
+    if (showGraphicTest) {
+      setGraphicTestAnswers(prev =>
+        graphicTestQuestions.reduce<Record<string, GraphicTestAnswer | "">>((acc, question) => {
+          acc[question.id] = prev[question.id] ?? "";
+          return acc;
+        }, {}),
+      );
+    } else {
+      setGraphicTestAnswers({});
+      setGraphicTestError(null);
+      setGraphicTestSubmitting(false);
+    }
+  }, [showGraphicTest, graphicTestQuestions]);
 
   React.useEffect(() => {
     const fetchStudentDetails = async () => {
@@ -139,7 +245,122 @@ export function Profile() {
     fetchStudentDetails();
   }, [isStudentUser]);
 
+  const handleGraphicTestAnswerChange = (questionId: string, answer: GraphicTestAnswer) => {
+    setGraphicTestAnswers(prev => ({ ...prev, [questionId]: answer }));
+    setGraphicTestError(null);
+  };
+
+  const handleGraphicTestSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setGraphicTestError(null);
+
+    if (graphicTestQuestions.some(question => !graphicTestAnswers[question.id])) {
+      setGraphicTestError(t("profile.graphicTestIncomplete"));
+      return;
+    }
+
+    try {
+      setGraphicTestSubmitting(true);
+      const payload = graphicTestQuestions.reduce<Record<string, GraphicTestAnswer>>(
+        (acc, question) => {
+          acc[question.id] = graphicTestAnswers[question.id] as GraphicTestAnswer;
+          return acc;
+        },
+        {},
+      );
+
+      const formDataText = graphicTestQuestions
+        .map(question => {
+          const answer = payload[question.id];
+          const answerLabel = answer === "yes" ? "Yes" : "No";
+          return `${question.label}\nAnswer: ${answerLabel}`;
+        })
+        .join("\n\n");
+
+      const response = await apis.student.graphic_test_send({ form_data: formDataText });
+
+      if (response && typeof response.status === "number" && response.status >= 200 && response.status < 400) {
+        setStudentDetails(prev =>
+          prev
+            ? {
+                ...prev,
+                student: {
+                  ...prev.student,
+                  graphic_test_completed: true,
+                },
+              }
+            : prev,
+        );
+        toast({ title: t("profile.graphicTestSubmitSuccess") });
+      } else {
+        throw new Error("Unexpected response");
+      }
+    } catch (error) {
+      console.error("Failed to submit graphic test:", error);
+      setGraphicTestError(t("profile.graphicTestSubmitError"));
+    } finally {
+      setGraphicTestSubmitting(false);
+    }
+  };
+
   const similarity = 78; // placeholder similarity score
+  const displayScores = React.useMemo(() => {
+    const fallbackMap = new Map(scores.map(entry => [entry.key, entry]));
+    const rawScores = studentDetails?.student?.graphic_test_scores;
+    if (!rawScores) {
+      return scoreKeyConfigs.map(config => ({
+        key: config.key,
+        label: config.label,
+        value: fallbackMap.get(config.key)?.value ?? 0,
+      }));
+    }
+
+    let parsedScores: Record<string, number> | null = null;
+    if (typeof rawScores === "string") {
+      parsedScores = sanitizeGraphicTestScores(rawScores);
+    } else if (typeof rawScores === "object" && rawScores !== null) {
+      parsedScores = rawScores;
+    }
+
+    if (!parsedScores) {
+      return scoreKeyConfigs.map(config => ({
+        key: config.key,
+        label: config.label,
+        value: fallbackMap.get(config.key)?.value ?? 0,
+      }));
+    }
+
+    const normalizedEntries = Object.entries(parsedScores).reduce<Record<string, number>>(
+      (acc, [label, value]) => {
+        const numeric = Number(value);
+        if (!Number.isNaN(numeric)) {
+          acc[label.trim().toLowerCase()] = numeric;
+        }
+        return acc;
+      },
+      {},
+    );
+
+    return scoreKeyConfigs.map(config => {
+      const matchedScore = config.matchKeys.reduce<number | undefined>((found, key) => {
+        if (found !== undefined) return found;
+        const normalizedKey = key.trim().toLowerCase();
+        if (normalizedKey in normalizedEntries) {
+          return normalizedEntries[normalizedKey];
+        }
+        return undefined;
+      }, undefined);
+
+      const fallbackValue =
+        fallbackMap.get(config.key)?.value ?? getRandomScore();
+      return {
+        key: config.key,
+        label: config.label,
+        value: matchedScore ?? fallbackValue,
+      };
+    });
+  }, [scores, studentDetails?.student?.graphic_test_scores, scoreKeyConfigs]);
+
   const primaryArchetype = studentDetails?.personality ? {
     code: studentDetails.personality.type.toLowerCase(),
     name: studentDetails.personality.name,
@@ -790,7 +1011,7 @@ export function Profile() {
             <div className="bg-card border rounded-lg p-4">
                 <div className="h-56 lg:h-64">
                   <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart data={scores.map((s) => ({ subject: s.label, A: s.value }))} outerRadius={85}>
+                    <RadarChart data={displayScores.map((s) => ({ subject: s.label, A: s.value }))} outerRadius={85}>
                       <PolarGrid />
                       <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10 }} />
                       <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}`} />
@@ -800,7 +1021,7 @@ export function Profile() {
                   </ResponsiveContainer>
                 </div>
                 <div className="flex flex-wrap gap-3 mt-3 text-xs sm:text-sm text-muted-foreground">
-                  {scores.map((s) => (
+                  {displayScores.map((s) => (
                     <div key={s.key} className="flex items-center gap-1">
                       <span className="inline-block h-2 w-2 rounded-full bg-amber-500" />
                       <span>{s.label}: <b>% {s.value.toFixed(0)}</b></span>
@@ -818,6 +1039,99 @@ export function Profile() {
             </div>
           </div>
         </div>
+
+        {showGraphicTest && (
+          <div className="max-w-5xl mx-auto px-8 pb-20 mt-20">
+            <Card className="relative overflow-hidden border border-amber-200/60 bg-gradient-to-br from-amber-50 via-white to-rose-50 shadow-xl backdrop-blur">
+              <div className="pointer-events-none absolute inset-0">
+                <div className="absolute -top-16 -right-12 h-56 w-56 rounded-full bg-amber-200/50 blur-3xl" />
+                <div className="absolute -bottom-10 -left-10 h-64 w-64 rounded-full bg-rose-200/40 blur-3xl" />
+                <div className="absolute inset-0 bg-grid-slate-100/40" />
+              </div>
+
+              <form className="relative flex flex-col gap-10" onSubmit={handleGraphicTestSubmit}>
+                <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="grid h-14 w-14 place-items-center rounded-xl bg-white/70 text-amber-600 shadow-inner">
+                      <Palette className="h-7 w-7" />
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-2xl font-semibold text-amber-900 sm:text-3xl">
+                        {t('profile.graphicTestTitle')}
+                      </h2>
+                      <p className="text-sm text-amber-900/80 sm:text-base">
+                        {t('profile.graphicTestDescription')}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Badge
+                    variant="secondary"
+                    className="self-start rounded-full border border-amber-200 bg-white/70 text-amber-700 backdrop-blur"
+                  >
+                    {t('profile.availableForWork')}
+                  </Badge>
+                </div>
+
+                <div className="grid gap-4">
+                  {graphicTestQuestions.map(question => {
+                    const answerValue = graphicTestAnswers[question.id];
+                    return (
+                      <div
+                        key={question.id}
+                        className="space-y-4 rounded-2xl border border-white/70 bg-white/75 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                      >
+                        <p className="text-sm font-medium text-amber-950 sm:text-base">
+                          {question.label}
+                        </p>
+                        <div className="flex flex-wrap gap-3">
+                          {(["yes", "no"] as GraphicTestAnswer[]).map(option => {
+                            const isActive = answerValue === option;
+                            return (
+                              <button
+                                key={option}
+                                type="button"
+                                onClick={() => handleGraphicTestAnswerChange(question.id, option)}
+                                aria-pressed={isActive}
+                                className={`rounded-lg border px-5 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+                                  isActive
+                                    ? "border-emerald-500 bg-emerald-500 text-white shadow-md"
+                                    : "border-amber-200 bg-white/80 text-amber-950 hover:border-amber-400"
+                                }`}
+                              >
+                                {option === "yes" ? t('common.yes') : t('common.no')}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {graphicTestError && (
+                  <p className="text-sm font-medium text-rose-600">{graphicTestError}</p>
+                )}
+
+                <div className="flex flex-col items-start gap-2">
+                  <Button
+                    type="submit"
+                    disabled={graphicTestSubmitting}
+                    className="bg-amber-500 text-white hover:bg-amber-500/90 px-8"
+                  >
+                    {graphicTestSubmitting && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    {t('common.submit')}
+                  </Button>
+                  <p className="text-xs text-amber-900/60">
+                    {t('profile.graphicTestIncomplete')}
+                  </p>
+                </div>
+              </form>
+            </Card>
+          </div>
+        )}
       </div>
     </AppLayout>
   );

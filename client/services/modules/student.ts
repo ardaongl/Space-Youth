@@ -81,4 +81,17 @@ export class StudentAPI {
         }
     }
 
+    graphic_test_send = async (payload: { form_data: string }) => {
+        try {
+            const response = await api.post(
+                "/api/student/graphic_test",
+                payload,
+                { requiresAuth: true, validateStatus: s => s < 500 }
+            );
+            return response;
+        } catch (error) {
+            return error;
+        }
+    }
+
 }
