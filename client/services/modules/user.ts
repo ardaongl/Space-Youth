@@ -52,6 +52,28 @@ export class UserAPI {
         }
     }
 
+    delete_account = async (userId?: string) => {
+        try {
+            const config: {
+                requiresAuth: boolean;
+                validateStatus: (status: number) => boolean;
+                params?: { user_id: string };
+            } = {
+                requiresAuth: true,
+                validateStatus: s => s < 500,
+            };
+
+            if (userId) {
+                config.params = { user_id: userId };
+            }
+
+            const response = await api.delete("/api/user", config);
+            return response;
+        } catch (error) {
+            return error;
+        }
+    }
+
     change_password = async (old_password: string, new_password: string) => {
         try {
             const response = await api.post("/api/renew_password", {old_password, new_password}, {requiresAuth: true, validateStatus: s => s < 500})

@@ -28,6 +28,17 @@ import { clearUser, setUser } from "@/store/slices/userSlice";
 import { setLanguage as setAppLanguage } from "@/store/slices/languageSlice";
 import { apis } from "@/services";
 import { isTeacher } from "@/utils/roles";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface LabelOption {
   id: number;
@@ -127,6 +138,8 @@ export default function Settings() {
   const [savedLabelIds, setSavedLabelIds] = useState<number[]>(userLabelIds);
   const [zoomAuthUrl, setZoomAuthUrl] = useState("");
   const [isFetchingZoomLink, setIsFetchingZoomLink] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
  
   // Security settings
   const [currentPassword, setCurrentPassword] = useState("");
@@ -408,14 +421,40 @@ export default function Settings() {
     }
   };
 
-  const handleDeleteAccount = () => {
-    if (confirm(t('settings.deleteAccountConfirm'))) {
+  const handleDeleteAccount = async () => {
+    if (isDeletingAccount) return;
+    setIsDeletingAccount(true);
+
+    try {
+      const response: any = await apis.user.delete_account();
+      const status = response?.status ?? response?.response?.status;
+
+      if (status && status >= 200 && status < 300) {
+        toast({
+          title: t('settings.accountDeleted'),
+          description: response?.data?.message || t('settings.accountDeletedDescription'),
+          variant: "destructive",
+        });
+        setIsDeleteDialogOpen(false);
+        dispatch(clearUser());
+        return;
+      }
+
+      const message = response?.data?.message || response?.response?.data?.message;
       toast({
-        title: t('settings.accountDeleted'),
-        description: t('settings.accountDeletedDescription'),
+        title: t('common.error'),
+        description: message || t('error.submitFailed'),
         variant: "destructive",
       });
-      dispatch(clearUser())
+    } catch (error: any) {
+      const message = error?.response?.data?.message || error?.message;
+      toast({
+        title: t('common.error'),
+        description: message || t('error.submitFailed'),
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingAccount(false);
     }
   };
 
@@ -755,14 +794,47 @@ export default function Settings() {
                   <p className="text-sm text-muted-foreground mb-4">
                     {t('settings.deleteAccountDescription')}
                   </p>
-                  <Button
-                    variant="destructive"
-                    onClick={handleDeleteAccount}
-                    className="w-full sm:w-auto"
+                  <AlertDialog
+                    open={isDeleteDialogOpen}
+                    onOpenChange={(open) => {
+                      if (isDeletingAccount) return;
+                      setIsDeleteDialogOpen(open);
+                    }}
                   >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    {t('settings.deleteAccount')}
-                  </Button>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        disabled={isDeletingAccount}
+                        className="w-full sm:w-auto"
+                      >
+                        {!isDeletingAccount && <Trash2 className="mr-2 h-4 w-4" />}
+                        {isDeletingAccount ? t('common.loading') : t('settings.deleteAccount')}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>{t('settings.deleteAccount')}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {t('settings.deleteAccountConfirm')}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeletingAccount}>
+                          {t('common.cancel')}
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          disabled={isDeletingAccount}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            handleDeleteAccount();
+                          }}
+                        >
+                          {isDeletingAccount ? t('common.loading') : t('settings.deleteAccount')}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </CardContent>
             </Card>

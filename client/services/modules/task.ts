@@ -79,6 +79,29 @@ export class TaskAPI {
         }
     }
 
+    complete_task = async (payload: {
+        task_id: string;
+        description: string;
+        file?: File;
+    }) => {
+        try {
+            const formData = new FormData();
+            formData.append("task_id", payload.task_id);
+            formData.append("description", payload.description);
+            if (payload.file) {
+                formData.append("file", payload.file);
+            }
+
+            const response = await api.post("/api/task/complete", formData, {
+                requiresAuth: true,
+                validateStatus: s => s < 500,
+            });
+            return response;
+        } catch (error) {
+            return error;
+        }
+    }
+
     admin_approve_task = async (submission_id: string, approve: boolean) => {
         try {
             const response = await api.post(`/api/task/approve`, {

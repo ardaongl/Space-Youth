@@ -1,21 +1,22 @@
 import { useState, useEffect } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Clock, ShieldCheck, BookOpen, ListChecks, ArrowLeft, Bookmark, BookmarkCheck, Coins, Users, Video, ExternalLink, Copy } from "lucide-react";
+import { Clock, ShieldCheck, BookOpen, ListChecks, ArrowLeft, Bookmark, BookmarkCheck, Coins, Users, Video, ExternalLink } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { isAdmin, isTeacher } from "@/utils/roles";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { BookmarkedContent, EnrolledContent } from "@/store/slices/bookmarksSlice";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/context/LanguageContext";
-import { useAppSelector } from "@/store";
+import { useAppDispatch, useAppSelector } from "@/store";
 import { apis } from "@/services";
+import { setUser } from "@/store/slices/userSlice";
 
 export default function CourseDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
 
+  const dispatch = useAppDispatch();
   const user = useAppSelector(state => state.user);
 
   const { t } = useLanguage();
@@ -30,6 +31,7 @@ export default function CourseDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEnrolling, setIsEnrolling] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   // Find course ID from slug by fetching courses list
   useEffect(() => {
@@ -84,6 +86,11 @@ export default function CourseDetail() {
     }
   }, [slug]);
 
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(new Date()), 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   if (loading) {
     return (
       <AppLayout>
@@ -127,6 +134,49 @@ export default function CourseDetail() {
     return `${baseUrl}/${url}`;
   };
 
+  const formatLessonDateTime = (dateString: string | null | undefined) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return null;
+
+    return {
+      date: date.toLocaleDateString('tr-TR', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      }),
+      time: date.toLocaleTimeString('tr-TR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }),
+    };
+  };
+
+  const translate = (
+    key: string,
+    fallback: string,
+    params?: Record<string, string | number>
+  ) => {
+    const translation = t(key, params);
+    return translation === key ? fallback : translation;
+  };
+
+  const lessonScheduleTitle = translate('courseDetail.lessonSchedule', 'Ders Programı');
+  const zoomLinkInfoText = translate(
+    'courseDetail.zoomLinkInfo',
+    'Zoom bağlantısı ders başlangıcında aktif olacaktır.'
+  );
+  const todayLessonTitle = translate('courseDetail.todayLesson', 'Günün Dersleri');
+  const joinZoomLabel = translate('courseDetail.joinZoom', 'Zooma Katıl');
+  const zoomPasswordLabel = translate('courseDetail.zoomPassword', 'Şifre');
+  const noScheduledTimeText = translate('courseDetail.noScheduledTime', 'Tarih bilgisi bulunmuyor');
+  const noLessonTodayText = translate('courseDetail.noLessonToday', 'Bugün dersiniz yok.');
+  const zoomLinkActiveSoonText = translate(
+    'courseDetail.zoomLinkActiveSoon',
+    'Zoom bağlantısı ders başlamadan 15 dakika önce aktif olacaktır.'
+  );
+
   // Transform API data to match component expectations
   const transformedCourseData = {
     id: courseData.id?.toString() || `course-${slug}`,
@@ -160,64 +210,43 @@ export default function CourseDetail() {
   // Check if current user is enrolled by checking students array
   const isUserEnrolled = user.user?.id && transformedCourseData.students.some((student: any) => student.id === user.user.id);
   const enrolled = isUserEnrolled;
-  
-  // Find the lesson with the closest date (today or next upcoming)
-  const getNextLesson = () => {
-    if (!transformedCourseData.lessons || transformedCourseData.lessons.length === 0) {
-      return null;
-    }
 
-    const now = new Date();
+  const lessonsWithDate = (transformedCourseData.lessons || [])
+    .filter((lesson: any) => lesson.zoom_start_time)
+    .map((lesson: any) => {
+      const lessonDate = new Date(lesson.zoom_start_time);
+      if (Number.isNaN(lessonDate.getTime())) {
+        return null;
+      }
 
-    // Filter lessons that have zoom_start_time and zoom link
-    const lessonsWithDate = transformedCourseData.lessons
-      .filter((lesson: any) => {
-        return lesson.zoom_start_time && lesson.zoom_join_url;
-      })
-      .map((lesson: any) => {
-        const lessonDate = new Date(lesson.zoom_start_time);
-        return {
-          ...lesson,
-          dateObj: lessonDate,
-        };
-      });
+      return {
+        ...lesson,
+        dateObj: lessonDate,
+      };
+    })
+    .filter(
+      (lesson: any): lesson is any & { dateObj: Date } => Boolean(lesson)
+    );
 
+  const todayLessons = (() => {
     if (lessonsWithDate.length === 0) {
-      return null;
+      return [];
     }
 
-    // Find today's lesson first (same day), otherwise find the next upcoming lesson
-    const todayStart = new Date(now);
+    const todayStart = new Date(currentTime);
     todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date(now);
+    const todayEnd = new Date(currentTime);
     todayEnd.setHours(23, 59, 59, 999);
 
-    const todayLesson = lessonsWithDate.find((lesson: any) => {
-      return lesson.dateObj >= todayStart && lesson.dateObj <= todayEnd;
-    });
+    return lessonsWithDate
+      .filter((lesson: any) => lesson.dateObj >= todayStart && lesson.dateObj <= todayEnd)
+      .sort((a: any, b: any) => a.dateObj.getTime() - b.dateObj.getTime());
+  })();
 
-    if (todayLesson) {
-      return todayLesson;
-    }
-
-    // Find the next upcoming lesson
-    const upcomingLessons = lessonsWithDate.filter((lesson: any) => {
-      return lesson.dateObj >= now;
-    });
-
-    if (upcomingLessons.length === 0) {
-      return null;
-    }
-
-    // Sort by date and return the closest one
-    upcomingLessons.sort((a: any, b: any) => {
-      return a.dateObj.getTime() - b.dateObj.getTime();
-    });
-
-    return upcomingLessons[0];
+  const isJoinAvailable = (lessonDate: Date) => {
+    const activationTime = new Date(lessonDate.getTime() - 15 * 60 * 1000);
+    return currentTime >= activationTime;
   };
-
-  const nextLesson = getNextLesson();
 
   const handleSave = () => {
     if (bookmarked) {
@@ -261,6 +290,8 @@ export default function CourseDetail() {
     try {
       setIsEnrolling(true);
       const courseId = parseInt(transformedCourseData.id);
+      console.log(courseId);
+      
       if (isNaN(courseId)) {
         toast({
           title: 'Hata',
@@ -305,6 +336,26 @@ export default function CourseDetail() {
           description: transformedCourseData.description
         };
         addEnrollment(enrollmentItem);
+
+        try {
+          const userResponse = await apis.user.get_user();
+          if (userResponse.status === 200 && userResponse.data) {
+            const existingUser = user.user;
+            if (existingUser) {
+              dispatch(
+                setUser({
+                  ...existingUser,
+                  points:
+                    typeof userResponse.data.points === "number"
+                      ? userResponse.data.points
+                      : existingUser.points || 0,
+                })
+              );
+            }
+          }
+        } catch (userRefreshError) {
+          console.error("Failed to refresh user data:", userRefreshError);
+        }
         
         toast({
           title: t('courses.enrolledSuccessfully'),
@@ -499,81 +550,6 @@ export default function CourseDetail() {
               </div>
             )}
 
-            {/* Course Lessons */}
-            {transformedCourseData.lessons && transformedCourseData.lessons.length > 0 ? (
-              transformedCourseData.lessons.length === 1 ? (
-                // Single lesson - display directly
-                <div className="rounded-lg border bg-card p-6">
-                  <h3 className="text-lg font-semibold mb-4">Dersler</h3>
-                  <div className="space-y-3">
-                    <div className="p-4 border rounded-lg hover:bg-muted/50 transition">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="font-medium">{transformedCourseData.lessons[0].title}</p>
-                          <p className="text-sm text-muted-foreground mt-1">{transformedCourseData.lessons[0].content}</p>
-                          <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {transformedCourseData.lessons[0].duration} dakika
-                            </span>
-                          </div>
-                          {transformedCourseData.lessons[0].zoom_join_url && (
-                            <Button
-                              size="sm"
-                              className="mt-3 gap-2"
-                              onClick={() => window.open(transformedCourseData.lessons[0].zoom_join_url, '_blank')}
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                              {t('courseDetail.joinZoom')}
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                // Multiple lessons - display as list
-                <div className="rounded-lg border bg-card p-6">
-                  <h3 className="text-lg font-semibold mb-4">Dersler ({transformedCourseData.lessons.length})</h3>
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {transformedCourseData.lessons.map((lesson: any, index: number) => (
-                      <div key={lesson.id || index} className="p-4 border rounded-lg hover:bg-muted/50 transition">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xs font-semibold text-primary">{index + 1}.</span>
-                              <p className="font-medium">{lesson.title}</p>
-                            </div>
-                            <p className="text-sm text-muted-foreground">{lesson.content}</p>
-                            <div className="flex items-center justify-between mt-3">
-                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                <span className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  {lesson.duration} dakika
-                                </span>
-                              </div>
-                              {lesson.zoom_join_url && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="gap-2"
-                                  onClick={() => window.open(lesson.zoom_join_url, '_blank')}
-                                >
-                                  <ExternalLink className="h-4 w-4" />
-                                  {t('courseDetail.joinZoom')}
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )
-            ) : null}
-
             {/* Students List - Show enrolled students */}
             {transformedCourseData.students && transformedCourseData.students.length > 0 && (
               <div className="rounded-lg border bg-card p-6">
@@ -629,66 +605,119 @@ export default function CourseDetail() {
             )}
 
             {/* Enrolled Content - Only for enrolled students */}
-            {enrolled && !canViewParticipants && nextLesson && (
+            {enrolled && !canViewParticipants && (
               <div className="rounded-lg border bg-card p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <Video className="h-5 w-5 text-primary" />
-                  <h3 className="text-lg font-semibold">Canlı Eğitim</h3>
+                  <h3 className="text-lg font-semibold">{todayLessonTitle}</h3>
                 </div>
                 
-                <div className="space-y-4">
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <div className="mb-2">
-                      <p className="text-sm font-medium mb-1">{nextLesson.title}</p>
-                      {nextLesson.content && (
-                        <p className="text-xs text-muted-foreground">{nextLesson.content}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">Zoom Linki</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          if (nextLesson.zoom_join_url) {
-                            navigator.clipboard.writeText(nextLesson.zoom_join_url);
-                            toast({
-                              title: "Link kopyalandı",
-                              description: "Zoom linki panoya kopyalandı.",
-                            });
-                          }
-                        }}
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={nextLesson.zoom_join_url || ''}
-                        readOnly
-                        className="flex-1"
-                      />
-                      <Button
-                        onClick={() => nextLesson.zoom_join_url && window.open(nextLesson.zoom_join_url, '_blank')}
-                        size="sm"
-                        disabled={!nextLesson.zoom_join_url}
-                      >
-                        <ExternalLink className="h-4 w-4 mr-1" />
-                        Katıl
-                      </Button>
-                    </div>
-                    {nextLesson.zoom_password && (
-                      <div className="mt-2 text-sm text-muted-foreground">
-                        Şifre: <span className="font-mono">{nextLesson.zoom_password}</span>
-                      </div>
-                    )}
+                {todayLessons.length > 0 ? (
+                  <div className="space-y-3">
+                    {todayLessons.map((lesson: any, index: number) => {
+                      const formatted = formatLessonDateTime(lesson.zoom_start_time);
+                      const joinEnabled = isJoinAvailable(lesson.dateObj);
+
+                      return (
+                        <div
+                          key={lesson.id || `${lesson.zoom_start_time}-${index}`}
+                          className="p-4 bg-muted/50 rounded-lg"
+                        >
+                          <div className="mb-3">
+                            <p className="text-sm font-medium mb-1">{lesson.title}</p>
+                            {lesson.content && (
+                              <p className="text-xs text-muted-foreground">{lesson.content}</p>
+                            )}
+                          </div>
+                          {formatted && (
+                            <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+                              <span>{formatted.date}</span>
+                              <span>{formatted.time}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">{joinZoomLabel}</span>
+                            <Button
+                              onClick={() => lesson.zoom_join_url && window.open(lesson.zoom_join_url, '_blank')}
+                              size="sm"
+                              disabled={!joinEnabled || !lesson.zoom_join_url}
+                            >
+                              <ExternalLink className="h-4 w-4 mr-1" />
+                              {joinZoomLabel}
+                            </Button>
+                          </div>
+                          {!joinEnabled && (
+                            <p className="mt-3 text-xs text-muted-foreground">
+                              {zoomLinkActiveSoonText}
+                            </p>
+                          )}
+                          {joinEnabled && lesson.zoom_password && (
+                            <div className="mt-3 text-sm text-muted-foreground">
+                              {`${zoomPasswordLabel}: `}
+                              <span className="font-mono">{lesson.zoom_password}</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                </div>
+                ) : (
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <p className="text-sm text-muted-foreground">{noLessonTodayText}</p>
+                  </div>
+                )}
               </div>
             )}
             
           </div>
         </div>
+        {transformedCourseData.lessons && transformedCourseData.lessons.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-semibold mb-4">{lessonScheduleTitle}</h2>
+            <div className="grid gap-4">
+              {transformedCourseData.lessons.map((lesson: any, index: number) => {
+                const formatted = formatLessonDateTime(lesson.zoom_start_time);
+
+                return (
+                  <div key={lesson.id || index} className="rounded-lg border bg-card p-6">
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div className="flex-1 min-w-[200px]">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-semibold text-primary">{index + 1}.</span>
+                          <p className="font-medium">{lesson.title}</p>
+                        </div>
+                        {lesson.content && (
+                          <p className="text-sm text-muted-foreground">{lesson.content}</p>
+                        )}
+                      </div>
+                      <div className="text-sm text-muted-foreground text-right min-w-[140px]">
+                        {formatted ? (
+                          <>
+                            <p>{formatted.date}</p>
+                            <p>{formatted.time}</p>
+                          </>
+                        ) : (
+                          <p>{noScheduledTimeText}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                      {lesson.duration && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {lesson.duration} dakika
+                        </span>
+                      )}
+                      {lesson.zoom_start_time && (
+                        <span>{zoomLinkInfoText}</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </AppLayout>
   );

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,14 @@ import {
 import { Search, Filter, Pencil, Trash2, MoreHorizontal } from "lucide-react";
 import { TaskStatus } from "@/data/tasks";
 import { Task } from "@/data/tasks";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import { useLanguage } from "@/context/LanguageContext";
 import { isAdmin, isTeacher } from "@/utils/roles";
@@ -42,6 +50,40 @@ interface ApiTask {
   level: string;
 }
 
+type CompletedSubmissionStatus = "APPROVED" | "PENDING" | "REJECTED";
+
+interface ApiCompletedTask {
+  id: string;
+  description?: string;
+  file_url?: string;
+  file_name?: string;
+  status?: CompletedSubmissionStatus;
+  task?: {
+    id?: string | number;
+    name?: string;
+    point?: number | string;
+    description?: string;
+    image_url?: string;
+    level?: string;
+    achivements?: string;
+  };
+}
+
+interface CompletedTaskSubmission {
+  id: string;
+  status: CompletedSubmissionStatus;
+  description: string;
+  fileUrl: string;
+  fileName: string;
+  taskId: string;
+  taskTitle: string;
+  taskDescription: string;
+  taskCoins: number;
+  taskLevel: string;
+  taskImage?: string;
+  taskAchievements?: string;
+}
+
 export default function Tasks() {
   const user = useAppSelector(state => state.user);
   const navigate = useNavigate();
@@ -51,6 +93,11 @@ export default function Tasks() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<TaskStatus[]>([]);
+  const [completedTasks, setCompletedTasks] = useState<CompletedTaskSubmission[]>([]);
+  const [completedLoading, setCompletedLoading] = useState(false);
+  const [completedError, setCompletedError] = useState<string | null>(null);
+  const [selectedSubmission, setSelectedSubmission] = useState<CompletedTaskSubmission | null>(null);
+  const [submissionDialogOpen, setSubmissionDialogOpen] = useState(false);
 
   // API'den görevleri çek
   useEffect(() => {
@@ -91,7 +138,101 @@ export default function Tasks() {
     fetchTasks();
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchCompletedTasks = async () => {
+      setCompletedLoading(true);
+      setCompletedError(null);
+
+      try {
+        const response = await apis.task.get_user_completed_tasks();
+        if (!isMounted) return;
+
+        const status: number | undefined = response?.status ?? response?.response?.status;
+        const data = response?.data ?? response?.response?.data;
+
+        if (status === 200 && Array.isArray(data)) {
+          const mapped: CompletedTaskSubmission[] = data
+            .map((apiCompleted: ApiCompletedTask) => {
+              const relatedTask = apiCompleted.task ?? {};
+              const rawId = relatedTask.id;
+              const taskId =
+                typeof rawId === "string"
+                  ? rawId
+                  : typeof rawId === "number"
+                    ? String(rawId)
+                    : "";
+
+              if (!taskId) {
+                return null;
+              }
+
+              const pointValue = relatedTask.point;
+              const coins =
+                typeof pointValue === "number"
+                  ? pointValue
+                  : typeof pointValue === "string"
+                    ? Number(pointValue) || 0
+                    : 0;
+
+              const statusValue = (apiCompleted.status ?? "PENDING") as CompletedSubmissionStatus;
+
+              return {
+                id: apiCompleted.id,
+                status: statusValue,
+                description: apiCompleted.description ?? "",
+                fileUrl: apiCompleted.file_url ?? "",
+                fileName: apiCompleted.file_name ?? "",
+                taskId,
+                taskTitle: typeof relatedTask.name === "string" ? relatedTask.name : "",
+                taskDescription: typeof relatedTask.description === "string" ? relatedTask.description : "",
+                taskCoins: coins,
+                taskLevel: typeof relatedTask.level === "string" ? relatedTask.level : "",
+                taskImage: typeof relatedTask.image_url === "string" ? relatedTask.image_url : undefined,
+                taskAchievements: typeof relatedTask.achivements === "string" ? relatedTask.achivements : undefined,
+              } as CompletedTaskSubmission;
+            })
+            .filter((item): item is CompletedTaskSubmission => item !== null);
+
+          setCompletedTasks(mapped);
+        } else if (status === 404) {
+          setCompletedTasks([]);
+        } else {
+          const errorMessage =
+            typeof data?.error?.message === "string" ? data.error.message : t("common.error");
+          setCompletedError(errorMessage);
+          setCompletedTasks([]);
+        }
+      } catch (err: any) {
+        if (!isMounted) return;
+        console.error("Error fetching user completed tasks:", err);
+        const errorMessage = err?.response?.data?.error?.message || t("common.error");
+        setCompletedError(errorMessage);
+        setCompletedTasks([]);
+      } finally {
+        if (isMounted) {
+          setCompletedLoading(false);
+        }
+      }
+    };
+
+    fetchCompletedTasks();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [t]);
+
+  const completedTaskIds = useMemo(
+    () => new Set(completedTasks.map((submission) => submission.taskId)),
+    [completedTasks]
+  );
+
   const filteredTasks = tasks.filter((task) => {
+    if (completedTaskIds.has(String(task.id))) {
+      return false;
+    }
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter.length === 0 || statusFilter.includes(task.status);
     return matchesSearch && matchesStatus;
@@ -128,6 +269,30 @@ export default function Tasks() {
       case "To Do": return t('tasks.pending');
       case "Overdue": return t('tasks.overdue');
       default: return status;
+    }
+  };
+
+  const getSubmissionStatusColor = (status: CompletedSubmissionStatus) => {
+    switch (status) {
+      case "APPROVED":
+        return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300";
+      case "REJECTED":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+      case "PENDING":
+      default:
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+    }
+  };
+
+  const getSubmissionStatusTranslation = (status: CompletedSubmissionStatus) => {
+    switch (status) {
+      case "APPROVED":
+        return t('tasks.submissionApproved');
+      case "REJECTED":
+        return t('tasks.submissionRejected');
+      case "PENDING":
+      default:
+        return t('tasks.submissionPending');
     }
   };
 
@@ -175,6 +340,19 @@ export default function Tasks() {
     } catch (error: any) {
       console.error("Error deleting task:", error);
       alert("Görev silinirken bir hata oluştu");
+    }
+  };
+
+  const handleSubmissionClick = (submission: CompletedTaskSubmission) => {
+    setSelectedSubmission(submission);
+    setSubmissionDialogOpen(true);
+  };
+
+  const handleResubmitSubmission = (submission: CompletedTaskSubmission) => {
+    setSubmissionDialogOpen(false);
+    setSelectedSubmission(null);
+    if (submission.taskId) {
+      navigate(`/tasks/${submission.taskId}/post`);
     }
   };
 
@@ -240,6 +418,116 @@ export default function Tasks() {
             </div>
           </div>
 
+          {/* Completed Tasks Section (hidden for admin users) */}
+          {!adminUser && (
+            <div className="rounded-lg border bg-card">
+              <div className="p-6">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-2xl font-semibold">{t('tasks.completedSectionTitle')}</h2>
+                    <p className="text-muted-foreground">
+                      {t('tasks.completedSectionSubtitle')}
+                    </p>
+                  </div>
+                </div>
+
+                {completedLoading ? (
+                  <div className="py-8 text-center text-muted-foreground">
+                    {t('common.loading')}
+                  </div>
+                ) : completedError ? (
+                  <div className="py-8 text-center text-red-600">
+                    {completedError}
+                  </div>
+                ) : completedTasks.length === 0 ? (
+                  <div className="py-8 text-center text-muted-foreground">
+                    {t('tasks.noCompletedTasks')}
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t('tasks.taskName')}</TableHead>
+                        <TableHead>{t('tasks.submissionStatus')}</TableHead>
+                        <TableHead className="text-right">{t('tasks.actions')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {completedTasks.map((submission) => (
+                        <TableRow
+                          key={submission.id}
+                          className={cn(
+                            submission.status !== "REJECTED" ? "cursor-pointer hover:bg-muted/50" : ""
+                          )}
+                          onClick={
+                            submission.status !== "REJECTED"
+                              ? () => handleSubmissionClick(submission)
+                              : undefined
+                          }
+                        >
+                          <TableCell>
+                            <div className="flex flex-col gap-1">
+                              <span className="font-medium">
+                                {submission.taskTitle || t('tasks.taskName')}
+                              </span>
+                              {submission.description && (
+                                <span className="text-xs text-muted-foreground line-clamp-2">
+                                  {submission.description}
+                                </span>
+                              )}
+                              <span className="text-xs text-muted-foreground">
+                                <span className="text-yellow-600 font-semibold">
+                                  +{submission.taskCoins}
+                                </span>{" "}
+                                {t('common.coins')}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="secondary"
+                              className={cn(
+                                "rounded-full px-3 py-1",
+                                getSubmissionStatusColor(submission.status)
+                              )}
+                            >
+                              {getSubmissionStatusTranslation(submission.status)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {submission.status === "REJECTED" ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleResubmitSubmission(submission);
+                                }}
+                              >
+                                {t('tasks.resubmit')}
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSubmissionClick(submission);
+                                }}
+                              >
+                                {t('common.viewDetails')}
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Tasks Table */}
           <div className="rounded-lg border bg-card">
             {loading ? (
@@ -256,7 +544,7 @@ export default function Tasks() {
                   <TableRow>
                     <TableHead>{t('tasks.taskName')}</TableHead>
                     <TableHead>{t('tasks.coinValue')}</TableHead>
-                    <TableHead>{canManageTasks ? t('tasks.completedStudents') : t('tasks.status')}</TableHead>
+                    <TableHead>{t('tasks.status')}</TableHead>
                     {canManageTasks && <TableHead className="text-right">{t('tasks.actions')}</TableHead>}
                   </TableRow>
                 </TableHeader>
@@ -264,7 +552,7 @@ export default function Tasks() {
                   {filteredTasks.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={adminUser ? 4 : 3}
+                        colSpan={canManageTasks ? 4 : 3}
                         className="h-24 text-center text-muted-foreground"
                       >
                         {t('tasks.noTasksFound')}
@@ -285,26 +573,15 @@ export default function Tasks() {
                         </div>
                       </TableCell>
                     <TableCell>
-                      {canManageTasks ? (
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl font-bold text-primary">
-                            {task.completionCount || 0}
-                          </span>
-                          <span className="text-muted-foreground">
-                            {task.completionCount === 1 ? t('tasks.student') : t('tasks.students')}
-                          </span>
-                        </div>
-                      ) : (
-                        <Badge
-                          variant="secondary"
-                          className={cn(
-                            "rounded-full px-3 py-1",
-                            getStatusColor(task.status)
-                          )}
-                        >
-                          {getStatusTranslation(task.status)}
-                        </Badge>
-                      )}
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          "rounded-full px-3 py-1",
+                          getStatusColor(task.status)
+                        )}
+                      >
+                        {getStatusTranslation(task.status)}
+                      </Badge>
                     </TableCell>
                       {canManageTasks && (
                         <TableCell className="text-right">
@@ -343,6 +620,111 @@ export default function Tasks() {
           </div>
         </div>
       </div>
+
+      <Dialog
+        open={submissionDialogOpen}
+        onOpenChange={(open) => {
+          setSubmissionDialogOpen(open);
+          if (!open) {
+            setSelectedSubmission(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedSubmission?.taskTitle || t('tasks.submissionDetailsTitle')}
+            </DialogTitle>
+            <DialogDescription>
+              {t('tasks.submissionDetailsDescription')}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedSubmission && (
+            <div className="space-y-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <Badge
+                  variant="secondary"
+                  className={cn(
+                    "rounded-full px-3 py-1",
+                    getSubmissionStatusColor(selectedSubmission.status)
+                  )}
+                >
+                  {getSubmissionStatusTranslation(selectedSubmission.status)}
+                </Badge>
+                {selectedSubmission.taskCoins > 0 && (
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">{t('tasks.coinValue')}</p>
+                    <p className="text-lg font-semibold text-yellow-600">
+                      +{selectedSubmission.taskCoins} {t('common.coins')}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                  {t('tasks.relatedTask')}
+                </h3>
+                <p className="mt-1 text-base font-semibold">
+                  {selectedSubmission.taskTitle || t('tasks.taskName')}
+                </p>
+                {selectedSubmission.taskDescription && (
+                  <p className="mt-2 text-sm text-muted-foreground whitespace-pre-line">
+                    {selectedSubmission.taskDescription}
+                  </p>
+                )}
+              </div>
+
+              {selectedSubmission.description && (
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                    {t('tasks.submissionDescription')}
+                  </h3>
+                  <p className="mt-2 text-sm">
+                    {selectedSubmission.description}
+                  </p>
+                </div>
+              )}
+
+              {selectedSubmission.fileUrl && (
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                    {t('tasks.submissionFile')}
+                  </h3>
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <Button variant="outline" size="sm" asChild>
+                      <a
+                        href={selectedSubmission.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {t('tasks.openSubmissionFile')}
+                      </a>
+                    </Button>
+                    {selectedSubmission.fileName && (
+                      <span className="text-sm text-muted-foreground">
+                        {selectedSubmission.fileName}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {selectedSubmission?.status === "REJECTED" && (
+            <DialogFooter className="mt-6 flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-muted-foreground">
+                {t('tasks.resubmitHelper')}
+              </p>
+              <Button onClick={() => handleResubmitSubmission(selectedSubmission)}>
+                {t('tasks.resubmit')}
+              </Button>
+            </DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
