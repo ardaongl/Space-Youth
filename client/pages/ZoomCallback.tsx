@@ -2,11 +2,13 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
-import { useAppSelector } from "@/store";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { setUser } from "@/store/slices/userSlice";
 
 export default function ZoomCallback() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const user = useAppSelector(state => state.user)
   const isTeacherOrAdmin = user.user?.role === "teacher" || user.user?.role === "admin";
 
@@ -18,8 +20,20 @@ export default function ZoomCallback() {
       try {
         localStorage.setItem("zoom.connected", "true");
       } catch {}
+
+      if (user.user?.teacher) {
+        dispatch(
+          setUser({
+            ...user.user,
+            teacher: {
+              ...user.user.teacher,
+              zoom_connected: true,
+            },
+          }),
+        );
+      }
     }
-  }, [params]);
+  }, [params, dispatch, user.user]);
 
   return (
     <AppLayout>

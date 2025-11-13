@@ -13,9 +13,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useLanguage } from "@/context/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { isTeacher, isStudent } from "@/utils/roles";
-import { useAppSelector } from "@/store";
+import { useAppDispatch, useAppSelector } from "@/store";
 import { apis } from "@/services";
 import { useToast } from "@/hooks/use-toast";
+import { setUser } from "@/store/slices/userSlice";
 
 type OnboardingData = {
   phase1: any;
@@ -129,6 +130,7 @@ function useOnboardingScores() {
 
 export function Profile() {
   const user = useAppSelector(state => state.user);
+  const dispatch = useAppDispatch();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -194,6 +196,19 @@ export function Profile() {
       studentDetails?.student &&
       !studentDetails.student.graphic_test_completed,
   );
+  React.useEffect(() => {
+    if (typeof user.user?.teacher?.zoom_connected === "boolean") {
+      setZoomConnected(user.user.teacher.zoom_connected);
+      return;
+    }
+
+    try {
+      const stored = localStorage.getItem("zoom.connected");
+      setZoomConnected(stored === "true");
+    } catch {
+      setZoomConnected(false);
+    }
+  }, [user.user?.teacher?.zoom_connected]);
   React.useEffect(() => {
     try {
       const raw = localStorage.getItem("onboarding.data");
@@ -995,7 +1010,23 @@ export function Profile() {
                     </Button>
                     <Button
                       variant="ghost"
-                      onClick={() => { try { localStorage.removeItem("zoom.connected"); } catch {}; setZoomConnected(false); }}
+                      onClick={() => {
+                        try {
+                          localStorage.removeItem("zoom.connected");
+                        } catch {}
+                        setZoomConnected(false);
+                        if (user.user?.teacher) {
+                          dispatch(
+                            setUser({
+                              ...user.user,
+                              teacher: {
+                                ...user.user.teacher,
+                                zoom_connected: false,
+                              },
+                            }),
+                          );
+                        }
+                      }}
                     >
                       {t('profile.disconnect')}
                     </Button>

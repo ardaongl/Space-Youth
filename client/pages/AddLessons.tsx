@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Plus, Upload, X, FileText, Calendar, Clock, Award } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { apis } from "@/services";
+import { useAppSelector } from "@/store";
 
 interface Lesson {
   id: string;
@@ -20,6 +21,7 @@ interface Lesson {
 export default function AddLessons() {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const authUser = useAppSelector(state => state.user.user);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [currentLesson, setCurrentLesson] = useState<Lesson>({
     id: crypto.randomUUID(),
@@ -189,9 +191,17 @@ export default function AddLessons() {
 
   const isCurrentLessonValid = currentLesson.title.trim() !== "" && currentLesson.description.trim() !== "";
 
-  const zoomConnected = (() => {
-    try { return localStorage.getItem("zoom.connected") === "true"; } catch { return false; }
-  })();
+  const zoomConnectedFromStore = authUser?.teacher?.zoom_connected;
+  const zoomConnected =
+    typeof zoomConnectedFromStore === "boolean"
+      ? zoomConnectedFromStore
+      : (() => {
+          try {
+            return localStorage.getItem("zoom.connected") === "true";
+          } catch {
+            return false;
+          }
+        })();
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {

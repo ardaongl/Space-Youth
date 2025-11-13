@@ -57,6 +57,7 @@ import { useToast } from "./hooks/use-toast";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { RoleProtectedRoute } from "./components/auth/RoleProtectedRoute";
 import { mapStudentResponseToState } from "@/utils/student";
+import { mapUserResponseToState } from "@/utils/user";
 
 const queryClient = new QueryClient();
 
@@ -146,28 +147,8 @@ const AppContent = () => {
         const userResponse: any = await apis.user.get_user();
         if (userResponse && userResponse.data) {
           // Update user
-          if (userResponse.data.id) {
-            const firstName = userResponse.data.first_name || "";
-            const lastName = userResponse.data.last_name || "";
-            const fullName = `${firstName} ${lastName}`.trim() || firstName || lastName || userResponse.data.email;
-            const refreshedGender: "male" | "female" = userResponse.data.gender?.toLowerCase() === "female" ? "female" : "male";
-            const refreshedLanguage: "TR" | "EN" = userResponse.data.language?.toUpperCase() === "EN" ? "EN" : "TR";
-            const labels = Array.isArray(userResponse.data.labels)
-              ? userResponse.data.labels
-                  .filter((label: any) => typeof label?.id === "number" && typeof label?.name === "string")
-                  .map((label: any) => ({ id: label.id, name: label.name }))
-              : [];
-            const updatedUser = {
-              id: userResponse.data.id,
-              name: fullName,
-              email: userResponse.data.email,
-              role: userResponse.data.role,
-              age: typeof userResponse.data.age === "number" ? userResponse.data.age : null,
-              gender: refreshedGender,
-              language: refreshedLanguage,
-              points: userResponse.data.points || 0,
-              labels,
-            };
+          const updatedUser = mapUserResponseToState(userResponse.data);
+          if (updatedUser) {
             console.log(updatedUser);
             dispatch(setUser(updatedUser));
           }

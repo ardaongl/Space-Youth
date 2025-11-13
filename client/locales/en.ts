@@ -205,6 +205,8 @@ export const en = {
     zoomLinkCopyFailed: 'Could not copy the Zoom link. Please try again.',
     zoomLinkFetchFailed: 'Unable to fetch the Zoom link. Please try again.',
     zoomLinkEmpty: 'There is no Zoom link to copy yet. Fetch the link first.',
+    zoomConnectedTitle: 'Zoom account already connected',
+    zoomConnectedDescription: 'Your Zoom account is linked. You can manage courses and create meetings without any extra steps.',
   },
 
   // Courses

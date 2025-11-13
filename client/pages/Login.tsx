@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Rocket, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apis } from "@/services";
+import { mapUserResponseToState } from "@/utils/user";
 import { email } from "zod/v4";
 import { useDispatch } from "react-redux";
 import { setUser, setUserToken } from "@/store/slices/userSlice";
@@ -200,31 +201,15 @@ export default function Login() {
         const response:any = await apis.user.get_user();
         console.log("user : ", response);
         if(auth_token != ""){
-          const firstName = response.data.first_name || "";
-          const lastName = response.data.last_name || "";
-          const fullName = `${firstName} ${lastName}`.trim() || firstName || lastName || response.data.email;
-          const responseGender: "male" | "female" = response.data.gender?.toLowerCase() === "female" ? "female" : "male";
-          const responseLanguage: "TR" | "EN" = response.data.language?.toUpperCase() === "EN" ? "EN" : "TR";
-          const labels = Array.isArray(response.data.labels)
-            ? response.data.labels
-                .filter((label: any) => typeof label?.id === "number" && typeof label?.name === "string")
-                .map((label: any) => ({ id: label.id, name: label.name }))
-            : [];
-          const user = {
-            id: response.data.id,
-            name: fullName,
-            email: response.data.email,
-            role: response.data.role,
-            age: typeof response.data.age === "number" ? response.data.age : null,
-            gender: responseGender,
-            language: responseLanguage,
-            points: typeof response.data.points === "number" ? response.data.points : 0,
-            labels,
+          const mappedUser = mapUserResponseToState(response.data);
+          console.log("user", mappedUser);
+
+          if (!mappedUser) {
+            return;
           }
-          console.log("user", user);
-          
-          dispatch(setUser(user));
-          if(user.role == IUserRoles.STUDENT){
+
+          dispatch(setUser(mappedUser));
+          if(mappedUser.role == IUserRoles.STUDENT){
             const mappedStudent = mapStudentResponseToState(response.data);
             if (mappedStudent) {
               console.log("student => ", mappedStudent);

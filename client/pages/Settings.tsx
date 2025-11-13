@@ -21,13 +21,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Shield, Trash2, Mail, Copy } from "lucide-react";
+import { User, Shield, Trash2, Mail, Copy, BadgeCheck } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { useToast } from "@/hooks/use-toast";
 import { clearUser, setUser } from "@/store/slices/userSlice";
 import { setLanguage as setAppLanguage } from "@/store/slices/languageSlice";
 import { apis } from "@/services";
 import { isTeacher } from "@/utils/roles";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,7 +55,8 @@ const arraysHaveSameItems = (a: number[], b: number[]) => {
 
 export default function Settings() {
   const user = useAppSelector(state => state.user);
-
+  console.log(user);
+  
   const { t, currentLanguage } = useLanguage();
   const dispatch = useAppDispatch();
   const { toast } = useToast();
@@ -525,6 +527,7 @@ export default function Settings() {
   };
 
   const isTeacherUser = isTeacher(user.user?.role);
+  const isTeacherZoomConnected = user.user?.teacher?.zoom_connected === true;
 
   return (
     <AppLayout>
@@ -701,7 +704,15 @@ export default function Settings() {
               </CardContent>
             </Card>
 
-            {isTeacherUser && (
+            {isTeacherUser && isTeacherZoomConnected && (
+              <Alert className="border-green-200 bg-emerald-50 text-emerald-800">
+                <BadgeCheck className="h-5 w-5 text-emerald-600" />
+                <AlertTitle>{t('settings.zoomConnectedTitle')}</AlertTitle>
+                <AlertDescription>{t('settings.zoomConnectedDescription')}</AlertDescription>
+              </Alert>
+            )}
+
+            {isTeacherUser && !isTeacherZoomConnected && (
               <Card>
                 <CardHeader>
                   <CardTitle>{t('profile.zoomIntegration')}</CardTitle>

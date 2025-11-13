@@ -205,6 +205,8 @@ export const tr = {
     zoomLinkCopyFailed: 'Zoom linki kopyalanamadı. Lütfen tekrar deneyin.',
     zoomLinkFetchFailed: 'Zoom linki alınamadı. Lütfen tekrar deneyin.',
     zoomLinkEmpty: 'Kopyalanacak bir Zoom linki yok. Önce linki alın.',
+    zoomConnectedTitle: 'Zoom hesabınız zaten bağlı',
+    zoomConnectedDescription: 'Zoom hesabınız eşleştirildi. Artık dersleri yönetirken toplantı oluşturmak için ekstra bir adım gerekmez.',
   },
 
   // Courses

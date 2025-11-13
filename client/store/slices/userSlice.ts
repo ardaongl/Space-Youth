@@ -6,6 +6,13 @@ export interface UserLabel {
   name: string;
 }
 
+export interface TeacherInfo {
+  id: string;
+  school?: string | null;
+  branch?: string | null;
+  zoom_connected?: boolean;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -16,6 +23,7 @@ export interface User {
   age?: number | null;
   gender?: "male" | "female";
   language?: "TR" | "EN";
+  teacher?: TeacherInfo;
 }
 
 interface UserState {
