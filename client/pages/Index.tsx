@@ -22,6 +22,7 @@ interface CourseData {
   duration: number;
   certificate_url: string | null;
   points: number;
+  status?: string | null;
   teacher?: {
     id: string;
     first_name: string;
@@ -187,20 +188,21 @@ export default function Courses() {
       
       if (response.status === 200 && response.data) {
         const allCourses = response.data;
+        const activeCourses = allCourses.filter((course: CourseData) => course.status === "ACTIVE");
         
         // If user is a teacher, separate their courses from others
         if (isTeacherRole && user.user?.id) {
-          const myCourseList = allCourses.filter((course: CourseData) => 
+          const myCourseList = activeCourses.filter((course: CourseData) => 
             course.teacher?.id === user.user?.id
           );
-          const otherCourseList = allCourses.filter((course: CourseData) => 
+          const otherCourseList = activeCourses.filter((course: CourseData) => 
             course.teacher?.id !== user.user?.id
           );
           setMyCourses(myCourseList);
           setOtherCourses(otherCourseList);
         } else {
           setMyCourses([]);
-          setOtherCourses(allCourses);
+          setOtherCourses(activeCourses);
         }
       } else {
         toast({

@@ -75,6 +75,40 @@ interface CharacterFormData {
   image: File;
 }
 
+interface CourseLabel {
+  id: number;
+  name: string;
+}
+
+interface CourseTeacher {
+  first_name: string;
+  last_name: string;
+  email: string;
+}
+
+interface CourseLesson {
+  id: string;
+  title: string;
+  duration: number;
+  order: number;
+}
+
+interface Course {
+  id: number;
+  title: string;
+  description: string;
+  image_url?: string | null;
+  video_url?: string | null;
+  level: string;
+  duration?: number | null;
+  certificate_url?: string | null;
+  points?: number | null;
+  status?: string | null;
+  labels?: CourseLabel[];
+  teacher?: CourseTeacher | null;
+  lessons?: CourseLesson[];
+}
+
 type EditEntity = "task" | "personality" | "character";
 type EditData = Task | IPersonality | Character;
 interface EditState {
@@ -89,7 +123,7 @@ type FeedbackState = {
 
 const AdminPage: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<
-    "students" | "answers" | "tasks" | "personalities" | "characters"
+    "students" | "answers" | "tasks" | "personalities" | "characters" | "courses"
   >("students");
   const navigate = useNavigate();
   const [students, setStudents] = useState<Student[]>([]);
@@ -104,6 +138,13 @@ const AdminPage: React.FC = () => {
   const [isTaskFormOpen, setIsTaskFormOpen] = useState<boolean>(false);
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
   const [actionFeedback, setActionFeedback] = useState<Record<string, FeedbackState | undefined>>({});
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [courseSearch, setCourseSearch] = useState<string>("");
+  const [courseLoading, setCourseLoading] = useState(false);
+  const [courseError, setCourseError] = useState<string | null>(null);
+  const [activationPoints, setActivationPoints] = useState<Record<number, string>>({});
+  const [courseActivationLoading, setCourseActivationLoading] = useState<Record<number, boolean>>({});
+  const [courseActivationFeedback, setCourseActivationFeedback] = useState<Record<number, FeedbackState | undefined>>({});
 
   const user = useAppSelector(state => state.user.user)
   const token = useAppSelector(state => state.user.token);
@@ -183,10 +224,120 @@ const AdminPage: React.FC = () => {
     }
   }
 
+  const fetchCourses = async () => {
+    setCourseLoading(true);
+    setCourseError(null);
+    try {
+      const response = await apis.course.get_courses();
+      if (response?.status === 200) {
+        const courseList: Course[] = response.data || [];
+        setCourses(courseList);
+        const initialPoints: Record<number, string> = {};
+        courseList.forEach((course) => {
+          initialPoints[course.id] = course.points !== null && course.points !== undefined ? course.points.toString() : "";
+        });
+        setActivationPoints(initialPoints);
+      } else {
+        setCourseError(
+          response?.data?.error?.message ||
+          response?.data?.message ||
+          "Kurslar getirilirken bir hata oluştu."
+        );
+        setCourses([]);
+      }
+    } catch (err: any) {
+      console.error("Error fetching courses:", err);
+      setCourseError(
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.message ||
+        "Kurslar getirilirken bir hata oluştu."
+      );
+      setCourses([]);
+    } finally {
+      setCourseLoading(false);
+    }
+  };
+
+  const handleActivateCourse = async (courseId: number) => {
+    const rawPoints = activationPoints[courseId];
+    const pointsValue = Number(rawPoints);
+    if (
+      rawPoints === undefined ||
+      rawPoints === null ||
+      rawPoints.toString().trim() === "" ||
+      Number.isNaN(pointsValue) ||
+      pointsValue <= 0
+    ) {
+      setCourseActivationFeedback((prev) => ({
+        ...prev,
+        [courseId]: {
+          type: "error",
+          message: "Lütfen geçerli bir puan değeri girin."
+        }
+      }));
+      return;
+    }
+
+    setCourseActivationLoading((prev) => ({ ...prev, [courseId]: true }));
+    setCourseActivationFeedback((prev) => ({ ...prev, [courseId]: undefined }));
+
+    try {
+      const response = await apis.course.admin_activate_course(courseId, pointsValue);
+      const statusCode = response?.status;
+      const responseMessage =
+        response?.data?.message ||
+        response?.data?.success ||
+        "Kurs başarıyla aktifleştirildi.";
+
+      if (statusCode === 200 || statusCode === 201) {
+        setCourses((prev) =>
+          prev.map((course) =>
+            course.id === courseId
+              ? { ...course, status: "ACTIVE", points: pointsValue }
+              : course
+          )
+        );
+        setCourseActivationFeedback((prev) => ({
+          ...prev,
+          [courseId]: {
+            type: "success",
+            message: responseMessage
+          }
+        }));
+      } else {
+        setCourseActivationFeedback((prev) => ({
+          ...prev,
+          [courseId]: {
+            type: "error",
+            message:
+              response?.data?.error?.message ||
+              response?.data?.message ||
+              "Kurs aktifleştirilirken bir hata oluştu."
+          }
+        }));
+      }
+    } catch (error: any) {
+      console.error("Error activating course:", error);
+      setCourseActivationFeedback((prev) => ({
+        ...prev,
+        [courseId]: {
+          type: "error",
+          message:
+            error?.response?.data?.error?.message ||
+            error?.response?.data?.message ||
+            "Kurs aktifleştirilirken bir hata oluştu."
+        }
+      }));
+    } finally {
+      setCourseActivationLoading((prev) => ({ ...prev, [courseId]: false }));
+    }
+  };
+
   useEffect(() => {
     if (selectedTab === "students" || selectedTab === "answers") fetchStudents();
     if (selectedTab === "characters") fetchCharacters();
     if (selectedTab === "tasks") fetchTasks();
+    if (selectedTab === "courses") fetchCourses();
   }, [selectedTab]);
 
   const filteredStudents = students.filter(
@@ -197,6 +348,25 @@ const AdminPage: React.FC = () => {
       (s.students.school && s.students.school.toLowerCase().includes(search.toLowerCase())) ||
       (s.students.department && s.students.department.toLowerCase().includes(search.toLowerCase()))
   );
+
+  const filteredCourses = courses.filter((course) => {
+    const query = courseSearch.trim().toLowerCase();
+    if (!query) return true;
+
+    const searchableFields = [
+      course.title,
+      course.description,
+      course.level,
+      course.teacher?.first_name,
+      course.teacher?.last_name,
+      course.teacher?.email,
+      ...(course.labels?.map((label) => label.name) ?? [])
+    ];
+
+    return searchableFields.some((field) =>
+      field?.toLowerCase().includes(query)
+    );
+  });
 
   const handleAddTask = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -618,6 +788,12 @@ const AdminPage: React.FC = () => {
             onClick={() => setSelectedTab("characters")}
           >
             Karakterler
+          </li>
+          <li
+            className={selectedTab === "courses" ? "active" : ""}
+            onClick={() => setSelectedTab("courses")}
+          >
+            Kurslar
           </li>
         </ul>
         <button
@@ -1642,6 +1818,397 @@ const AdminPage: React.FC = () => {
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+        )}
+
+        {selectedTab === "courses" && (
+          <div className="courses-section">
+            <h3 style={{ fontWeight: "bold", color: "#2c3e50", marginBottom: "24px" }}>
+              Kurslar
+            </h3>
+
+            {!token ? (
+              <p style={{ color: "red" }}>Lütfen giriş yapınız.</p>
+            ) : courseLoading ? (
+              <p>Yükleniyor...</p>
+            ) : courseError ? (
+              <p style={{ color: "red" }}>{courseError}</p>
+            ) : courses.length === 0 ? (
+              <p>Kurs bulunmamaktadır.</p>
+            ) : (
+              <>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "16px",
+                    marginBottom: "24px",
+                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    borderRadius: "12px",
+                    padding: "20px",
+                    boxShadow: "0 6px 20px rgba(0,0,0,0.1)",
+                    color: "white"
+                  }}
+                >
+                  <h4
+                    style={{
+                      margin: 0,
+                      fontSize: "18px",
+                      fontWeight: 600
+                    }}
+                  >
+                    Kurs Arama
+                  </h4>
+                  <input
+                    type="text"
+                    placeholder="Başlık, seviye, öğretmen veya etiket ara..."
+                    value={courseSearch}
+                    onChange={(e) => setCourseSearch(e.target.value)}
+                    style={{
+                      padding: "12px 16px",
+                      borderRadius: "8px",
+                      border: "none",
+                      fontSize: "15px",
+                      color: "#2c3e50",
+                      outline: "none",
+                      backgroundColor: "rgba(255,255,255,0.95)",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
+                    }}
+                    onFocus={(e) => (e.target.style.backgroundColor = "white")}
+                    onBlur={(e) => (e.target.style.backgroundColor = "rgba(255,255,255,0.95)")}
+                  />
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                    gap: "20px"
+                  }}
+                >
+                  {filteredCourses.map((course) => {
+                    const isActive = course.status === "ACTIVE";
+                    const activationPending = !!courseActivationLoading[course.id];
+                    const feedback = courseActivationFeedback[course.id];
+                    const pointsValue = activationPoints[course.id] ?? "";
+
+                    return (
+                      <div
+                        key={course.id}
+                        style={{
+                          background: "#ffffff",
+                          borderRadius: "16px",
+                          padding: "20px",
+                          boxShadow: "0 10px 30px rgba(31, 45, 61, 0.08)",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "16px",
+                          border: "1px solid rgba(103, 119, 239, 0.15)"
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            gap: "12px"
+                          }}
+                        >
+                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                            <h4 style={{ margin: 0, fontSize: "18px", color: "#2c3e50" }}>
+                              {course.title}
+                            </h4>
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                fontSize: "13px",
+                                fontWeight: 600
+                              }}
+                            >
+                              <span
+                                style={{
+                                  padding: "4px 10px",
+                                  borderRadius: "999px",
+                                  backgroundColor: isActive ? "rgba(46, 213, 115, 0.15)" : "rgba(255, 165, 2, 0.15)",
+                                  color: isActive ? "#2ecc71" : "#f39c12",
+                                  fontWeight: 600
+                                }}
+                              >
+                                {isActive ? "ACTİVE" : "PASİF"}
+                              </span>
+                              <span
+                                style={{
+                                  padding: "4px 10px",
+                                  borderRadius: "999px",
+                                  backgroundColor: "rgba(104, 109, 224, 0.12)",
+                                  color: "#4c51bf",
+                                  fontWeight: 600
+                                }}
+                              >
+                                {course.level?.toUpperCase() || "Bilinmiyor"}
+                              </span>
+                            </span>
+                          </div>
+
+                          {course.image_url ? (
+                            <img
+                              src={`${baseUrl}${course.image_url}`}
+                              alt={course.title}
+                              style={{
+                                width: "60px",
+                                height: "60px",
+                                objectFit: "cover",
+                                borderRadius: "12px",
+                                border: "1px solid rgba(0,0,0,0.05)"
+                              }}
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                width: "60px",
+                                height: "60px",
+                                borderRadius: "12px",
+                                background: "linear-gradient(135deg, #cfd9ff 0%, #e0e7ff 100%)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "12px",
+                                fontWeight: 600,
+                                color: "#4c51bf"
+                              }}
+                            >
+                              Kurs
+                            </div>
+                          )}
+                        </div>
+
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: "14px",
+                            lineHeight: 1.6,
+                            color: "#4b5563"
+                          }}
+                        >
+                          {course.description}
+                        </p>
+
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                            gap: "12px",
+                            background: "#f8fafc",
+                            borderRadius: "12px",
+                            padding: "12px"
+                          }}
+                        >
+                          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                            <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 600 }}>
+                              Süre
+                            </span>
+                            <span style={{ fontSize: "14px", color: "#1e293b", fontWeight: 600 }}>
+                              {course.duration ? `${course.duration} dk` : "-"}
+                            </span>
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                            <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 600 }}>
+                              Puan
+                            </span>
+                            <span style={{ fontSize: "14px", color: "#1e293b", fontWeight: 600 }}>
+                              {course.points ?? "-"}
+                            </span>
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                            <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 600 }}>
+                              Ders Sayısı
+                            </span>
+                            <span style={{ fontSize: "14px", color: "#1e293b", fontWeight: 600 }}>
+                              {course.lessons?.length ?? 0}
+                            </span>
+                          </div>
+                        </div>
+
+                        {course.labels && course.labels.length > 0 && (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                            {course.labels.map((label) => (
+                              <span
+                                key={label.id}
+                                style={{
+                                  padding: "6px 12px",
+                                  borderRadius: "999px",
+                                  background: "rgba(79, 172, 254, 0.12)",
+                                  color: "#1f7aec",
+                                  fontSize: "12px",
+                                  fontWeight: 600
+                                }}
+                              >
+                                #{label.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {course.teacher && (
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "4px",
+                              padding: "12px",
+                              borderRadius: "12px",
+                              background: "linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.1) 100%)"
+                            }}
+                          >
+                            <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 600 }}>
+                              Eğitmen
+                            </span>
+                            <span style={{ fontSize: "14px", color: "#1e293b", fontWeight: 600 }}>
+                              {course.teacher.first_name} {course.teacher.last_name}
+                            </span>
+                            <span style={{ fontSize: "13px", color: "#475569" }}>
+                              {course.teacher.email}
+                            </span>
+                          </div>
+                        )}
+
+                        {course.lessons && course.lessons.length > 0 && (
+                          <details
+                            style={{
+                              background: "#f9fafb",
+                              borderRadius: "12px",
+                              padding: "14px",
+                              border: "1px solid rgba(15, 23, 42, 0.08)"
+                            }}
+                          >
+                            <summary
+                              style={{
+                                cursor: "pointer",
+                                fontWeight: 600,
+                                color: "#334155"
+                              }}
+                            >
+                              Dersleri Görüntüle
+                            </summary>
+                            <div style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                              {course.lessons.map((lesson) => (
+                                <div
+                                  key={lesson.id}
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    padding: "10px 12px",
+                                    borderRadius: "10px",
+                                    background: "white",
+                                    boxShadow: "0 1px 4px rgba(15, 23, 42, 0.06)"
+                                  }}
+                                >
+                                  <div style={{ display: "flex", flexDirection: "column" }}>
+                                    <span style={{ fontWeight: 600, color: "#1f2937" }}>
+                                      {lesson.order}. {lesson.title}
+                                    </span>
+                                    <span style={{ fontSize: "12px", color: "#6b7280" }}>
+                                      Süre: {lesson.duration ? `${lesson.duration} dk` : "-"}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </details>
+                        )}
+
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "12px"
+                          }}
+                        >
+                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                            <label
+                              style={{
+                                fontSize: "13px",
+                                color: "#475569",
+                                fontWeight: 600
+                              }}
+                            >
+                              Aktif Etmek İçin Puan
+                            </label>
+                            <input
+                              type="number"
+                              min={0}
+                              value={pointsValue}
+                              onChange={(e) =>
+                                setActivationPoints((prev) => ({
+                                  ...prev,
+                                  [course.id]: e.target.value
+                                }))
+                              }
+                              disabled={isActive}
+                              placeholder="Örn: 100"
+                              style={{
+                                padding: "12px 14px",
+                                borderRadius: "8px",
+                                border: "1px solid rgba(148, 163, 184, 0.6)",
+                                fontSize: "14px",
+                                outline: "none",
+                                backgroundColor: isActive ? "#f1f5f9" : "#ffffff",
+                                color: "#1e293b"
+                              }}
+                            />
+                          </div>
+
+                          <button
+                            onClick={() => handleActivateCourse(course.id)}
+                            disabled={isActive || activationPending}
+                            style={{
+                              background: isActive
+                                ? "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)"
+                                : "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "8px",
+                              padding: "12px 18px",
+                              fontSize: "15px",
+                              fontWeight: 600,
+                              cursor: isActive || activationPending ? "not-allowed" : "pointer",
+                              opacity: isActive || activationPending ? 0.7 : 1,
+                              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                              boxShadow: "0 8px 18px rgba(79,172,254,0.35)"
+                            }}
+                            onMouseEnter={(e) => {
+                              if (isActive || activationPending) return;
+                              e.currentTarget.style.transform = "translateY(-2px)";
+                              e.currentTarget.style.boxShadow = "0 12px 25px rgba(79,172,254,0.4)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = "translateY(0)";
+                              e.currentTarget.style.boxShadow = "0 8px 18px rgba(79,172,254,0.35)";
+                            }}
+                          >
+                            {isActive ? "Aktif" : activationPending ? "Aktifleştiriliyor..." : "Kursu Aktifleştir"}
+                          </button>
+
+                          {feedback && (
+                            <span
+                              style={{
+                                fontWeight: 600,
+                                color: feedback.type === "success" ? "#22c55e" : "#ef4444"
+                              }}
+                            >
+                              {feedback.message}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </div>
         )}

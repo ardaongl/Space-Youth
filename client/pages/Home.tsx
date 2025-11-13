@@ -40,6 +40,7 @@ interface DashboardCourse {
   level?: string | null;
   duration?: string | null;
   coins?: number | null;
+  status?: string | null;
   labels: number[];
   slug: string;
   href: string;
@@ -173,6 +174,9 @@ export default function Home() {
         const allCourses: DashboardCourse[] = Array.isArray(coursesResponse?.data)
           ? coursesResponse.data
               .map((course: any) => {
+                const status = typeof course?.status === "string" ? course.status : null;
+                if (status !== "ACTIVE") return null;
+
                 const courseId = course?.id ?? course?.course_id;
                 if (typeof courseId !== "number" && typeof courseId !== "string") {
                   return null;
@@ -211,6 +215,7 @@ export default function Home() {
                         ? `${course.duration}${t('common.hours')}`
                         : "",
                   coins: typeof course?.points === "number" ? course.points : null,
+                  status,
                   labels,
                   slug,
                   href: `/courses/${slug}`,

@@ -126,4 +126,13 @@ export class CourseAPI {
             return error;
         }
     }
+
+    admin_activate_course = async (courseId: number, points: number) => {
+        try {
+            const response = await api.post(`/api/course/activate`, {id: courseId, points: points},{requiresAuth: true, validateStatus: s => s < 500})
+            return response;
+        } catch (error) {
+            return error;
+        }
+    }
 }
