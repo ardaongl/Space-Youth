@@ -1,6 +1,6 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { Link } from "react-router-dom";
-import { Clock, Trophy, Bookmark, BookmarkCheck, SlidersHorizontal } from "lucide-react";
+import { Clock, Trophy, Bookmark, BookmarkCheck } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import AddCourseButton from "@/components/Courses/AddCourseButton";
 import { useBookmarks } from "@/hooks/useBookmarks";
@@ -137,7 +137,7 @@ export default function Courses() {
   const { t } = useLanguage();
   const [myCourses, setMyCourses] = useState<CourseData[]>([])
   const [otherCourses, setOtherCourses] = useState<CourseData[]>([])
-  const [showFilters, setShowFilters] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
   const { toast } = useToast();
   const user = useAppSelector(state => state.user);
   const isTeacherRole = isTeacher(user.user?.role);
@@ -157,6 +157,29 @@ export default function Courses() {
     // Otherwise, add / between base URL and path
     return `${baseUrl}/${url}`;
   };
+
+  const matchesSearch = useCallback(
+    (course: CourseData) => {
+      const normalizedSearch = searchTerm.trim().toLowerCase();
+      if (!normalizedSearch) return true;
+
+      const teacherName = course.teacher
+        ? `${course.teacher.first_name} ${course.teacher.last_name}`
+        : "";
+
+      const fieldsToSearch = [
+        course.title ?? "",
+        course.category ?? "",
+        course.level ?? "",
+        teacherName ?? "",
+      ];
+
+      return fieldsToSearch.some((field) =>
+        field.toLowerCase().includes(normalizedSearch)
+      );
+    },
+    [searchTerm]
+  );
 
   const handleGetCourses = useCallback(async () => {
     try {
@@ -200,6 +223,11 @@ export default function Courses() {
     handleGetCourses();
   }, [handleGetCourses])
 
+  const filteredMyCourses = isTeacherRole
+    ? myCourses.filter(matchesSearch)
+    : [];
+  const filteredOtherCourses = otherCourses.filter(matchesSearch);
+
   return (
     <AppLayout>
       <div className="py-6">
@@ -211,68 +239,36 @@ export default function Courses() {
 
         {/* Search and Filters Section */}
         <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="flex items-center gap-4">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                placeholder={t('common.search')}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
-              <svg
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${
-                showFilters 
-                  ? 'bg-purple-600 text-white border-purple-600' 
-                  : 'bg-white border-gray-300 hover:bg-gray-50'
-              }`}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder={t('common.search')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+            <svg
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <SlidersHorizontal className="h-5 w-5" />
-              <span className="font-medium">{t('common.filter')}</span>
-            </button>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
           </div>
-
-          {/* Filters Dropdown */}
-          {showFilters && (
-            <div className="mt-4 flex items-center gap-4 pt-4 border-t border-gray-200">
-              <select className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
-                <option>En Yeniye Göre Sırala</option>
-                <option>En Eskiye Göre Sırala</option>
-                <option>A-Z Sırala</option>
-                <option>Z-A Sırala</option>
-              </select>
-
-              <select className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
-                <option>Tüm Kategoriler</option>
-                <option>Programlama</option>
-                <option>Tasarım</option>
-                <option>İş Geliştirme</option>
-                <option>Pazarlama</option>
-              </select>
-            </div>
-          )}
         </div>
 
         {/* Conditional rendering based on user role */}
-        {isTeacherRole && myCourses.length > 0 && (
+        {isTeacherRole && filteredMyCourses.length > 0 && (
           <div className="mt-6">
             <h2 className="text-2xl font-semibold mb-4 text-gray-800">{t('courses.myCourses')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {myCourses.map((course) => {
+              {filteredMyCourses.map((course) => {
                 const slug = course.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
                 const durationHours = Math.floor(course.duration / 60);
                 const durationMinutes = course.duration % 60;
@@ -301,12 +297,12 @@ export default function Courses() {
         )}
 
         {/* Other courses section */}
-        <div className={isTeacherRole && myCourses.length > 0 ? "mt-10" : "mt-6"}>
+        <div className={isTeacherRole && filteredMyCourses.length > 0 ? "mt-10" : "mt-6"}>
           {isTeacherRole && (
             <h2 className="text-2xl font-semibold mb-4 text-gray-800">{t('courses.otherCourses')}</h2>
           )}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {otherCourses.map((course) => {
+            {filteredOtherCourses.map((course) => {
               const slug = course.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
               const durationHours = Math.floor(course.duration / 60);
               const durationMinutes = course.duration % 60;

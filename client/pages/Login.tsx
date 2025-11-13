@@ -13,6 +13,7 @@ import { setUser, setUserToken } from "@/store/slices/userSlice";
 import { useAppSelector } from "@/store";
 import { IUserRoles, STUDENT_STATUS } from "@/types/user/user";
 import { setStudent } from "@/store/slices/studentSlice";
+import { mapStudentResponseToState } from "@/utils/student";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -224,18 +225,15 @@ export default function Login() {
           
           dispatch(setUser(user));
           if(user.role == IUserRoles.STUDENT){
-            const student = {
-              id: response.data.student.id,
-              status: response.data.student.status,
-              questions_and_answers: response.data.student.questions_and_answers
+            const mappedStudent = mapStudentResponseToState(response.data);
+            if (mappedStudent) {
+              console.log("student => ", mappedStudent);
+              dispatch(setStudent(mappedStudent));
             }
-            console.log("student => ", student);
-            
-            dispatch(setStudent(student));
             
             // Redirect based on student status
             setTimeout(() => {
-              switch (student.status) {
+              switch (mappedStudent?.status) {
                 case STUDENT_STATUS.INCOMPLETE:
                 case STUDENT_STATUS.PENDING:
                 case STUDENT_STATUS.REJECTED:

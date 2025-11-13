@@ -43,7 +43,7 @@ import { TokensProvider } from "./context/TokensContext";
 import { DraftsProvider } from "./context/DraftsContext";
 import { TaskSubmissionsProvider } from "./context/TaskSubmissionsContext";
 import { TasksProvider } from "./context/TasksContext";
-import { StudentProvider, useStudent } from "./context/StudentContext";
+import { StudentProvider } from "./context/StudentContext";
 import { LanguageProvider, useLanguage } from "./context/LanguageContext";
 import TestWizard, { OnboardingData } from "@/components/onboarding/TestWizard";
 import PendingStatus from "@/components/status/PendingStatus";
@@ -51,11 +51,12 @@ import RejectedStatus from "@/components/status/RejectedStatus";
 import { store, useAppSelector } from "./store";
 import { apis } from "./services";
 import { IUserRoles, STUDENT_STATUS } from "./types/user/user";
-import { clearUser, setUser } from "./store/slices/userSlice";
+import { setUser } from "./store/slices/userSlice";
 import { setStudent } from "./store/slices/studentSlice";
 import { useToast } from "./hooks/use-toast";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { RoleProtectedRoute } from "./components/auth/RoleProtectedRoute";
+import { mapStudentResponseToState } from "@/utils/student";
 
 const queryClient = new QueryClient();
 
@@ -64,7 +65,7 @@ const AppContent = () => {
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const navigate = useNavigate();
   const user = useAppSelector(state => state.user.user) 
-  const student = useAppSelector(state => state.student.student);
+  const { student, isLoading: isStudentLoading } = useAppSelector(state => state.student);
   const dispatch = useDispatch();
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -172,13 +173,9 @@ const AppContent = () => {
           }
           
           // Update student
-          if (userResponse.data.student) {
-            const updatedStudent = {
-              id: userResponse.data.student.id,
-              status: userResponse.data.student.status,
-              questions_and_answers: userResponse.data.student.questions_and_answers
-            };
-            dispatch(setStudent(updatedStudent));
+          const mappedStudent = mapStudentResponseToState(userResponse.data);
+          if (mappedStudent) {
+            dispatch(setStudent(mappedStudent));
           }
         }
         
@@ -210,13 +207,20 @@ const AppContent = () => {
   };
 
   // Check if user is a non-approved student
-  const isNonApprovedStudent = user && 
+  const shouldRestrictStudentAccess = user && 
     user.role === IUserRoles.STUDENT && 
-    student && 
-    student.status !== STUDENT_STATUS.APPROVED;
+    (isStudentLoading || !student || student.status !== STUDENT_STATUS.APPROVED);
 
   // If user is a non-approved student, show only status components
-  if (isNonApprovedStudent) {
+  if (shouldRestrictStudentAccess) {
+    if (isStudentLoading || !student) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <span className="text-muted-foreground">Yükleniyor...</span>
+        </div>
+      );
+    }
+
     return (
       <>
         {/* Show onboarding for incomplete applications */}
