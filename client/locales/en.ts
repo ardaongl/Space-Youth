@@ -234,6 +234,10 @@ export const en = {
     beginner: 'Beginner',
     intermediate: 'Intermediate',
     advanced: 'Advanced',
+    levelEasy: 'Easy',
+    levelMedium: 'Medium',
+    levelHard: 'Hard',
+    selectLevel: 'Select level',
     turkish: 'Turkish',
     english: 'English',
     german: 'German',
@@ -1204,7 +1208,8 @@ export const en = {
 
   // Add Course Button
   addCourseButton: {
-    addContent: 'Add Content'
+    addContent: 'Add Content',
+    connectZoomFromSettings: 'Connect your Zoom account from settings'
   },
 
   // Zoom Integration

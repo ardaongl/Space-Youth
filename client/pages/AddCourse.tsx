@@ -173,16 +173,16 @@ export default function AddCourse() {
               {/* Level Selection */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  {t('courses.level') || 'Seviye'} <span className="text-red-500">*</span>
+                  {t('courses.level')} <span className="text-red-500">*</span>
                 </label>
                 <Select value={level} onValueChange={setLevel}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder={t('courses.selectLevel') || 'Seviye seçin'} />
+                    <SelectValue placeholder={t('courses.selectLevel')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="easy">{t('courses.levelEasy') || 'Kolay'}</SelectItem>
-                    <SelectItem value="medium">{t('courses.levelMedium') || 'Orta'}</SelectItem>
-                    <SelectItem value="hard">{t('courses.levelHard') || 'Zor'}</SelectItem>
+                    <SelectItem value="easy">{t('courses.levelEasy')}</SelectItem>
+                    <SelectItem value="medium">{t('courses.levelMedium')}</SelectItem>
+                    <SelectItem value="hard">{t('courses.levelHard')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

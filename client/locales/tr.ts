@@ -234,6 +234,10 @@ export const tr = {
     beginner: 'Başlangıç',
     intermediate: 'Orta',
     advanced: 'İleri',
+    levelEasy: 'Kolay',
+    levelMedium: 'Orta',
+    levelHard: 'Zor',
+    selectLevel: 'Seviye seçin',
     turkish: 'Türkçe',
     english: 'İngilizce',
     german: 'Almanca',
@@ -1206,7 +1210,8 @@ export const tr = {
 
   // Add Course Button
   addCourseButton: {
-    addContent: 'İçerik Ekle'
+    addContent: 'İçerik Ekle',
+    connectZoomFromSettings: 'Ayarlardan Zoom hesabınızı bağlayın'
   },
 
   // Zoom Integration

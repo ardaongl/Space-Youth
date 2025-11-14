@@ -236,7 +236,13 @@ export default function Courses() {
         {/* Header Section */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-gray-800">{t('courses.title')}</h1>
-          <AddCourseButton />
+          {isTeacherRole && user.user?.teacher?.zoom_connected === false ? (
+            <div className="text-sm text-muted-foreground italic">
+              {t('addCourseButton.connectZoomFromSettings')}
+            </div>
+          ) : (
+            <AddCourseButton />
+          )}
         </div>
 
         {/* Search and Filters Section */}

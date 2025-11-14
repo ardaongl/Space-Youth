@@ -109,8 +109,15 @@ interface Course {
   lessons?: CourseLesson[];
 }
 
-type EditEntity = "task" | "personality" | "character";
-type EditData = Task | IPersonality | Character;
+interface Label {
+  id: number;
+  name: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+type EditEntity = "task" | "personality" | "character" | "label";
+type EditData = Task | IPersonality | Character | Label;
 interface EditState {
   entity: EditEntity;
   data: EditData;
@@ -123,7 +130,7 @@ type FeedbackState = {
 
 const AdminPage: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<
-    "students" | "answers" | "tasks" | "personalities" | "characters" | "courses"
+    "students" | "answers" | "tasks" | "personalities" | "characters" | "courses" | "labels"
   >("students");
   const navigate = useNavigate();
   const [students, setStudents] = useState<Student[]>([]);
@@ -145,6 +152,10 @@ const AdminPage: React.FC = () => {
   const [activationPoints, setActivationPoints] = useState<Record<number, string>>({});
   const [courseActivationLoading, setCourseActivationLoading] = useState<Record<number, boolean>>({});
   const [courseActivationFeedback, setCourseActivationFeedback] = useState<Record<number, FeedbackState | undefined>>({});
+  const [labels, setLabels] = useState<Label[]>([]);
+  const [labelLoading, setLabelLoading] = useState(false);
+  const [labelError, setLabelError] = useState<string | null>(null);
+  const [labelSearch, setLabelSearch] = useState<string>("");
 
   const user = useAppSelector(state => state.user.user)
   const token = useAppSelector(state => state.user.token);
@@ -333,11 +344,75 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  const fetchLabels = async () => {
+    setLabelLoading(true);
+    setLabelError(null);
+    try {
+      const response = await apis.label.get_labels();
+      if (response?.status === 200) {
+        setLabels(response.data || []);
+      } else {
+        setLabelError(
+          response?.data?.error?.message ||
+          response?.data?.message ||
+          "İlgi alanları getirilirken bir hata oluştu."
+        );
+        setLabels([]);
+      }
+    } catch (err: any) {
+      console.error("Error fetching labels:", err);
+      setLabelError(
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.message ||
+        "İlgi alanları getirilirken bir hata oluştu."
+      );
+      setLabels([]);
+    } finally {
+      setLabelLoading(false);
+    }
+  };
+
+  const handleAddLabel = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const target = e.target as typeof e.target & {
+      name: { value: string };
+    };
+
+    const payload = {
+      name: target.name.value.trim(),
+    };
+
+    if (!payload.name) {
+      alert("Lütfen bir ilgi alanı adı girin.");
+      return;
+    }
+
+    try {
+      const response = await apis.label.add_label(payload);
+      if (response.status === 200 || response.status === 201) {
+        fetchLabels();
+        // Form reset işlemini biraz geciktiriyoruz
+        setTimeout(() => {
+          if (form) {
+            form.reset();
+          }
+        }, 100);
+      } else {
+        alert("İlgi alanı eklenirken bir hata oluştu");
+      }
+    } catch (error: any) {
+      console.error("Error adding label:", error);
+      alert("İlgi alanı eklenirken bir hata oluştu");
+    }
+  };
+
   useEffect(() => {
     if (selectedTab === "students" || selectedTab === "answers") fetchStudents();
     if (selectedTab === "characters") fetchCharacters();
     if (selectedTab === "tasks") fetchTasks();
     if (selectedTab === "courses") fetchCourses();
+    if (selectedTab === "labels") fetchLabels();
   }, [selectedTab]);
 
   const filteredStudents = students.filter(
@@ -366,6 +441,12 @@ const AdminPage: React.FC = () => {
     return searchableFields.some((field) =>
       field?.toLowerCase().includes(query)
     );
+  });
+
+  const filteredLabels = labels.filter((label) => {
+    const query = labelSearch.trim().toLowerCase();
+    if (!query) return true;
+    return label.name.toLowerCase().includes(query);
   });
 
   const handleAddTask = async (e: FormEvent<HTMLFormElement>) => {
@@ -559,6 +640,25 @@ const AdminPage: React.FC = () => {
         setCharacters((prev) => prev.map((c) => (c.id === item.id ? item : c)));
       }
     }
+    if (editState.entity === "label") {
+      const item = editState.data as Label;
+      if (item.id) {
+        try {
+          const payload = {
+            name: item.name.trim(),
+          };
+          const response = await apis.label.update_label(item.id, payload);
+          if (response.status === 200 || response.status === 201) {
+            fetchLabels();
+          } else {
+            alert("İlgi alanı güncellenirken bir hata oluştu");
+          }
+        } catch (error) {
+          console.error("Error updating label:", error);
+          alert("İlgi alanı güncellenirken bir hata oluştu");
+        }
+      }
+    }
     closeEdit();
   };
 
@@ -644,6 +744,21 @@ const AdminPage: React.FC = () => {
             placeholder="Uzun açıklama"
             rows={6}
             style={{ resize: "vertical" }}
+          />
+        </>
+      );
+    }
+
+    if (editState.entity === "label") {
+      const d = editState.data as Label;
+      return (
+        <>
+          <h3>İlgi Alanı Düzenle</h3>
+          <label>Ad</label>
+          <input
+            value={d.name}
+            onChange={(e) => onEditChange("name", e.target.value)}
+            placeholder="İlgi alanı adı"
           />
         </>
       );
@@ -794,6 +909,12 @@ const AdminPage: React.FC = () => {
             onClick={() => setSelectedTab("courses")}
           >
             Kurslar
+          </li>
+          <li
+            className={selectedTab === "labels" ? "active" : ""}
+            onClick={() => setSelectedTab("labels")}
+          >
+            İlgi Alanları
           </li>
         </ul>
         <button
@@ -2208,6 +2329,215 @@ const AdminPage: React.FC = () => {
                     );
                   })}
                 </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* İlgi Alanları */}
+        {selectedTab === "labels" && (
+          <div className="labels-section">
+            <h3 style={{ fontWeight: "bold", color: "#2c3e50", marginBottom: "24px" }}>
+              İlgi Alanları
+            </h3>
+
+            {!token ? (
+              <p style={{ color: "red" }}>Lütfen giriş yapınız.</p>
+            ) : labelLoading ? (
+              <p>Yükleniyor...</p>
+            ) : labelError ? (
+              <p style={{ color: "red" }}>{labelError}</p>
+            ) : (
+              <>
+                {/* Compact Form Design */}
+                <div style={{
+                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  borderRadius: "12px",
+                  padding: "14px 18px",
+                  marginBottom: "20px",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  color: "white"
+                }}>
+                  <form onSubmit={handleAddLabel} style={{ display: "flex", alignItems: "flex-end", gap: "12px" }}>
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <label style={{ 
+                        fontSize: "12px", 
+                        fontWeight: "500", 
+                        color: "rgba(255,255,255,0.9)" 
+                      }}>
+                        Yeni İlgi Alanı Ekle
+                      </label>
+                      <input 
+                        name="name" 
+                        placeholder="Örn: Software, Design, Marketing" 
+                        required 
+                        style={{
+                          padding: "10px 14px",
+                          borderRadius: "8px",
+                          border: "none",
+                          fontSize: "14px",
+                          backgroundColor: "rgba(255,255,255,0.95)",
+                          color: "#2c3e50",
+                          outline: "none",
+                          transition: "all 0.2s ease",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                        }}
+                        onFocus={(e) => e.target.style.backgroundColor = "white"}
+                        onBlur={(e) => e.target.style.backgroundColor = "rgba(255,255,255,0.95)"}
+                      />
+                    </div>
+                    
+                    <button 
+                      type="submit" 
+                      style={{
+                        background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "8px",
+                        padding: "10px 18px",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        transition: "all 0.3s ease",
+                        boxShadow: "0 4px 12px rgba(79, 172, 254, 0.3)",
+                        whiteSpace: "nowrap",
+                        height: "42px"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                        e.currentTarget.style.boxShadow = "0 6px 16px rgba(79, 172, 254, 0.4)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "translateY(0)";
+                        e.currentTarget.style.boxShadow = "0 4px 12px rgba(79, 172, 254, 0.3)";
+                      }}
+                    >
+                      ✨ Ekle
+                    </button>
+                  </form>
+                </div>
+
+                {/* Arama */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "16px",
+                    marginBottom: "24px",
+                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    borderRadius: "12px",
+                    padding: "20px",
+                    boxShadow: "0 6px 20px rgba(0,0,0,0.1)",
+                    color: "white"
+                  }}
+                >
+                  <h4
+                    style={{
+                      margin: 0,
+                      fontSize: "18px",
+                      fontWeight: 600
+                    }}
+                  >
+                    İlgi Alanı Arama
+                  </h4>
+                  <input
+                    type="text"
+                    placeholder="İlgi alanı adı ara..."
+                    value={labelSearch}
+                    onChange={(e) => setLabelSearch(e.target.value)}
+                    style={{
+                      padding: "12px 16px",
+                      borderRadius: "8px",
+                      border: "none",
+                      fontSize: "15px",
+                      color: "#2c3e50",
+                      outline: "none",
+                      backgroundColor: "rgba(255,255,255,0.95)",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
+                    }}
+                    onFocus={(e) => (e.target.style.backgroundColor = "white")}
+                    onBlur={(e) => (e.target.style.backgroundColor = "rgba(255,255,255,0.95)")}
+                  />
+                </div>
+
+                {/* Labels List */}
+                {filteredLabels.length === 0 ? (
+                  <p>İlgi alanı bulunmamaktadır.</p>
+                ) : (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                      gap: "16px"
+                    }}
+                  >
+                    {filteredLabels.map((label) => (
+                      <div
+                        key={label.id}
+                        style={{
+                          background: "#ffffff",
+                          borderRadius: "12px",
+                          padding: "20px",
+                          boxShadow: "0 4px 12px rgba(31, 45, 61, 0.08)",
+                          border: "1px solid rgba(103, 119, 239, 0.15)",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "12px"
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                          <h4 style={{ margin: 0, fontSize: "18px", color: "#2c3e50", fontWeight: 600 }}>
+                            {label.name}
+                          </h4>
+                          <span
+                            style={{
+                              padding: "4px 10px",
+                              borderRadius: "999px",
+                              backgroundColor: "rgba(79, 172, 254, 0.12)",
+                              color: "#1f7aec",
+                              fontSize: "12px",
+                              fontWeight: 600
+                            }}
+                          >
+                            ID: {label.id}
+                          </span>
+                        </div>
+                        
+                        {label.created_at && (
+                          <div style={{ fontSize: "12px", color: "#64748b" }}>
+                            Oluşturulma: {new Date(label.created_at).toLocaleDateString("tr-TR")}
+                          </div>
+                        )}
+
+                        <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                          <button
+                            onClick={() => openEdit("label", label)}
+                            style={{
+                              flex: 1,
+                              padding: "10px 16px",
+                              borderRadius: "8px",
+                              border: "1px solid rgba(79, 172, 254, 0.3)",
+                              background: "rgba(79, 172, 254, 0.1)",
+                              color: "#1f7aec",
+                              fontWeight: 600,
+                              cursor: "pointer",
+                              transition: "all 0.2s ease",
+                              fontSize: "14px"
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = "rgba(79, 172, 254, 0.2)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = "rgba(79, 172, 254, 0.1)";
+                            }}
+                          >
+                            Düzenle
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </>
             )}
           </div>

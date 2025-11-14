@@ -493,13 +493,19 @@ export function Profile() {
                         <Edit className="h-4 w-4" />
                         {t('profile.editProfile')}
                       </Button>
-                      <Button 
-                        onClick={() => navigate('/courses/add')}
-                        className="flex items-center gap-2"
-                      >
-                        <Plus className="h-4 w-4" />
-                        {t('courses.addCourse')}
-                      </Button>
+                      {user.user?.teacher?.zoom_connected === false ? (
+                        <div className="text-sm text-muted-foreground italic flex items-center">
+                          {t('addCourseButton.connectZoomFromSettings')}
+                        </div>
+                      ) : (
+                        <Button 
+                          onClick={() => navigate('/courses/add')}
+                          className="flex items-center gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          {t('courses.addCourse')}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -569,13 +575,19 @@ export function Profile() {
                 ) : (
                   <div className="text-center py-12 text-muted-foreground">
                     <p className="mb-4">{t('instructor.noCourses')}</p>
-                    <Button 
-                      onClick={() => navigate('/courses/add')}
-                      className="flex items-center gap-2 mx-auto"
-                    >
-                      <Plus className="h-4 w-4" />
-                      {t('courses.addCourse')}
-                    </Button>
+                    {user.user?.teacher?.zoom_connected === false ? (
+                      <p className="text-sm italic">
+                        {t('addCourseButton.connectZoomFromSettings')}
+                      </p>
+                    ) : (
+                      <Button 
+                        onClick={() => navigate('/courses/add')}
+                        className="flex items-center gap-2 mx-auto"
+                      >
+                        <Plus className="h-4 w-4" />
+                        {t('courses.addCourse')}
+                      </Button>
+                    )}
                   </div>
                 )}
               </Card>
