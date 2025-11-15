@@ -569,7 +569,7 @@ export default function Tasks() {
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <span className="text-yellow-600 font-semibold">{task.coins}</span>
-                          <span className="text-muted-foreground">coin</span>
+                          <span className="text-muted-foreground">{t('common.coins')}</span>
                         </div>
                       </TableCell>
                     <TableCell>

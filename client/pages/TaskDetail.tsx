@@ -390,7 +390,7 @@ export default function TaskDetail() {
                   <div className="flex items-center gap-2">
                     <Coins className="h-5 w-5 text-yellow-600" />
                     <span className="font-semibold text-yellow-600">+{task.coins}</span>
-                    <span>coins</span>
+                    <span>{t('common.coins')}</span>
                   </div>
                 </div>
 
@@ -448,7 +448,7 @@ export default function TaskDetail() {
                         </li>
                         <li className="flex items-start gap-3">
                           <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
-                          <span>Earn {task.coins} coins upon successful completion</span>
+                          <span>Earn {task.coins} {t('common.coins')} upon successful completion</span>
                         </li>
                       </ul>
                     )}
@@ -478,7 +478,7 @@ export default function TaskDetail() {
                   <>
                     {task.status === "To Do" && (
                       <p className="text-sm text-muted-foreground mt-4 text-center">
-                        Complete your work and submit it for review to earn {task.coins} coins.
+                        Complete your work and submit it for review to earn {task.coins} {t('common.coins')}.
                       </p>
                     )}
                     {task.status === "In Review" && (
@@ -488,7 +488,7 @@ export default function TaskDetail() {
                     )}
                     {task.status === "Accepted" && (
                       <p className="text-sm text-green-600 mt-4 text-center">
-                        Congratulations! Your work has been accepted and you earned {task.coins} coins.
+                        Congratulations! Your work has been accepted and you earned {task.coins} {t('common.coins')}.
                       </p>
                     )}
                     {task.status === "Rejected" && (
@@ -498,7 +498,7 @@ export default function TaskDetail() {
                     )}
                     {task.status === "Done" && (
                       <p className="text-sm text-green-600 dark:text-green-400 mt-4 text-center font-medium">
-                        🎉 Tebrikler! Bu görevi tamamladınız ve {task.coins} coin kazandınız!
+                        🎉 Tebrikler! Bu görevi tamamladınız ve {task.coins} {t('common.coins')} kazandınız!
                       </p>
                     )}
                   </>

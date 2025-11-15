@@ -1,196 +1,294 @@
-import { Users } from "lucide-react";
+import { Users, Video, GraduationCap, ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import AppLayout from "@/components/layout/AppLayout";
-import React from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/context/LanguageContext";
+import { apis } from "@/services";
+import { useToast } from "@/hooks/use-toast";
+
+interface TeacherInfo {
+  id: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  about?: string;
+  school?: string;
+  branch?: string;
+}
+
+interface Course {
+  id: number;
+  title: string;
+  description: string;
+  image_url: string | null;
+  level: string;
+  points: number;
+  duration: number;
+  status?: string;
+  students_count?: number;
+}
 
 export function InstructorProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { toast } = useToast();
+  
+  const [teacherInfo, setTeacherInfo] = useState<TeacherInfo | null>(null);
+  const [teacherCourses, setTeacherCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock instructor data - in real app, fetch from API based on id
-  const instructor = {
-    id: id,
-    name: "Academind by Maximilian Schwarzmüller",
-    title: "Online Education",
-    avatar: "/placeholder.svg",
-    totalCourses: 48,
-    about: "Bundling the courses and know how of successful instructors, Academind strives to deliver high quality online education.\n\nOnline Education, Real-Life Success - that's what Academind stands for. Learn topics like web development, data analyses and more in a fun and engaging way.\n\nWe've taught more than 3,000,000 students on a broad variety of topics. We'd love to teach you as well! :)\n\nKeep learning!",
-    courses: [
-      {
-        id: 1,
-        title: "React - The Complete Guide",
-        thumbnail: "/image.png",
-        level: "Beginner",
-        students: 450000,
-        rating: "4.6"
-      },
-      {
-        id: 2,
-        title: "Flutter & Dart - The Complete Guide",
-        thumbnail: "/image.png",
-        level: "Intermediate",
-        students: 320000,
-        rating: "4.7"
-      },
-      {
-        id: 3,
-        title: "Docker & Kubernetes",
-        thumbnail: "/image.png",
-        level: "Advanced",
-        students: 280000,
-        rating: "4.5"
-      },
-      {
-        id: 4,
-        title: "Node.js - The Complete Guide",
-        thumbnail: "/image.png",
-        level: "Intermediate",
-        students: 390000,
-        rating: "4.8"
-      },
-      {
-        id: 5,
-        title: "Python for Data Science",
-        thumbnail: "/image.png",
-        level: "Beginner",
-        students: 275000,
-        rating: "4.6"
-      },
-      {
-        id: 6,
-        title: "Angular - The Complete Guide",
-        thumbnail: "/image.png",
-        level: "Intermediate",
-        students: 310000,
-        rating: "4.7"
-      },
-      {
-        id: 7,
-        title: "Vue.js - Complete Guide",
-        thumbnail: "/image.png",
-        level: "Beginner",
-        students: 265000,
-        rating: "4.5"
-      },
-      {
-        id: 8,
-        title: "MongoDB - The Complete Guide",
-        thumbnail: "/image.png",
-        level: "Intermediate",
-        students: 195000,
-        rating: "4.6"
-      },
-      {
-        id: 9,
-        title: "GraphQL with Node.js",
-        thumbnail: "/image.png",
-        level: "Advanced",
-        students: 145000,
-        rating: "4.7"
-      },
-      {
-        id: 10,
-        title: "TypeScript - The Complete Guide",
-        thumbnail: "/image.png",
-        level: "Intermediate",
-        students: 380000,
-        rating: "4.8"
-      },
-      {
-        id: 11,
-        title: "Next.js & React - Complete Guide",
-        thumbnail: "/image.png",
-        level: "Advanced",
-        students: 290000,
-        rating: "4.9"
-      },
-      {
-        id: 12,
-        title: "AWS Fundamentals",
-        thumbnail: "/image.png",
-        level: "Beginner",
-        students: 225000,
-        rating: "4.5"
-      }
-    ]
+  // Helper function to build full image URL
+  const buildImageUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    const baseUrl = import.meta.env.VITE_BASE_URL || '';
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    if (url.startsWith('/')) {
+      return `${baseUrl}${url}`;
+    }
+    return `${baseUrl}/${url}`;
   };
+
+  useEffect(() => {
+    const fetchInstructorData = async () => {
+      if (!id) {
+        setError('Öğretmen ID bulunamadı');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch all courses to find teacher's courses
+        const coursesResponse = await apis.course.get_courses();
+        
+        if (coursesResponse.status === 200 && coursesResponse.data) {
+          // Filter courses by teacher ID
+          const teacherCoursesList = coursesResponse.data.filter((course: any) => 
+            course.teacher?.id === id || course.teacher_id === id
+          );
+
+          if (teacherCoursesList.length > 0) {
+            // Get teacher info from first course (all courses should have same teacher)
+            const firstCourse = teacherCoursesList[0];
+            if (firstCourse.teacher) {
+              // Filter out sensitive fields
+              const safeTeacherInfo: TeacherInfo = {
+                id: firstCourse.teacher.id,
+                first_name: firstCourse.teacher.first_name,
+                last_name: firstCourse.teacher.last_name,
+                // Don't include email, password, token, or other sensitive data
+                about: firstCourse.teacher.about,
+                school: firstCourse.teacher.school,
+                branch: firstCourse.teacher.branch,
+              };
+              setTeacherInfo(safeTeacherInfo);
+            }
+
+            // Transform courses data
+            const transformedCourses: Course[] = teacherCoursesList
+              .filter((course: any) => course.status === "ACTIVE")
+              .map((course: any) => ({
+                id: course.id,
+                title: course.title,
+                description: course.description || '',
+                image_url: course.image_url,
+                level: course.level || 'N/A',
+                points: course.points || 0,
+                duration: course.duration || 0,
+                status: course.status,
+                students_count: course.students?.length || 0,
+              }));
+            
+            setTeacherCourses(transformedCourses);
+          } else {
+            setError('Bu öğretmene ait kurs bulunamadı');
+          }
+        } else {
+          setError('Kurslar yüklenemedi');
+        }
+      } catch (err) {
+        console.error('Error fetching instructor data:', err);
+        setError('Öğretmen bilgileri yüklenirken bir hata oluştu');
+        toast({
+          title: t('error.title') || 'Hata',
+          description: 'Öğretmen bilgileri yüklenemedi',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInstructorData();
+  }, [id, toast, t]);
+
+  if (loading) {
+    return (
+      <AppLayout>
+        <div className="container mx-auto py-8 max-w-7xl">
+          <div className="space-y-8">
+            <Card className="p-8">
+              <div className="animate-pulse">
+                <div className="h-32 bg-muted rounded w-32 mb-4"></div>
+                <div className="h-8 bg-muted rounded w-1/3 mb-2"></div>
+                <div className="h-4 bg-muted rounded w-1/4"></div>
+              </div>
+            </Card>
+            <Card className="p-8">
+              <div className="animate-pulse">
+                <div className="h-6 bg-muted rounded w-1/4 mb-4"></div>
+                <div className="h-4 bg-muted rounded w-full mb-2"></div>
+                <div className="h-4 bg-muted rounded w-2/3"></div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (error || !teacherInfo) {
+    return (
+      <AppLayout>
+        <div className="container mx-auto py-8 max-w-7xl">
+          <Button
+            variant="ghost"
+            className="mb-6 gap-2"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {t('common.back')}
+          </Button>
+          <Card className="p-8">
+            <div className="text-center py-12">
+              <p className="text-destructive mb-4">{error || 'Öğretmen bulunamadı'}</p>
+              <Button onClick={() => navigate('/courses')}>
+                {t('courses.backToCourses') || 'Kurslara Dön'}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  const teacherName = `${teacherInfo.first_name || ''} ${teacherInfo.last_name || ''}`.trim() || 'Öğretmen';
+  const teacherInitials = `${teacherInfo.first_name?.charAt(0) || ''}${teacherInfo.last_name?.charAt(0) || ''}`.toUpperCase() || 'T';
 
   return (
     <AppLayout>
       <div className="container mx-auto py-8 max-w-7xl">
-        {/* Header Card - Similar to Udemy */}
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          className="mb-6 gap-2"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t('common.back')}
+        </Button>
+
+        {/* Header Card */}
         <Card className="p-8 mb-8">
           <div className="flex flex-col md:flex-row gap-8">
             {/* Avatar */}
             <div className="flex-shrink-0">
-              <div className="w-32 h-32 rounded-full overflow-hidden bg-muted border-4 border-background shadow-lg">
-                <img 
-                  src={instructor.avatar} 
-                  alt={instructor.name}
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-primary to-indigo-500 text-white grid place-items-center text-2xl font-bold border-4 border-background shadow-lg">
+                {teacherInitials}
               </div>
             </div>
 
             {/* Info */}
             <div className="flex-1 space-y-4">
               <div>
-                <h1 className="text-3xl font-bold mb-2">{instructor.name}</h1>
-                <p className="text-lg text-muted-foreground">{instructor.title}</p>
+                <h1 className="text-3xl font-bold mb-2">{teacherName}</h1>
+                {teacherInfo.school && (
+                  <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                    <GraduationCap className="h-4 w-4" />
+                    <span>{teacherInfo.school}</span>
+                    {teacherInfo.branch && <span>• {teacherInfo.branch}</span>}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </Card>
 
         {/* About Section */}
-        <Card className="p-8 mb-8">
-          <h2 className="text-2xl font-semibold mb-4">{t('instructor.about')}</h2>
-          <div className="text-muted-foreground leading-1">
-            {instructor.about}
-          </div>
-        </Card>
+        {teacherInfo.about && (
+          <Card className="p-8 mb-8">
+            <h2 className="text-2xl font-semibold mb-4">{t('instructor.about')}</h2>
+            <div className="text-muted-foreground leading-relaxed whitespace-pre-line">
+              {teacherInfo.about}
+            </div>
+          </Card>
+        )}
 
         {/* Courses Section */}
         <Card className="p-8">
           <h2 className="text-2xl font-semibold mb-6">
-            {t('instructor.myCourses')} ({instructor.totalCourses})
+            {t('instructor.myCourses')} ({teacherCourses.length})
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {instructor.courses.map((course) => (
-              <div 
-                key={course.id}
-                onClick={() => navigate(`/courses/${course.id}`)}
-                className="cursor-pointer group"
-              >
-                <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
-                  <div className="aspect-video relative overflow-hidden bg-muted">
-                    <img 
-                      src={course.thumbnail} 
-                      alt={course.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+          {teacherCourses.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {teacherCourses.map((course) => {
+                const courseSlug = course.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                return (
+                  <div 
+                    key={course.id}
+                    onClick={() => navigate(`/courses/${courseSlug}`)}
+                    className="cursor-pointer group"
+                  >
+                    <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
+                      <div className="aspect-video relative overflow-hidden bg-muted">
+                        {course.image_url ? (
+                          <img 
+                            src={buildImageUrl(course.image_url) || '/placeholder.svg'} 
+                            alt={course.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground">
+                            <Video className="h-12 w-12" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                          {course.title}
+                        </h3>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                          {course.level && (
+                            <Badge variant="secondary">{course.level}</Badge>
+                          )}
+                          {course.students_count !== undefined && (
+                            <span className="flex items-center gap-1">
+                              <Users className="h-3 w-3" />
+                              {course.students_count.toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
                   </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                      {course.title}
-                    </h3>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                      <Badge variant="secondary">{course.level}</Badge>
-                      <span className="flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        {course.students.toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              <p>{t('instructor.noCourses') || 'Henüz kurs bulunmuyor'}</p>
+            </div>
+          )}
         </Card>
       </div>
     </AppLayout>

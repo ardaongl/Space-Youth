@@ -44,6 +44,7 @@ interface DashboardCourse {
   labels: number[];
   slug: string;
   href: string;
+  image_url?: string | null;
 }
 
 const createSlug = (value: string) =>
@@ -51,6 +52,19 @@ const createSlug = (value: string) =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+
+// Helper function to build full image URL
+const buildImageUrl = (url: string | null | undefined): string | null => {
+  if (!url) return null;
+  const baseUrl = import.meta.env.VITE_BASE_URL || '';
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  if (url.startsWith('/')) {
+    return `${baseUrl}${url}`;
+  }
+  return `${baseUrl}/${url}`;
+};
 
 function pickRandom<T>(items: T[], count: number): T[] {
   const copy = [...items];
@@ -219,6 +233,7 @@ export default function Home() {
                   labels,
                   slug,
                   href: `/courses/${slug}`,
+                  image_url: course?.image_url ?? null,
                 } as DashboardCourse;
               })
               .filter((course): course is DashboardCourse => course !== null)
@@ -495,7 +510,7 @@ export default function Home() {
                     )}
                   </div>
                   <div className="text-right">
-                    <div className="text-sm sm:text-base font-semibold text-yellow-600">{coinsLabel} coins</div>
+                    <div className="text-sm sm:text-base font-semibold text-yellow-600">{coinsLabel} {t('common.coins')}</div>
                   </div>
                 </div>
                 <Link to={taskHref} className="mt-3 sm:mt-4 inline-block text-sm sm:text-base text-primary hover:underline font-medium">
@@ -524,8 +539,22 @@ export default function Home() {
               recommendedCourses.map((course) => (
               <Card key={course.id} className="p-4 sm:p-6 hover:shadow-lg transition">
                 <div className="relative">
-                  <div className="aspect-[5/3] w-full rounded-xl bg-accent grid place-items-center mb-3 sm:mb-4">
-                    <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-lg bg-secondary" />
+                  <div className="aspect-[5/3] w-full rounded-xl bg-accent overflow-hidden mb-3 sm:mb-4 relative">
+                    {buildImageUrl(course.image_url) ? (
+                      <img 
+                        src={buildImageUrl(course.image_url) || ''}
+                        alt={course.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    ) : null}
+                    {(!buildImageUrl(course.image_url) || course.image_url === null) && (
+                      <div className="absolute inset-0 w-full h-full grid place-items-center">
+                        <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-lg bg-secondary" />
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="text-[8px] sm:text-[10px] font-semibold tracking-widest text-muted-foreground">
@@ -549,7 +578,7 @@ export default function Home() {
                 )}
                 {typeof course.coins === "number" && (
                   <div className="mt-3 text-sm sm:text-base font-semibold text-yellow-600">
-                    {course.coins} coin
+                    {course.coins} {t('common.coins')}
                   </div>
                 )}
                 <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">

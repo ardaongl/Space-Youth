@@ -51,13 +51,13 @@ const FeatureSlider: React.FC = () => {
                 <Coins className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h4 className="font-semibold text-sm text-gray-900">Coin Balance</h4>
+                <h4 className="font-semibold text-sm text-gray-900">{t('announcements.coinUpdate.title')}</h4>
                 <p className="text-xs text-gray-600">Current Balance</p>
               </div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-yellow-600">1,250</div>
-              <div className="text-xs text-gray-600 mb-3">Coins Available</div>
+              <div className="text-xs text-gray-600 mb-3">{t('common.coins')} Available</div>
               <button className="bg-yellow-600 text-white text-xs px-4 py-2 rounded hover:bg-yellow-700 transition-colors">
                 {t('announcements.coinUpdate.action')}
               </button>
