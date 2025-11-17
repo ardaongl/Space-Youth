@@ -51,7 +51,7 @@ import RejectedStatus from "@/components/status/RejectedStatus";
 import { store, useAppSelector } from "./store";
 import { apis } from "./services";
 import { IUserRoles, STUDENT_STATUS } from "./types/user/user";
-import { setUser } from "./store/slices/userSlice";
+import { clearUser, setUser } from "./store/slices/userSlice";
 import { setStudent } from "./store/slices/studentSlice";
 import { useToast } from "./hooks/use-toast";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -65,11 +65,63 @@ const queryClient = new QueryClient();
 const AppContent = () => {
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const navigate = useNavigate();
-  const user = useAppSelector(state => state.user.user) 
+  const { user, token } = useAppSelector(state => state.user);
   const { student, isLoading: isStudentLoading } = useAppSelector(state => state.student);
   const dispatch = useDispatch();
   const { toast } = useToast();
   const { t } = useLanguage();
+
+  // Uygulama açıldığında / token değiştiğinde oturumu backend ile doğrula
+  // Geçersiz veya hatalı token durumunda kullanıcıyı güvenli şekilde çıkışa zorla
+  useEffect(() => {
+    const verifySession = async () => {
+      // Token yoksa herhangi bir doğrulamaya gerek yok
+      if (!token) {
+        return;
+      }
+
+      try {
+        const response: any = await apis.user.get_user();
+
+        // Beklenmeyen yanıt veya başarısız istek
+        if (!response || typeof response !== "object" || !("status" in response)) {
+          dispatch(clearUser());
+          return;
+        }
+
+        // Yetkisiz / geçersiz token durumları
+        if (response.status === 401 || response.status === 403) {
+          dispatch(clearUser());
+          return;
+        }
+
+        // Başarılı yanıt değilse de oturumu temizle
+        if (response.status !== 200 || !response.data) {
+          dispatch(clearUser());
+          return;
+        }
+
+        // Backend'den gelen en güncel user & student bilgisini store'a yaz
+        const mappedUser = mapUserResponseToState(response.data);
+        if (mappedUser) {
+          dispatch(setUser(mappedUser));
+        }
+
+        const mappedStudent = mapStudentResponseToState(response.data);
+        if (mappedStudent) {
+          dispatch(setStudent(mappedStudent));
+        }
+      } catch (error) {
+        // Herhangi bir hata durumunda oturumu güvenli şekilde sonlandır
+        dispatch(clearUser());
+      }
+    };
+
+    // verifySession'ı sadece token mevcutken çalıştır
+    if (token) {
+      void verifySession();
+    }
+  }, [token, dispatch]);
 
   // Handle student status routing
   useEffect(() => {

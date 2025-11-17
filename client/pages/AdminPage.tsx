@@ -456,7 +456,7 @@ const AdminPage: React.FC = () => {
       description: { value: string };
       point: { value: string };
       achivements: { value: string };
-      image_url: { value: string };
+      file: { files: FileList };
       level: { value: string };
     };
     
@@ -465,13 +465,29 @@ const AdminPage: React.FC = () => {
       description: target.description.value,
       point: parseInt(target.point.value) || 0,
       achivements: target.achivements.value,
-      image_url: target.image_url.value,
+      image_url: "", // Empty string since we'll upload file separately
       level: target.level.value,
     };
+
+    const file = target.file.files?.[0];
 
     try {
       const response = await apis.task.admin_add_task(payload);
       if (response.status === 200 || response.status === 201) {
+        // If task was created successfully and file is provided, upload the file
+        if (file && response.data?.id) {
+          try {
+            const uploadResponse = await apis.task.upload_task_file(response.data.id, file);
+            if (uploadResponse.status !== 200 && uploadResponse.status !== 201) {
+              console.error("Task created but file upload failed:", uploadResponse);
+              alert("Görev oluşturuldu ancak dosya yüklenirken bir hata oluştu");
+            }
+          } catch (uploadError: any) {
+            console.error("Error uploading task file:", uploadError);
+            alert("Görev oluşturuldu ancak dosya yüklenirken bir hata oluştu");
+          }
+        }
+        
         // Reset form before closing
         if (e.currentTarget) {
           e.currentTarget.reset();
@@ -1526,12 +1542,11 @@ const AdminPage: React.FC = () => {
                         fontWeight: "500", 
                         color: "rgba(255,255,255,0.9)" 
                       }}>
-                        Görsel URL
+                        Dosya
                       </label>
                       <input 
-                        name="image_url" 
-                        type="url" 
-                        placeholder="https://example.com/image.jpg" 
+                        name="file" 
+                        type="file" 
                         style={{
                           padding: "14px 16px",
                           borderRadius: "8px",
@@ -1543,7 +1558,8 @@ const AdminPage: React.FC = () => {
                           transition: "all 0.2s ease",
                           boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                           height: "48px",
-                          width: "100%"
+                          width: "100%",
+                          cursor: "pointer"
                         }}
                         onFocus={(e) => e.target.style.backgroundColor = "white"}
                         onBlur={(e) => e.target.style.backgroundColor = "rgba(255,255,255,0.95)"}

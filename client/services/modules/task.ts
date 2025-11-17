@@ -114,4 +114,19 @@ export class TaskAPI {
         }   
     }
 
+    upload_task_file = async (id: string, file: File) => {
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const response = await api.post(`/api/task/${id}/upload-file`, formData, {
+                requiresAuth: true,
+                validateStatus: s => s < 500,
+            });
+            return response;
+        } catch (error) {
+            return error;
+        }
+    }
+
 }
