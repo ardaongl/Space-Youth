@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, GraduationCap, School, User, Mail, Calendar, Award } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, GraduationCap, School, User, Mail, Calendar, Award, ExternalLink } from "lucide-react";
 import { apis } from "@/services";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface UserProfileViewProps {
   userId: string;
@@ -77,6 +79,7 @@ export function UserProfileView({ userId, open, onOpenChange }: UserProfileViewP
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (open && userId) {
@@ -327,6 +330,27 @@ export function UserProfileView({ userId, open, onOpenChange }: UserProfileViewP
                   </Card>
                 )}
               </>
+            )}
+
+            {/* Profile Git Button */}
+            {userData && (
+              <div className="pt-4 border-t mt-4">
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    onOpenChange(false);
+                    // userId prop'unu kullan, userData.id yerine
+                    if (userData.role === "teacher") {
+                      navigate(`/instructor/${userId}`);
+                    } else {
+                      navigate(`/profile/${userId}`);
+                    }
+                  }}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Profile Git
+                </Button>
+              </div>
             )}
           </div>
         ) : (

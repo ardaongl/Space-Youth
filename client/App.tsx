@@ -30,6 +30,7 @@ import Certifications from "./pages/Certifications";
 import JobBoard from "./pages/JobBoard";
 import { Profile } from "./pages/Profile";
 import { InstructorProfile } from "./pages/InstructorProfile";
+import UserProfile from "./pages/UserProfile";
 import About from "./pages/About";
 import Settings from "./pages/Settings";
 import MyTasks from "./pages/MyTasks";
@@ -353,6 +354,14 @@ const AppContent = () => {
           element={
             <ProtectedRoute>
               <Bookmarks />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile/:userId"
+          element={
+            <ProtectedRoute>
+              <UserProfile />
             </ProtectedRoute>
           }
         />
