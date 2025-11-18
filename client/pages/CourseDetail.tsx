@@ -11,6 +11,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { apis } from "@/services";
 import { setUser } from "@/store/slices/userSlice";
+import { UserProfileView } from "@/components/UserProfileView";
 
 export default function CourseDetail() {
   const { slug } = useParams();
@@ -32,6 +33,8 @@ export default function CourseDetail() {
   const [error, setError] = useState<string | null>(null);
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // Find course ID from slug by fetching courses list
   useEffect(() => {
@@ -560,7 +563,14 @@ export default function CourseDetail() {
                 </div>
                 <div className="space-y-3 max-h-64 overflow-y-auto">
                   {transformedCourseData.students.map((student: any) => (
-                    <div key={student.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div 
+                      key={student.id} 
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                      onClick={() => {
+                        setSelectedUserId(student.id);
+                        setIsProfileModalOpen(true);
+                      }}
+                    >
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                         <span className="text-sm font-semibold text-primary">
                           {student.first_name?.[0]?.toUpperCase() || ''}{student.last_name?.[0]?.toUpperCase() || 'U'}
@@ -588,7 +598,16 @@ export default function CourseDetail() {
                 </div>
                 <div className="space-y-3 max-h-64 overflow-y-auto">
                   {transformedCourseData.participants.map((participant: any) => (
-                    <div key={participant.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div 
+                      key={participant.id} 
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                      onClick={() => {
+                        if (participant.id) {
+                          setSelectedUserId(participant.id);
+                          setIsProfileModalOpen(true);
+                        }
+                      }}
+                    >
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                         <span className="text-sm font-semibold text-primary">
                           {participant.name?.split(' ').map((n: string) => n[0]).join('') || 'U'}
@@ -719,6 +738,15 @@ export default function CourseDetail() {
           </div>
         )}
       </div>
+
+      {/* User Profile Modal */}
+      {selectedUserId && (
+        <UserProfileView
+          userId={selectedUserId}
+          open={isProfileModalOpen}
+          onOpenChange={setIsProfileModalOpen}
+        />
+      )}
     </AppLayout>
   );
 }

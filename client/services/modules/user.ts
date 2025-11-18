@@ -144,7 +144,8 @@ export class UserAPI {
 
     user_visit = async (user_id: string) => {
         try {
-            const response = await api.post("/api/user/visit", {user_id}, {requiresAuth: true, validateStatus: s => s < 500})
+            const response = await api.get("/api/user/visit", {requiresAuth: true, validateStatus: s => s < 500, params: {user_id}})
+            console.log("user_visit_response: ", response);
             return response;
         } catch (error) {
             return error;
