@@ -104,6 +104,18 @@ const AppContent = () => {
         // Backend'den gelen en güncel user & student bilgisini store'a yaz
         const mappedUser = mapUserResponseToState(response.data);
         if (mappedUser) {
+          // Check if user is a teacher and not approved
+          if (mappedUser.role === IUserRoles.TEACHER && mappedUser.teacher) {
+            if (mappedUser.teacher.admin_approved === false) {
+              toast({
+                title: "Onay Bekleniyor",
+                description: "Hesabınız henüz admin tarafından onaylanmadı. Lütfen onay bekleyin.",
+                variant: "destructive",
+              });
+              dispatch(clearUser());
+              return;
+            }
+          }
           dispatch(setUser(mappedUser));
         }
 

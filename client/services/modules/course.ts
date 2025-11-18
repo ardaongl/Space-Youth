@@ -35,6 +35,7 @@ export class CourseAPI {
         title: string;
         description: string;
         level: string;
+        registration_deadline?: string;
         labels?: number[];
         lessons?: Array<{
             title: string;
@@ -51,6 +52,7 @@ export class CourseAPI {
                     title: payload.title,
                     description: payload.description,
                     level: payload.level,
+                    registration_deadline: payload.registration_deadline,
                     labels: payload.labels,
                     lessons: payload.lessons
                 }, {requiresAuth: true, validateStatus: s => s < 500})

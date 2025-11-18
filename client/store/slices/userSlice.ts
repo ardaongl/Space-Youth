@@ -11,6 +11,7 @@ export interface TeacherInfo {
   school?: string | null;
   branch?: string | null;
   zoom_connected?: boolean;
+  admin_approved?: boolean;
 }
 
 export interface User {

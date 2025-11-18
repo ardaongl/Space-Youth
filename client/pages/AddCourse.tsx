@@ -34,6 +34,7 @@ export default function AddCourse() {
   const [selectedLabels, setSelectedLabels] = useState<number[]>([]);
   const [loadingLabels, setLoadingLabels] = useState(false);
   const [level, setLevel] = useState<string>("");
+  const [registrationDeadline, setRegistrationDeadline] = useState<string>("");
 
   useEffect(() => {
     const fetchLabels = async () => {
@@ -103,6 +104,7 @@ export default function AddCourse() {
       title: courseName,
       description: courseDescription,
       level: level,
+      registration_deadline: registrationDeadline,
       achievements: achievements.filter(a => a.trim() !== ""),
       photos,
       videos,
@@ -119,7 +121,7 @@ export default function AddCourse() {
     navigate("/courses/add/lessons");
   };
 
-  const isValid = courseName.trim() !== "" && courseDescription.trim() !== "" && level !== "";
+  const isValid = courseName.trim() !== "" && courseDescription.trim() !== "" && level !== "" && registrationDeadline !== "";
 
   return (
     <AppLayout>
@@ -185,6 +187,22 @@ export default function AddCourse() {
                     <SelectItem value="hard">{t('courses.levelHard')}</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Registration Deadline */}
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  Son Kayıt Tarihi <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="datetime-local"
+                  value={registrationDeadline}
+                  onChange={(e) => setRegistrationDeadline(e.target.value)}
+                  className="w-full"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Son kayıt tarihi, en erken dersin başlangıç tarihinden önce olmalıdır.
+                </p>
               </div>
 
               {/* Labels Selection */}

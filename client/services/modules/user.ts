@@ -1,3 +1,4 @@
+import { IUserRoles } from "@/types/user/user";
 import { api } from "../api";
 
 export class UserAPI {
@@ -117,6 +118,33 @@ export class UserAPI {
                 "/api/zoom/auth",
                 { requiresAuth: true, validateStatus: s => s < 500 }
             );
+            return response;
+        } catch (error) {
+            return error;
+        }
+    }
+
+    admin_get_users = async (role: IUserRoles) => {
+        try {
+            const response = await api.get("/api/users", {requiresAuth: true, validateStatus: s => s < 500, params: {role: role.toLowerCase()}})
+            return response;
+        } catch (error) {
+            return error;
+        }
+    }
+
+    admin_teacher_approve = async (user_id: string, approve: boolean) => {
+        try {
+            const response = await api.post("/api/teacher/approve", {user_id, approve}, {requiresAuth: true, validateStatus: s => s < 500})
+            return response;
+        } catch (error) {
+            return error;
+        }
+    }
+
+    user_visit = async (user_id: string) => {
+        try {
+            const response = await api.post("/api/user/visit", {user_id}, {requiresAuth: true, validateStatus: s => s < 500})
             return response;
         } catch (error) {
             return error;

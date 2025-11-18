@@ -5,6 +5,7 @@ import { useAppSelector } from "@/store";
 import { apis } from "@/services";
 import { useNavigate } from "react-router-dom";
 import { IPersonality } from "@/types/common/common";
+import { IUserRoles } from "@/types/user/user";
 
 const baseUrl = import.meta.env.VITE_BASE_URL;
 
@@ -116,6 +117,35 @@ interface Label {
   updated_at?: string;
 }
 
+interface TeacherCourse {
+  id: number;
+  title: string;
+  description: string;
+  image_url?: string | null;
+  video_url?: string | null;
+  level: string;
+  duration: number;
+  certificate_url?: string | null;
+  registration_deadline?: string | null;
+  points: number;
+  status: string;
+}
+
+interface Teacher {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  teacher: {
+    id: string;
+    school: string | null;
+    branch: string | null;
+    admin_approved: boolean;
+    zoom_connected: boolean;
+  };
+  courses: TeacherCourse[];
+}
+
 type EditEntity = "task" | "personality" | "character" | "label";
 type EditData = Task | IPersonality | Character | Label;
 interface EditState {
@@ -130,7 +160,7 @@ type FeedbackState = {
 
 const AdminPage: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<
-    "students" | "answers" | "tasks" | "personalities" | "characters" | "courses" | "labels"
+    "students" | "answers" | "tasks" | "personalities" | "characters" | "courses" | "labels" | "teachers"
   >("students");
   const navigate = useNavigate();
   const [students, setStudents] = useState<Student[]>([]);
@@ -156,6 +186,13 @@ const AdminPage: React.FC = () => {
   const [labelLoading, setLabelLoading] = useState(false);
   const [labelError, setLabelError] = useState<string | null>(null);
   const [labelSearch, setLabelSearch] = useState<string>("");
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [teacherLoading, setTeacherLoading] = useState(false);
+  const [teacherError, setTeacherError] = useState<string | null>(null);
+  const [teacherSearch, setTeacherSearch] = useState<string>("");
+  const [showUnapprovedOnly, setShowUnapprovedOnly] = useState(false);
+  const [teacherApprovalLoading, setTeacherApprovalLoading] = useState<Record<string, boolean>>({});
+  const [teacherApprovalFeedback, setTeacherApprovalFeedback] = useState<Record<string, FeedbackState | undefined>>({});
 
   const user = useAppSelector(state => state.user.user)
   const token = useAppSelector(state => state.user.token);
@@ -407,12 +444,97 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  const fetchTeachers = async () => {
+    setTeacherLoading(true);
+    setTeacherError(null);
+    try {
+      const response = await apis.user.admin_get_users(IUserRoles.TEACHER);
+      if (response?.status === 200) {
+        setTeachers(response.data || []);
+      } else {
+        setTeacherError(
+          response?.data?.error?.message ||
+          response?.data?.message ||
+          "Öğretmenler getirilirken bir hata oluştu."
+        );
+        setTeachers([]);
+      }
+    } catch (err: any) {
+      console.error("Error fetching teachers:", err);
+      setTeacherError(
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.message ||
+        "Öğretmenler getirilirken bir hata oluştu."
+      );
+      setTeachers([]);
+    } finally {
+      setTeacherLoading(false);
+    }
+  };
+
+  const handleApproveTeacher = async (userId: string, approve: boolean) => {
+    setTeacherApprovalLoading((prev) => ({ ...prev, [userId]: true }));
+    setTeacherApprovalFeedback((prev) => ({ ...prev, [userId]: undefined }));
+
+    try {
+      const response = await apis.user.admin_teacher_approve(userId, approve);
+      const statusCode = response?.status;
+      const responseMessage =
+        response?.data?.message ||
+        response?.data?.success ||
+        (approve ? "Öğretmen başarıyla onaylandı." : "Öğretmen onayı kaldırıldı.");
+
+      if (statusCode === 200 || statusCode === 201) {
+        setTeachers((prev) =>
+          prev.map((teacher) =>
+            teacher.id === userId
+              ? { ...teacher, teacher: { ...teacher.teacher, admin_approved: approve } }
+              : teacher
+          )
+        );
+        setTeacherApprovalFeedback((prev) => ({
+          ...prev,
+          [userId]: {
+            type: "success",
+            message: responseMessage
+          }
+        }));
+      } else {
+        setTeacherApprovalFeedback((prev) => ({
+          ...prev,
+          [userId]: {
+            type: "error",
+            message:
+              response?.data?.error?.message ||
+              response?.data?.message ||
+              "İşlem sırasında bir hata oluştu."
+          }
+        }));
+      }
+    } catch (error: any) {
+      console.error("Error approving teacher:", error);
+      setTeacherApprovalFeedback((prev) => ({
+        ...prev,
+        [userId]: {
+          type: "error",
+          message:
+            error?.response?.data?.error?.message ||
+            error?.response?.data?.message ||
+            "İşlem sırasında bir hata oluştu."
+        }
+      }));
+    } finally {
+      setTeacherApprovalLoading((prev) => ({ ...prev, [userId]: false }));
+    }
+  };
+
   useEffect(() => {
     if (selectedTab === "students" || selectedTab === "answers") fetchStudents();
     if (selectedTab === "characters") fetchCharacters();
     if (selectedTab === "tasks") fetchTasks();
     if (selectedTab === "courses") fetchCourses();
     if (selectedTab === "labels") fetchLabels();
+    if (selectedTab === "teachers") fetchTeachers();
   }, [selectedTab]);
 
   const filteredStudents = students.filter(
@@ -447,6 +569,20 @@ const AdminPage: React.FC = () => {
     const query = labelSearch.trim().toLowerCase();
     if (!query) return true;
     return label.name.toLowerCase().includes(query);
+  });
+
+  const filteredTeachers = teachers.filter((teacher) => {
+    const query = teacherSearch.trim().toLowerCase();
+    const matchesSearch = !query || 
+      teacher.first_name.toLowerCase().includes(query) ||
+      teacher.last_name.toLowerCase().includes(query) ||
+      teacher.email.toLowerCase().includes(query) ||
+      (teacher.teacher.school && teacher.teacher.school.toLowerCase().includes(query)) ||
+      (teacher.teacher.branch && teacher.teacher.branch.toLowerCase().includes(query));
+    
+    const matchesApprovalFilter = !showUnapprovedOnly || !teacher.teacher.admin_approved;
+    
+    return matchesSearch && matchesApprovalFilter;
   });
 
   const handleAddTask = async (e: FormEvent<HTMLFormElement>) => {
@@ -931,6 +1067,12 @@ const AdminPage: React.FC = () => {
             onClick={() => setSelectedTab("labels")}
           >
             İlgi Alanları
+          </li>
+          <li
+            className={selectedTab === "teachers" ? "active" : ""}
+            onClick={() => setSelectedTab("teachers")}
+          >
+            Öğretmenler
           </li>
         </ul>
         <button
@@ -2345,6 +2487,319 @@ const AdminPage: React.FC = () => {
                     );
                   })}
                 </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Öğretmenler */}
+        {selectedTab === "teachers" && (
+          <div className="teachers-section">
+            <h3 style={{ fontWeight: "bold", color: "#2c3e50", marginBottom: "24px" }}>
+              Öğretmenler
+            </h3>
+
+            {!token ? (
+              <p style={{ color: "red" }}>Lütfen giriş yapınız.</p>
+            ) : teacherLoading ? (
+              <p>Yükleniyor...</p>
+            ) : teacherError ? (
+              <p style={{ color: "red" }}>{teacherError}</p>
+            ) : (
+              <>
+                {/* Arama ve Filtre */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "16px",
+                    marginBottom: "24px",
+                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    borderRadius: "12px",
+                    padding: "20px",
+                    boxShadow: "0 6px 20px rgba(0,0,0,0.1)",
+                    color: "white"
+                  }}
+                >
+                  <h4
+                    style={{
+                      margin: 0,
+                      fontSize: "18px",
+                      fontWeight: 600
+                    }}
+                  >
+                    Öğretmen Arama ve Filtreleme
+                  </h4>
+                  <input
+                    type="text"
+                    placeholder="İsim, email, okul veya branş ara..."
+                    value={teacherSearch}
+                    onChange={(e) => setTeacherSearch(e.target.value)}
+                    style={{
+                      padding: "12px 16px",
+                      borderRadius: "8px",
+                      border: "none",
+                      fontSize: "15px",
+                      color: "#2c3e50",
+                      outline: "none",
+                      backgroundColor: "rgba(255,255,255,0.95)",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
+                    }}
+                    onFocus={(e) => (e.target.style.backgroundColor = "white")}
+                    onBlur={(e) => (e.target.style.backgroundColor = "rgba(255,255,255,0.95)")}
+                  />
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      fontWeight: 500
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={showUnapprovedOnly}
+                      onChange={(e) => setShowUnapprovedOnly(e.target.checked)}
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        cursor: "pointer"
+                      }}
+                    />
+                    Sadece onay bekleyen öğretmenleri göster
+                  </label>
+                </div>
+
+                {/* Teachers List */}
+                {filteredTeachers.length === 0 ? (
+                  <p>Öğretmen bulunmamaktadır.</p>
+                ) : (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                      gap: "20px"
+                    }}
+                  >
+                    {filteredTeachers.map((teacher) => {
+                      const isApproved = teacher.teacher.admin_approved;
+                      const isZoomConnected = teacher.teacher.zoom_connected;
+                      const approvalPending = !!teacherApprovalLoading[teacher.id];
+                      const feedback = teacherApprovalFeedback[teacher.id];
+
+                      return (
+                        <div
+                          key={teacher.id}
+                          style={{
+                            background: "#ffffff",
+                            borderRadius: "16px",
+                            padding: "20px",
+                            boxShadow: "0 10px 30px rgba(31, 45, 61, 0.08)",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "16px",
+                            border: "1px solid rgba(103, 119, 239, 0.15)"
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              gap: "12px"
+                            }}
+                          >
+                            <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: 1 }}>
+                              <h4 style={{ margin: 0, fontSize: "18px", color: "#2c3e50" }}>
+                                {teacher.first_name} {teacher.last_name}
+                              </h4>
+                              <span style={{ fontSize: "14px", color: "#64748b" }}>
+                                {teacher.email}
+                              </span>
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "4px" }}>
+                                <span
+                                  style={{
+                                    padding: "4px 10px",
+                                    borderRadius: "999px",
+                                    backgroundColor: isApproved ? "rgba(46, 213, 115, 0.15)" : "rgba(255, 165, 2, 0.15)",
+                                    color: isApproved ? "#2ecc71" : "#f39c12",
+                                    fontWeight: 600,
+                                    fontSize: "12px"
+                                  }}
+                                >
+                                  {isApproved ? "ONAYLI" : "ONAY BEKLİYOR"}
+                                </span>
+                                <span
+                                  style={{
+                                    padding: "4px 10px",
+                                    borderRadius: "999px",
+                                    backgroundColor: isZoomConnected ? "rgba(79, 172, 254, 0.15)" : "rgba(148, 163, 184, 0.15)",
+                                    color: isZoomConnected ? "#1f7aec" : "#64748b",
+                                    fontWeight: 600,
+                                    fontSize: "12px"
+                                  }}
+                                >
+                                  {isZoomConnected ? "ZOOM BAĞLI" : "ZOOM BAĞLI DEĞİL"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {(teacher.teacher.school || teacher.teacher.branch) && (
+                            <div
+                              style={{
+                                display: "grid",
+                                gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                                gap: "12px",
+                                background: "#f8fafc",
+                                borderRadius: "12px",
+                                padding: "12px"
+                              }}
+                            >
+                              {teacher.teacher.school && (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                  <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 600 }}>
+                                    Okul
+                                  </span>
+                                  <span style={{ fontSize: "14px", color: "#1e293b", fontWeight: 600 }}>
+                                    {teacher.teacher.school}
+                                  </span>
+                                </div>
+                              )}
+                              {teacher.teacher.branch && (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                  <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 600 }}>
+                                    Branş
+                                  </span>
+                                  <span style={{ fontSize: "14px", color: "#1e293b", fontWeight: 600 }}>
+                                    {teacher.teacher.branch}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {teacher.courses && teacher.courses.length > 0 && (
+                            <details
+                              style={{
+                                background: "#f9fafb",
+                                borderRadius: "12px",
+                                padding: "14px",
+                                border: "1px solid rgba(15, 23, 42, 0.08)"
+                              }}
+                            >
+                              <summary
+                                style={{
+                                  cursor: "pointer",
+                                  fontWeight: 600,
+                                  color: "#334155",
+                                  fontSize: "14px"
+                                }}
+                              >
+                                Kurslar ({teacher.courses.length})
+                              </summary>
+                              <div style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                                {teacher.courses.map((course) => (
+                                  <div
+                                    key={course.id}
+                                    style={{
+                                      padding: "10px 12px",
+                                      borderRadius: "10px",
+                                      background: "white",
+                                      boxShadow: "0 1px 4px rgba(15, 23, 42, 0.06)",
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: "6px"
+                                    }}
+                                  >
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                      <span style={{ fontWeight: 600, color: "#1f2937", fontSize: "14px" }}>
+                                        {course.title}
+                                      </span>
+                                      <span
+                                        style={{
+                                          padding: "2px 8px",
+                                          borderRadius: "999px",
+                                          backgroundColor: course.status === "ACTIVE" ? "rgba(46, 213, 115, 0.15)" : "rgba(148, 163, 184, 0.15)",
+                                          color: course.status === "ACTIVE" ? "#2ecc71" : "#64748b",
+                                          fontWeight: 600,
+                                          fontSize: "11px"
+                                        }}
+                                      >
+                                        {course.status}
+                                      </span>
+                                    </div>
+                                    <span style={{ fontSize: "12px", color: "#6b7280" }}>
+                                      {course.description}
+                                    </span>
+                                    <div style={{ display: "flex", gap: "12px", fontSize: "12px", color: "#64748b" }}>
+                                      <span>Seviye: {course.level}</span>
+                                      <span>Süre: {course.duration} dk</span>
+                                      <span>Puan: {course.points}</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </details>
+                          )}
+
+                          {!isApproved && (
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "12px"
+                              }}
+                            >
+                              <button
+                                onClick={() => handleApproveTeacher(teacher.id, true)}
+                                disabled={approvalPending}
+                                style={{
+                                  background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                                  color: "white",
+                                  border: "none",
+                                  borderRadius: "8px",
+                                  padding: "12px 18px",
+                                  fontSize: "15px",
+                                  fontWeight: 600,
+                                  cursor: approvalPending ? "not-allowed" : "pointer",
+                                  opacity: approvalPending ? 0.7 : 1,
+                                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                                  boxShadow: "0 8px 18px rgba(79,172,254,0.35)"
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (approvalPending) return;
+                                  e.currentTarget.style.transform = "translateY(-2px)";
+                                  e.currentTarget.style.boxShadow = "0 12px 25px rgba(79,172,254,0.4)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.transform = "translateY(0)";
+                                  e.currentTarget.style.boxShadow = "0 8px 18px rgba(79,172,254,0.35)";
+                                }}
+                              >
+                                {approvalPending ? "Onaylanıyor..." : "Öğretmeni Onayla"}
+                              </button>
+
+                              {feedback && (
+                                <span
+                                  style={{
+                                    fontWeight: 600,
+                                    color: feedback.type === "success" ? "#22c55e" : "#ef4444",
+                                    fontSize: "14px"
+                                  }}
+                                >
+                                  {feedback.message}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </>
             )}
           </div>

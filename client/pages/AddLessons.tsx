@@ -7,6 +7,7 @@ import { ArrowLeft, Plus, Upload, X, FileText, Calendar, Clock, Award } from "lu
 import { useLanguage } from "@/context/LanguageContext";
 import { apis } from "@/services";
 import { useAppSelector } from "@/store";
+import { useToast } from "@/hooks/use-toast";
 
 interface Lesson {
   id: string;
@@ -21,6 +22,7 @@ interface Lesson {
 export default function AddLessons() {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { toast } = useToast();
   const authUser = useAppSelector(state => state.user.user);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [currentLesson, setCurrentLesson] = useState<Lesson>({
@@ -162,11 +164,39 @@ export default function AddLessons() {
         };
       });
 
+      // Validate registration_deadline is before earliest lesson start_time
+      if (courseData.registration_deadline) {
+        // Convert registration_deadline from datetime-local to ISO format
+        const registrationDeadlineDate = new Date(courseData.registration_deadline);
+        
+        // Find the earliest lesson start_time
+        const earliestStartTime = lessonsData
+          .map(lesson => new Date(lesson.start_time))
+          .sort((a, b) => a.getTime() - b.getTime())[0];
+
+        if (registrationDeadlineDate >= earliestStartTime) {
+          toast({
+            title: "Geçersiz Son Kayıt Tarihi",
+            description: "Son kayıt tarihi, en erken dersin başlangıç tarihinden önce olmalıdır. Lütfen son kayıt tarihini güncelleyin veya ders tarihlerini kontrol edin.",
+            variant: "destructive",
+          });
+          setIsCreating(false);
+          return;
+        }
+      }
+
+      // Convert registration_deadline to ISO format if it exists
+      let registrationDeadlineISO: string | undefined;
+      if (courseData.registration_deadline) {
+        registrationDeadlineISO = new Date(courseData.registration_deadline).toISOString();
+      }
+
       // Prepare course payload
       const coursePayload = {
         title: courseData.title || courseData.name,
         description: courseData.description,
         level: courseData.level,
+        registration_deadline: registrationDeadlineISO,
         labels: courseData.labels || [],
         lessons: lessonsData,
       };

@@ -49,6 +49,12 @@ export const mapTeacherFromResponse = (teacher: unknown): TeacherInfo | undefine
       ? zoomConnectedField
       : zoomConnectedField === 1;
 
+  const adminApprovedField = teacherData.admin_approved;
+  const adminApproved =
+    typeof adminApprovedField === "boolean"
+      ? adminApprovedField
+      : adminApprovedField === 1 || adminApprovedField === true;
+
   const teacherInfo: TeacherInfo = {
     id,
     school: (teacherData.school ?? null) as string | null | undefined,
@@ -57,6 +63,10 @@ export const mapTeacherFromResponse = (teacher: unknown): TeacherInfo | undefine
 
   if (typeof zoomConnected === "boolean") {
     teacherInfo.zoom_connected = zoomConnected;
+  }
+
+  if (typeof adminApproved === "boolean") {
+    teacherInfo.admin_approved = adminApproved;
   }
 
   return teacherInfo;

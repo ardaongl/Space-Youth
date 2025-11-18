@@ -10,7 +10,7 @@ import { apis } from "@/services";
 import { mapUserResponseToState } from "@/utils/user";
 import { email } from "zod/v4";
 import { useDispatch } from "react-redux";
-import { setUser, setUserToken } from "@/store/slices/userSlice";
+import { setUser, setUserToken, clearUser } from "@/store/slices/userSlice";
 import { useAppSelector } from "@/store";
 import { IUserRoles, STUDENT_STATUS } from "@/types/user/user";
 import { setStudent } from "@/store/slices/studentSlice";
@@ -206,6 +206,20 @@ export default function Login() {
 
           if (!mappedUser) {
             return;
+          }
+
+          // Check if user is a teacher and not approved
+          if (mappedUser.role === IUserRoles.TEACHER && mappedUser.teacher) {
+            if (mappedUser.teacher.admin_approved === false) {
+              toast({
+                title: "Onay Bekleniyor",
+                description: "Hesabınız henüz admin tarafından onaylanmadı. Lütfen onay bekleyin.",
+                variant: "destructive",
+              });
+              dispatch(clearUser());
+              setIsLoading(false);
+              return;
+            }
           }
 
           dispatch(setUser(mappedUser));
